@@ -52,3 +52,24 @@ func TestGetCandlesFrom(t *testing.T) {
 	}
 	t.Logf("%+v", candles)
 }
+
+func TestGetPricing(t *testing.T) {
+	since := float64(time.Date(2020, 4, 1, 8, 0, 0, 0, time.UTC).Unix())
+	instruments := []string{"GBP_USD", "EUR_USD"}
+
+	prices, err := GetPricing(accountID, instruments, since)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", prices)
+}
+
+func TestGetLatestCandles(t *testing.T) {
+	specifications := []string{"GBP_USD:S5:M", "EUR_USD:S5:M"}
+
+	latestCandles, err := GetLatestCandles(accountID, specifications)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", latestCandles)
+}

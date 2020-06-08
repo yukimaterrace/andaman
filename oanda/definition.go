@@ -51,3 +51,29 @@ type CandleStickData struct {
 	L float64 `json:"l,string"`
 	C float64 `json:"c,string"`
 }
+
+// Prices is a definition for prices
+type Prices struct {
+	Prices []ClientPrice `json:"prices"`
+	Time   float64       `json:"time,string"`
+}
+
+// ClientPrice is a definition for client price
+type ClientPrice struct {
+	Instrument string  `json:"instrument"`
+	Time       float64 `json:"time,string"`
+	Tradable   bool    `json:"tradable"`
+	Bids       []Price `json:"bids"`
+	Asks       []Price `json:"asks"`
+}
+
+// Price is a definition for price
+type Price struct {
+	Price     float64 `json:"price,string"`
+	Liquidity int     `json:"liquidity"`
+}
+
+// LatestCandles is a definition for latest candles
+type LatestCandles struct {
+	LatestCandles []Candles `json:"latestCandles"`
+}

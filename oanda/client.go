@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"yukimaterrace/andaman/api"
 	"yukimaterrace/andaman/config"
 )
@@ -76,4 +77,33 @@ func GetCandles(instrument string, granularity string, count int, from float64, 
 		return nil, err
 	}
 	return &candles, nil
+}
+
+// GetPricing is a method to get pricing
+func GetPricing(accountID string, instruments []string, since float64) (*Prices, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/pricing", accountID)
+
+	query := url.Values{}
+	query.Add("instruments", strings.Join(instruments, ","))
+	query.Add("since", Float64(since).String())
+
+	var prices Prices
+	if err := client.Get(path, query, &prices); err != nil {
+		return nil, err
+	}
+	return &prices, nil
+}
+
+// GetLatestCandles is a method to get latest candles
+func GetLatestCandles(accountID string, specifications []string) (*LatestCandles, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/candles/latest", accountID)
+
+	query := url.Values{}
+	query.Add("candleSpecifications", strings.Join(specifications, ","))
+
+	var latestCandles LatestCandles
+	if err := client.Get(path, query, &latestCandles); err != nil {
+		return nil, err
+	}
+	return &latestCandles, nil
 }
