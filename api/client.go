@@ -35,7 +35,7 @@ func NewClient(host string, commonHeader http.Header) *Client {
 	}
 }
 
-func (client *Client) request(method string, path string, query url.Values, bodyMap map[string]interface{}, response interface{}) error {
+func (client *Client) request(method string, path string, query url.Values, requestBody interface{}, response interface{}) error {
 	rawQuery := ""
 	if query != nil {
 		rawQuery = query.Encode()
@@ -49,8 +49,8 @@ func (client *Client) request(method string, path string, query url.Values, body
 	}
 
 	var body *bytes.Buffer
-	if bodyMap != nil {
-		buf, err := json.Marshal(bodyMap)
+	if requestBody != nil {
+		buf, err := json.Marshal(requestBody)
 		if err != nil {
 			return err
 		}
@@ -104,11 +104,11 @@ func (client *Client) Get(path string, query url.Values, response interface{}) e
 }
 
 // Post is a method for post request
-func (client *Client) Post(path string, bodyMap map[string]interface{}, response interface{}) error {
-	return client.request("POST", path, nil, bodyMap, response)
+func (client *Client) Post(path string, requestBody interface{}, response interface{}) error {
+	return client.request("POST", path, nil, requestBody, response)
 }
 
 // Put is a method for put request
-func (client *Client) Put(path string, bodyMap map[string]interface{}, response interface{}) error {
-	return client.request("PUT", path, nil, bodyMap, response)
+func (client *Client) Put(path string, requestBody interface{}, response interface{}) error {
+	return client.request("PUT", path, nil, requestBody, response)
 }

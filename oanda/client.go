@@ -95,15 +95,60 @@ func GetPricing(accountID string, instruments []string, since float64) (*Prices,
 }
 
 // GetLatestCandles is a method to get latest candles
-func GetLatestCandles(accountID string, specifications []string) (*LatestCandles, error) {
+func GetLatestCandles(accountID string, specs []string) (*LatestCandles, error) {
 	path := fmt.Sprintf("/v3/accounts/%s/candles/latest", accountID)
 
 	query := url.Values{}
-	query.Add("candleSpecifications", strings.Join(specifications, ","))
+	query.Add("candleSpecifications", strings.Join(specs, ","))
 
 	var latestCandles LatestCandles
 	if err := client.Get(path, query, &latestCandles); err != nil {
 		return nil, err
 	}
 	return &latestCandles, nil
+}
+
+// GetOpenTrades is a method to get open trades
+func GetOpenTrades(accountID string) (*Trades, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/openTrades", accountID)
+
+	var trades Trades
+	if err := client.Get(path, nil, &trades); err != nil {
+		return nil, err
+	}
+	return &trades, nil
+}
+
+// PostOrder is a method to post order
+func PostOrder(accountID string, orderType string, instrument string, units float64) (*OrderCreated, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/orders", accountID)
+
+	requestBody := Order{
+		Order: OrderRequest{
+			Type:       orderType,
+			Instrument: instrument,
+			Units:      units,
+		},
+	}
+
+	var orderCreated OrderCreated
+	if err := client.Post(path, &requestBody, &orderCreated); err != nil {
+		return nil, err
+	}
+	return &orderCreated, nil
+}
+
+// PutCloseTrade is a method to close trade
+func PutCloseTrade(accountID string, tradeID string) (*TradeClosed, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/trades/%s/close", accountID, tradeID)
+
+	requestBody := CloseTrade{
+		Units: "ALL",
+	}
+
+	var tradeClosed TradeClosed
+	if err := client.Put(path, &requestBody, &tradeClosed); err != nil {
+		return nil, err
+	}
+	return &tradeClosed, nil
 }

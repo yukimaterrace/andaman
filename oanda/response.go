@@ -77,3 +77,32 @@ type Price struct {
 type LatestCandles struct {
 	LatestCandles []Candles `json:"latestCandles"`
 }
+
+// Trades is a definition for trades
+type Trades struct {
+	Trades            []Trade `json:"trades"`
+	LastTransactionID string  `json:"lastTransactionID"`
+}
+
+// Trade is a definition for trade
+type Trade struct {
+	ID           string  `json:"id"`
+	Instrument   string  `json:"instrument"`
+	Price        float64 `json:"price,string"`
+	OpenTime     float64 `json:"openTime,string"`
+	State        string  `json:"state"`
+	InitialUnits float64 `json:"initialUnits,string"`
+	CurrentUnits float64 `json:"currentUnits,string"`
+	RealizedPL   float64 `json:"realizedPL,string"`
+	UnrealizedPL float64 `json:"unrealizedPL,string"`
+}
+
+// OrderCreated is a definition for order created
+type OrderCreated struct {
+	LastTransactionID string `json:"lastTransactionID"`
+}
+
+// TradeClosed is a definition for trade closed
+type TradeClosed struct {
+	LastTransactionID string `json:"lastTransactionID"`
+}

@@ -3,6 +3,7 @@ package oanda
 import (
 	"testing"
 	"time"
+	"yukimaterrace/andaman/config"
 )
 
 var accountID string
@@ -55,7 +56,7 @@ func TestGetCandlesFrom(t *testing.T) {
 
 func TestGetPricing(t *testing.T) {
 	since := float64(time.Date(2020, 4, 1, 8, 0, 0, 0, time.UTC).Unix())
-	instruments := []string{"GBP_USD", "EUR_USD"}
+	instruments := []string{GbpUsd, EurAud}
 
 	prices, err := GetPricing(accountID, instruments, since)
 	if err != nil {
@@ -65,11 +66,45 @@ func TestGetPricing(t *testing.T) {
 }
 
 func TestGetLatestCandles(t *testing.T) {
-	specifications := []string{"GBP_USD:S5:M", "EUR_USD:S5:M"}
+	specs := MakeCandleSpecs(S5, GbpUsd, EurUsd)
 
-	latestCandles, err := GetLatestCandles(accountID, specifications)
+	latestCandles, err := GetLatestCandles(accountID, specs)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 	t.Logf("%+v", latestCandles)
+}
+
+func TestGetOpenTrades(t *testing.T) {
+	trades, err := GetOpenTrades(accountID)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", trades)
+}
+
+func TestOrder(t *testing.T) {
+	if !config.OandaPractice {
+		t.Skip("not practice mode")
+	}
+
+	units := 1000.0
+
+	orderCreated, err := PostOrder(accountID, Market, GbpUsd, units)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", orderCreated)
+
+	openTrades, _ := GetOpenTrades(accountID)
+	t.Logf("%+v", openTrades)
+
+	time.Sleep(time.Second)
+
+	tradeID := openTrades.Trades[0].ID
+	tradeClosed, err := PutCloseTrade(accountID, tradeID)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", tradeClosed)
 }
