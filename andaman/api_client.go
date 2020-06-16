@@ -1,4 +1,4 @@
-package api
+package andaman
 
 import (
 	"bytes"
@@ -9,33 +9,30 @@ import (
 	"net/url"
 )
 
-// HTTPStatusError is an error for http status
-type HTTPStatusError struct {
+type httpStatusError struct {
 	code    int
 	message string
 }
 
-func (err HTTPStatusError) Error() string {
+func (err httpStatusError) Error() string {
 	return fmt.Sprintf("code:%v message:%s", err.code, err.message)
 }
 
-// Client is an API client
-type Client struct {
+type apiClient struct {
 	host         string
 	commonHeader http.Header
 	client       *http.Client
 }
 
-// NewClient is a constructor of API client
-func NewClient(host string, commonHeader http.Header) *Client {
-	return &Client{
+func newApiClient(host string, commonHeader http.Header) *apiClient {
+	return &apiClient{
 		host:         host,
 		commonHeader: commonHeader,
 		client:       &http.Client{},
 	}
 }
 
-func (client *Client) request(method string, path string, query url.Values, requestBody interface{}, response interface{}) error {
+func (client *apiClient) request(method string, path string, query url.Values, requestBody interface{}, response interface{}) error {
 	rawQuery := ""
 	if query != nil {
 		rawQuery = query.Encode()
@@ -85,7 +82,7 @@ func (client *Client) request(method string, path string, query url.Values, requ
 
 	code := resp.StatusCode
 	if code < 200 || code >= 300 {
-		return &HTTPStatusError{
+		return &httpStatusError{
 			code:    code,
 			message: string(content),
 		}
@@ -98,17 +95,14 @@ func (client *Client) request(method string, path string, query url.Values, requ
 	return nil
 }
 
-// Get is a method for get request
-func (client *Client) Get(path string, query url.Values, response interface{}) error {
+func (client *apiClient) get(path string, query url.Values, response interface{}) error {
 	return client.request("GET", path, query, nil, response)
 }
 
-// Post is a method for post request
-func (client *Client) Post(path string, requestBody interface{}, response interface{}) error {
+func (client *apiClient) post(path string, requestBody interface{}, response interface{}) error {
 	return client.request("POST", path, nil, requestBody, response)
 }
 
-// Put is a method for put request
-func (client *Client) Put(path string, requestBody interface{}, response interface{}) error {
+func (client *apiClient) put(path string, requestBody interface{}, response interface{}) error {
 	return client.request("PUT", path, nil, requestBody, response)
 }
