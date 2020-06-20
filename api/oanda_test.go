@@ -1,4 +1,4 @@
-package andaman
+package api
 
 import (
 	"testing"
@@ -6,13 +6,13 @@ import (
 	"yukimaterrace/andaman/config"
 )
 
-var oandaInstance = newOanda()
+var oanda = NewOanda()
 
 var accountID string
 var lastTransactionID string
 
 func TestGetAccounts(t *testing.T) {
-	accounts, err := oandaInstance.getAccounts()
+	accounts, err := oanda.GetAccounts()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -22,7 +22,7 @@ func TestGetAccounts(t *testing.T) {
 }
 
 func TestGetAccount(t *testing.T) {
-	account, err := oandaInstance.getAccount(accountID)
+	account, err := oanda.GetAccount(accountID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -32,7 +32,7 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestGetAccountChanges(t *testing.T) {
-	accountChanges, err := oandaInstance.getAccountChanges(accountID, lastTransactionID)
+	accountChanges, err := oanda.GetAccountChanges(accountID, lastTransactionID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -40,7 +40,7 @@ func TestGetAccountChanges(t *testing.T) {
 }
 
 func TestGetCandlesLatest(t *testing.T) {
-	candles, err := oandaInstance.getCandles("GBP_USD", "S5", 5, 0, true)
+	candles, err := oanda.GetCandles("GBP_USD", "S5", 5, 0, true)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -49,7 +49,7 @@ func TestGetCandlesLatest(t *testing.T) {
 
 func TestGetCandlesFrom(t *testing.T) {
 	from := float64(time.Date(2020, 4, 1, 8, 0, 0, 0, time.UTC).Unix())
-	candles, err := oandaInstance.getCandles("GBP_USD", "S5", 5, from, true)
+	candles, err := oanda.GetCandles("GBP_USD", "S5", 5, from, true)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -60,7 +60,7 @@ func TestGetPricing(t *testing.T) {
 	since := float64(time.Date(2020, 4, 1, 8, 0, 0, 0, time.UTC).Unix())
 	instruments := []string{"GBP_USD", "EUR_AUD"}
 
-	prices, err := oandaInstance.getPricing(accountID, instruments, since)
+	prices, err := oanda.GetPricing(accountID, instruments, since)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -68,9 +68,9 @@ func TestGetPricing(t *testing.T) {
 }
 
 func TestGetLatestCandles(t *testing.T) {
-	specs := oandaInstance.makeCandleSpecs("S5", "GBP_USD", "EUR_USD")
+	specs := oanda.makeCandleSpecs("S5", "GBP_USD", "EUR_USD")
 
-	latestCandles, err := oandaInstance.getLatestCandles(accountID, specs)
+	latestCandles, err := oanda.GetLatestCandles(accountID, specs)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -78,7 +78,7 @@ func TestGetLatestCandles(t *testing.T) {
 }
 
 func TestGetOpenTrades(t *testing.T) {
-	trades, err := oandaInstance.getOpenTrades(accountID)
+	trades, err := oanda.GetOpenTrades(accountID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -92,19 +92,19 @@ func TestOrder(t *testing.T) {
 
 	units := 1000.0
 
-	orderCreated, err := oandaInstance.postOrder(accountID, "MARKET", "GBP_USD", units)
+	orderCreated, err := oanda.PostOrder(accountID, "MARKET", "GBP_USD", units)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 	t.Logf("%+v", orderCreated)
 
-	openTrades, _ := oandaInstance.getOpenTrades(accountID)
+	openTrades, _ := oanda.GetOpenTrades(accountID)
 	t.Logf("%+v", openTrades)
 
 	time.Sleep(time.Second)
 
 	tradeID := openTrades.Trades[0].ID
-	tradeClosed, err := oandaInstance.putCloseTrade(accountID, tradeID)
+	tradeClosed, err := oanda.PutCloseTrade(accountID, tradeID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
