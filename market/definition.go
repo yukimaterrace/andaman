@@ -65,6 +65,44 @@ type (
 )
 
 type (
+	request interface{}
+
+	pricesRequest struct {
+		instrument  Instrument
+		granularity Granularity
+		count       int
+		from        int64
+		replyTo     chan<- *PriceSequence
+	}
+
+	latestPriceRequest struct {
+		instrument Instrument
+		replyTo    chan<- *PriceDetail
+	}
+
+	ordersRequest struct {
+		instrument Instrument
+		replyTo    chan<- *Orders
+	}
+
+	assetRequest struct {
+		replyTo chan<- *AssetStatus
+	}
+
+	makeOrderRequest struct {
+		instrument Instrument
+		orderType  OrderType
+		unit       float64
+		replyTo    chan<- *MakeOrderStatus
+	}
+
+	closerOrderRequest struct {
+		orderID string
+		replyTo chan<- *CloseOrderStatus
+	}
+)
+
+type (
 	// Instrument is an interface for instrument
 	Instrument interface{}
 
