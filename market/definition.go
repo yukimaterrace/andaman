@@ -137,7 +137,9 @@ type (
 
 type (
 	// Instrument is an interface for instrument
-	Instrument interface{}
+	Instrument interface {
+		String()
+	}
 
 	// GbpUsd is a currency pair for GBP and USD
 	GbpUsd Instrument
@@ -151,7 +153,7 @@ type (
 	GbpAud Instrument
 	// EurAud is a currency pair for EUR and AUD
 	EurAud Instrument
-	// UsdJpy is a currency pair for UDS and JPY
+	// UsdJpy is a currency pair for USD and JPY
 	UsdJpy Instrument
 	// GbpJpy is a currency pair for GBP and JPY
 	GbpJpy Instrument
@@ -159,9 +161,47 @@ type (
 	EurJpy Instrument
 )
 
+func (gbpUsd GbpUsd) String() string {
+	return "GBP_USD"
+}
+
+func (eurUsd EurUsd) String() string {
+	return "EUR_USD"
+}
+
+func (audUsd AudUsd) String() string {
+	return "AUD_USD"
+}
+
+func (audJpy AudJpy) String() string {
+	return "AUD_JPY"
+}
+
+func (gbpAud GbpAud) String() string {
+	return "GBP_AUD"
+}
+
+func (eurAud EurAud) String() string {
+	return "EUR_AUD"
+}
+
+func (usdJpy UsdJpy) String() string {
+	return "USD_JPY"
+}
+
+func (gbpJpy GbpJpy) String() string {
+	return "GBP_JPY"
+}
+
+func (eurJpy EurJpy) String() string {
+	return "EUR_JPY"
+}
+
 type (
 	// Granularity is an interface for time granularity
-	Granularity interface{}
+	Granularity interface {
+		String()
+	}
 
 	// S5 is 5 sec
 	S5 Granularity
@@ -179,22 +219,72 @@ type (
 	H4 Granularity
 )
 
+func (s5 S5) String() string {
+	return "S5"
+}
+
+func (s15 S15) String() string {
+	return "S15"
+}
+
+func (m1 M1) String() string {
+	return "M1"
+}
+
+func (m5 M5) String() string {
+	return "M5"
+}
+
+func (h1 H1) String() string {
+	return "H1"
+}
+
+func (h4 H4) String() string {
+	return "H4"
+}
+
 type (
 	// PriceType is an interface for price type
-	PriceType interface{}
+	PriceType interface {
+		String() string
+	}
 
 	// Bid is a price type for bid
 	Bid PriceType
 	// Ask is a price type for ask
 	Ask PriceType
+	// Mid is a price type for mid
+	Mid PriceType
 )
+
+func (bid Bid) String() string {
+	return "B"
+}
+
+func (ask Ask) String() string {
+	return "A"
+}
+
+func (mid Mid) String() string {
+	return "M"
+}
 
 type (
 	// OrderType is an interface for order type
-	OrderType interface{}
+	OrderType interface {
+		String() string
+	}
 
 	// Buy is an order type for long
 	Buy OrderType
 	// Sell is an order type for short
 	Sell OrderType
 )
+
+func (buy Buy) String() string {
+	return "BUY"
+}
+
+func (sell Sell) String() string {
+	return "SELL"
+}
