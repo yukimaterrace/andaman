@@ -6,29 +6,29 @@ import "yukimaterrace/andaman/config"
 type Market interface {
 	Start()
 
-	Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequence
+	Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequenceStatus
 
-	LatestPrice(instrument Instrument) <-chan *PriceDetail
+	LatestPrice(instrument Instrument) <-chan *PriceDetailStatus
 
-	Orders(instrument Instrument) <-chan *Orders
+	Orders(instrument Instrument) <-chan *OrdersStatus
 
 	Asset() <-chan *AssetStatus
 
-	MakeOrder(instrument Instrument, orderType OrderType, unit float64) <-chan *MakeOrderStatus
+	MakeOrder(instrument Instrument, orderType OrderType, unit float64) <-chan *MadeOrderStatus
 
-	CloseOrder(orderID string) <-chan *CloseOrderStatus
+	CloseOrder(orderID string) <-chan *ClosedOrderStatus
 }
 
 type adaptor interface {
-	prices(instrument Instrument, granularity Granularity, count int, from int64) *PriceSequence
+	prices(instrument Instrument, granularity Granularity, count int, from int64) *PriceSequenceStatus
 
-	latestPrice(instrument Instrument) *PriceDetail
+	latestPrice(instrument Instrument) *PriceDetailStatus
 
-	orders(instrument Instrument) *Orders
+	orders(instrument Instrument) *OrdersStatus
 
 	asset() *AssetStatus
 
-	makeOrder(instrument Instrument, orderType OrderType, unit float64) *MakeOrderStatus
+	makeOrder(instrument Instrument, orderType OrderType, unit float64) *MadeOrderStatus
 
 	closeOrder(orderID string) *CloseOrderStatus
 }

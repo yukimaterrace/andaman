@@ -36,6 +36,15 @@ type (
 		TotalProfit float64
 	}
 
+	// MadeOrder is a definition for made order
+	MadeOrder struct {
+		OrderID    string
+		Instrument Instrument
+		OrderType  OrderType
+		OpenPrice  float64
+		Profit     float64
+	}
+
 	// ClosedOrder is a definition for closed order
 	ClosedOrder struct {
 		OrderID    string
@@ -45,22 +54,46 @@ type (
 		Profit     float64
 	}
 
-	// AssetStatus is a definition for asset status
-	AssetStatus struct {
+	// AssetSummary is a definition for asset summary
+	AssetSummary struct {
 		unrealizedProfit float64
 		balance          float64
 	}
 
-	// MakeOrderStatus is a definition for action status
-	MakeOrderStatus struct {
-		Success bool
-		Message string
+	// PriceSequenceStatus is a definition for price sequence status
+	PriceSequenceStatus struct {
+		PriceSequence *PriceSequence
+		Err           error
 	}
 
-	// CloseOrderStatus is a definition for close order status
-	CloseOrderStatus struct {
-		Success     bool
+	// PriceDetailStatus is a definition for price detail status
+	PriceDetailStatus struct {
+		PriceDetail *PriceDetail
+		Err         error
+	}
+
+	// OrdersStatus is a definition for orders status
+	OrdersStatus struct {
+		Orders *Orders
+		Err    error
+	}
+
+	// AssetStatus is a definition for asset status
+	AssetStatus struct {
+		AssetSummary *AssetSummary
+		Err          error
+	}
+
+	// MadeOrderStatus is a definition for made order status
+	MadeOrderStatus struct {
+		MadeOrder *MadeOrder
+		Err       error
+	}
+
+	// ClosedOrderStatus is a definition for close order status
+	ClosedOrderStatus struct {
 		ClosedOrder ClosedOrder
+		Err         error
 	}
 )
 
