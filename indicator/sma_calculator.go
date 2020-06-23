@@ -29,7 +29,7 @@ func newSmaCalculator(valueType Type) *smaCalculator {
 	}
 }
 
-func (calculator *smaCalculator) calculate(prices []market.Price) []*Element {
+func (calculator *smaCalculator) calculate(prices []*market.Price) []*Element {
 	return nil
 }
 
