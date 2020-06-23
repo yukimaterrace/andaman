@@ -5,11 +5,19 @@ import "yukimaterrace/andaman/config"
 // Market is an interface for market
 type Market interface {
 	Start()
+	Pricer
+	Orderer
+}
 
-	Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequenceStatus
+// Pricer is an interface for pricer
+type Pricer interface {
+	Prices(instrument Instrument, granularity Granularity, count int) <-chan *PriceSequenceStatus
 
-	LatestPrice(instrument Instrument) <-chan *TradePriceStatus
+	TradePrice(instrument Instrument) <-chan *TradePriceStatus
+}
 
+// Orderer is an interface for orderer
+type Orderer interface {
 	Orders(instrument Instrument) <-chan *OrdersStatus
 
 	Asset() <-chan *AssetStatus
@@ -20,9 +28,9 @@ type Market interface {
 }
 
 type adaptor interface {
-	prices(instrument Instrument, granularity Granularity, count int, from int64) *PriceSequenceStatus
+	prices(instrument Instrument, granularity Granularity, count int) *PriceSequenceStatus
 
-	latestPrice(instrument Instrument) *TradePriceStatus
+	tradePrice(instrument Instrument) *TradePriceStatus
 
 	orders(instrument Instrument) *OrdersStatus
 
@@ -51,24 +59,23 @@ func (routine *routine) Start() {
 }
 
 // Prices is a method for prices request
-func (routine *routine) Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequenceStatus {
+func (routine *routine) Prices(instrument Instrument, granularity Granularity, count int) <-chan *PriceSequenceStatus {
 	replyTo := make(chan *PriceSequenceStatus, 1)
 
 	routine.request <- &pricesRequest{
 		instrument:  instrument,
 		granularity: granularity,
 		count:       count,
-		from:        from,
 		replyTo:     replyTo,
 	}
 	return replyTo
 }
 
-// LatestPrice is a method for latest price request
-func (routine *routine) LatestPrice(instrument Instrument) <-chan *TradePriceStatus {
+// TradePrice is a method for latest price request
+func (routine *routine) TredePrice(instrument Instrument) <-chan *TradePriceStatus {
 	replyTo := make(chan *TradePriceStatus, 1)
 
-	routine.request <- &latestPriceRequest{
+	routine.request <- &tradePriceRequest{
 		instrument: instrument,
 		replyTo:    replyTo,
 	}
@@ -123,10 +130,10 @@ func (routine *routine) run() {
 
 		switch req := req.(type) {
 		case *pricesRequest:
-			req.replyTo <- routine.prices(req.instrument, req.granularity, req.count, req.from)
+			req.replyTo <- routine.prices(req.instrument, req.granularity, req.count)
 
-		case *latestPriceRequest:
-			req.replyTo <- routine.latestPrice(req.instrument)
+		case *tradePriceRequest:
+			req.replyTo <- routine.tradePrice(req.instrument)
 
 		case *ordersRequest:
 			req.replyTo <- routine.orders(req.instrument)

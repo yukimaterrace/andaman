@@ -4,39 +4,36 @@ import "yukimaterrace/andaman/market"
 
 // Indicator is an interface for indicator
 type Indicator interface {
+	Type() Type
 	Indicate(priceSequence *market.PriceSequence) *Value
 }
 
 type calculator interface {
-	Type() Type
-	calculate(priceSequence *market.PriceSequence) *Value
+	calculate(prices []*market.Price) []*Element
+	valueType() Type
 }
 
 type routine struct {
-	cache   *Value
-	archive *market.PriceSequence
 	calculator
 }
 
-func (routine *routine) compare(new *market.PriceSequence) bool {
-	old := routine.archive
+func newRoutine(calculator calculator) *routine {
+	return &routine{
+		calculator: calculator,
+	}
+}
 
-	condInstrument := old.Instrument == new.Instrument
-	condGranularity := old.Granularity == new.Granularity
-	condType := old.Type == new.Type
-	condPrices := len(old.Prices) > 0 && len(old.Prices) == len(new.Prices) && old.Prices[0].Time == new.Prices[0].Time
-
-	return condInstrument && condGranularity && condType && condPrices
+func (routine *routine) Type() Type {
+	return routine.valueType()
 }
 
 func (routine *routine) Indicate(priceSequence *market.PriceSequence) *Value {
-	if routine.compare(priceSequence) {
-		return routine.cache
+	elements := routine.calculate(priceSequence.Prices)
+
+	return &Value{
+		Instrument:  priceSequence.Instrument,
+		Granularity: priceSequence.Granularity,
+		Type:        routine.valueType(),
+		Elements:    elements,
 	}
-
-	routine.archive = priceSequence
-	value := routine.calculate(priceSequence)
-	routine.cache = value
-
-	return value
 }

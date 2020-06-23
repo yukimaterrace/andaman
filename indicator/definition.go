@@ -40,8 +40,14 @@ const (
 
 func (t Type) String() string {
 	switch t {
-	case SMA:
-		return "SMA"
+	case SMA25:
+		return "SMA25"
+	case SMA75:
+		return "SMA75"
+	case SMA150:
+		return "SMA150"
+	case SMA600:
+		return "SMA600"
 	default:
 		return "Unknown"
 	}

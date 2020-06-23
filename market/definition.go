@@ -13,7 +13,7 @@ type (
 		Instrument  Instrument
 		Granularity Granularity
 		Type        PriceType
-		Prices      []Price
+		Prices      []*Price
 	}
 
 	// TradePrice is a definition for trade price
@@ -106,11 +106,10 @@ type (
 		instrument  Instrument
 		granularity Granularity
 		count       int
-		from        int64
 		replyTo     chan<- *PriceSequenceStatus
 	}
 
-	latestPriceRequest struct {
+	tradePriceRequest struct {
 		instrument Instrument
 		replyTo    chan<- *TradePriceStatus
 	}
