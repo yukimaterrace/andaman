@@ -28,8 +28,14 @@ type (
 type Type int
 
 const (
-	// SMA is simple moving average type
-	SMA Type = iota
+	// SMA25 is 25 points simple moving average type
+	SMA25 Type = iota
+	// SMA75 is 75 points simple moving average type
+	SMA75
+	// SMA150 is 150 points simple moving average type
+	SMA150
+	// SMA600 is 600 points simple moving average type
+	SMA600
 )
 
 func (t Type) String() string {
