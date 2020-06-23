@@ -8,7 +8,7 @@ type Market interface {
 
 	Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequenceStatus
 
-	LatestPrice(instrument Instrument) <-chan *PriceDetailStatus
+	LatestPrice(instrument Instrument) <-chan *TradePriceStatus
 
 	Orders(instrument Instrument) <-chan *OrdersStatus
 
@@ -22,7 +22,7 @@ type Market interface {
 type adaptor interface {
 	prices(instrument Instrument, granularity Granularity, count int, from int64) *PriceSequenceStatus
 
-	latestPrice(instrument Instrument) *PriceDetailStatus
+	latestPrice(instrument Instrument) *TradePriceStatus
 
 	orders(instrument Instrument) *OrdersStatus
 
@@ -65,8 +65,8 @@ func (routine *routine) Prices(instrument Instrument, granularity Granularity, c
 }
 
 // LatestPrice is a method for latest price request
-func (routine *routine) LatestPrice(instrument Instrument) <-chan *PriceDetailStatus {
-	replyTo := make(chan *PriceDetailStatus, 1)
+func (routine *routine) LatestPrice(instrument Instrument) <-chan *TradePriceStatus {
+	replyTo := make(chan *TradePriceStatus, 1)
 
 	routine.request <- &latestPriceRequest{
 		instrument: instrument,

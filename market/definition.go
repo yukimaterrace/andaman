@@ -3,8 +3,9 @@ package market
 type (
 	// Price is a definition for price
 	Price struct {
-		Value float64
-		Time  int64
+		Value    float64
+		Time     int64
+		Complete bool
 	}
 
 	// PriceSequence is a definition for price sequence
@@ -15,8 +16,8 @@ type (
 		Prices      []Price
 	}
 
-	// PriceDetail is a definition for price detail
-	PriceDetail struct {
+	// TradePrice is a definition for trade price
+	TradePrice struct {
 		Bid  float64
 		Ask  float64
 		Time int64
@@ -67,10 +68,10 @@ type (
 		Err           error
 	}
 
-	// PriceDetailStatus is a definition for price detail status
-	PriceDetailStatus struct {
-		PriceDetail *PriceDetail
-		Err         error
+	// TradePriceStatus is a definition for trade price status
+	TradePriceStatus struct {
+		TradePrice *TradePrice
+		Err        error
 	}
 
 	// OrdersStatus is a definition for orders status
@@ -111,7 +112,7 @@ type (
 
 	latestPriceRequest struct {
 		instrument Instrument
-		replyTo    chan<- *PriceDetailStatus
+		replyTo    chan<- *TradePriceStatus
 	}
 
 	ordersRequest struct {
