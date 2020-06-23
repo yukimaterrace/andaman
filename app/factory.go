@@ -2,7 +2,7 @@ package app
 
 import (
 	"yukimaterrace/andaman/market"
-	"yukimaterrace/andaman/recorder"
+	"yukimaterrace/andaman/record"
 	"yukimaterrace/andaman/trade"
 )
 
@@ -10,14 +10,14 @@ import (
 func CreateApp() *App {
 	market := market.CreateOandaMarket()
 
-	recorders := make([]recorder.Recorder, 0)
+	recorders := make([]record.Recorder, 0)
 	traders := make([]trade.Trader, 0)
 	for _, instrument := range tradeInstruments {
-		r := recorder.CreateSimpleFileRecorder(instrument)
-		t := trade.CreateZoneTrader(instrument, market, r)
+		recorder := record.CreateSimpleFileRecorder(instrument)
+		trader := trade.CreateZoneTrader(instrument, market, r)
 
-		recorders = append(recorders, r)
-		traders = append(traders, t)
+		recorders = append(recorders, recorder)
+		traders = append(traders, trader)
 	}
 
 	return &App{

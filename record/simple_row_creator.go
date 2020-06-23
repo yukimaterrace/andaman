@@ -1,6 +1,6 @@
-package recorder
+package record
 
-type simpleRowCreator struct {}
+type simpleRowCreator struct{}
 
 func (creator *simpleRowCreator) header() []string {
 	return nil

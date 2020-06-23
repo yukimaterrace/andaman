@@ -1,4 +1,4 @@
-package recorder
+package record
 
 import (
 	"fmt"

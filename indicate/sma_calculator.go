@@ -1,4 +1,4 @@
-package indicator
+package indicate
 
 import "yukimaterrace/andaman/market"
 

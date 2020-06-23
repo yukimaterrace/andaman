@@ -1,18 +1,18 @@
 package trade
 
 import (
-	"yukimaterrace/andaman/indicator"
+	"yukimaterrace/andaman/indicate"
 	"yukimaterrace/andaman/market"
 )
 
 type zoneTradeStrategy struct{}
 
-func (strategy *zoneTradeStrategy) requireIndicators() []indicator.Indicator {
-	return []indicator.Indicator{
-		indicator.CreateSMA25(),
-		indicator.CreateSMA75(),
-		indicator.CreateSMA150(),
-		indicator.CreateSMA600(),
+func (strategy *zoneTradeStrategy) requireIndicators() []indicate.Indicator {
+	return []indicate.Indicator{
+		indicate.CreateSMA25(),
+		indicate.CreateSMA75(),
+		indicate.CreateSMA150(),
+		indicate.CreateSMA600(),
 	}
 }
 
@@ -27,7 +27,7 @@ func (strategy *zoneTradeStrategy) requirePriceCount() int {
 func (strategy *zoneTradeStrategy) processOrder(
 	orderer market.Orderer,
 	tradePrice *market.TradePrice,
-	indicatorValues []*indicator.Value,
+	indicatorValues []*indicate.Value,
 ) (*market.MadeOrder, []*market.ClosedOrder) {
 
 	return nil, nil

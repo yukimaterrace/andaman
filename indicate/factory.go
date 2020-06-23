@@ -1,4 +1,4 @@
-package indicator
+package indicate
 
 // CreateSMA25 is a factory method for SMA25 indicator
 func CreateSMA25() Indicator {

@@ -2,7 +2,7 @@ package app
 
 import (
 	"yukimaterrace/andaman/market"
-	"yukimaterrace/andaman/recorder"
+	"yukimaterrace/andaman/record"
 	"yukimaterrace/andaman/trade"
 )
 
@@ -10,7 +10,7 @@ import (
 type App struct {
 	market    market.Market
 	traders   []trade.Trader
-	recorders []recorder.Recorder
+	recorders []record.Recorder
 }
 
 // Start is a method to start Andaman

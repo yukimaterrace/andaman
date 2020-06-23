@@ -1,7 +1,7 @@
-package recorder
+package record
 
 import (
-	"yukimaterrace/andaman/indicator"
+	"yukimaterrace/andaman/indicate"
 	"yukimaterrace/andaman/market"
 )
 
@@ -10,7 +10,7 @@ type (
 	Material struct {
 		Instrument  market.Instrument
 		Prices      *market.PriceSequence
-		Indicators  []*indicator.Value
+		Indicators  []*indicate.Value
 		MadeOrder   *market.MadeOrder
 		ClosedOrder []*market.ClosedOrder
 	}

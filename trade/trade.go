@@ -2,9 +2,9 @@ package trade
 
 import (
 	"log"
-	"yukimaterrace/andaman/indicator"
+	"yukimaterrace/andaman/indicate"
 	"yukimaterrace/andaman/market"
-	"yukimaterrace/andaman/recorder"
+	"yukimaterrace/andaman/record"
 )
 
 // Trader is an interface for trader
@@ -16,14 +16,14 @@ type routine struct {
 	instrument market.Instrument
 	market.Pricer
 	market.Orderer
-	recorder.Recorder
+	record.Recorder
 	tradeStrategy
-	indicators  []indicator.Indicator
+	indicators  []indicate.Indicator
 	granularity market.Granularity
 	priceCount  int
 }
 
-func newRoutine(instrument market.Instrument, market market.Market, recorder recorder.Recorder, tradeStrategy tradeStrategy) *routine {
+func newRoutine(instrument market.Instrument, market market.Market, recorder record.Recorder, tradeStrategy tradeStrategy) *routine {
 	return &routine{
 		instrument:    instrument,
 		Pricer:        market,
@@ -34,10 +34,10 @@ func newRoutine(instrument market.Instrument, market market.Market, recorder rec
 }
 
 type tradeStrategy interface {
-	requireIndicators() []indicator.Indicator
+	requireIndicators() []indicate.Indicator
 	requireGranularity() market.Granularity
 	requirePriceCount() int
-	processOrder(orderer market.Orderer, tradePrice *market.TradePrice, indicatorValues []*indicator.Value) (*market.MadeOrder, []*market.ClosedOrder)
+	processOrder(orderer market.Orderer, tradePrice *market.TradePrice, indicatorValues []*indicate.Value) (*market.MadeOrder, []*market.ClosedOrder)
 }
 
 func (routine *routine) Start() {
@@ -61,9 +61,9 @@ func (routine *routine) run() {
 
 		tradePriceChan := routine.TradePrice(routine.instrument)
 
-		values := make([]*indicator.Value, 0)
+		values := make([]*indicate.Value, 0)
 		for _, indicator := range routine.indicators {
-			values = append(values, indicator.Indicate(prices))
+			values = append(values, indicate.Indicate(prices))
 		}
 
 		tradePriceStat := <-tradePriceChan
@@ -74,7 +74,7 @@ func (routine *routine) run() {
 		tradePrice := tradePriceStat.TradePrice
 
 		madeOrder, closedOrders := routine.processOrder(routine.Orderer, tradePrice, values)
-		material := &recorder.Material{
+		material := &record.Material{
 			Instrument:  routine.instrument,
 			Prices:      prices,
 			Indicators:  values,
