@@ -11,6 +11,7 @@ type (
 	PriceSequence struct {
 		Instrument  Instrument
 		Granularity Granularity
+		Type        PriceType
 		Prices      []Price
 	}
 

@@ -12,6 +12,6 @@ type (
 		Prices      *market.PriceSequence
 		Indicators  []*indicator.Value
 		MadeOrder   *market.MadeOrder
-		ClosedOrder *market.ClosedOrder
+		ClosedOrder []*market.ClosedOrder
 	}
 )
