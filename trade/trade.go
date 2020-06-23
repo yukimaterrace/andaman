@@ -54,7 +54,7 @@ func (routine *routine) run() {
 
 		pricesStat := <-pricesChan
 		if pricesStat.Err != nil {
-			log.Fatal(pricesStat.Err)
+			log.Println(pricesStat.Err)
 			continue
 		}
 		prices := pricesStat.PriceSequence
@@ -68,7 +68,7 @@ func (routine *routine) run() {
 
 		tradePriceStat := <-tradePriceChan
 		if tradePriceStat.Err != nil {
-			log.Fatal(tradePriceStat.Err)
+			log.Println(tradePriceStat.Err)
 			continue
 		}
 		tradePrice := tradePriceStat.TradePrice
