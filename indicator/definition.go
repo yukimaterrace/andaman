@@ -24,16 +24,19 @@ type (
 	}
 )
 
-type (
-	// Type is indicator type
-	Type interface {
-		String() string
-	}
+// Type is indicator type
+type Type int
 
+const (
 	// SMA is simple moving average type
-	SMA Type
+	SMA Type = iota
 )
 
-func (sma SMA) String() string {
-	return "SMA"
+func (t Type) String() string {
+	switch t {
+	case SMA:
+		return "SMA"
+	default:
+		return "Unknown"
+	}
 }

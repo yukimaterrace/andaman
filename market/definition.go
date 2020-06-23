@@ -106,17 +106,17 @@ type (
 		granularity Granularity
 		count       int
 		from        int64
-		replyTo     chan<- *PriceSequence
+		replyTo     chan<- *PriceSequenceStatus
 	}
 
 	latestPriceRequest struct {
 		instrument Instrument
-		replyTo    chan<- *PriceDetail
+		replyTo    chan<- *PriceDetailStatus
 	}
 
 	ordersRequest struct {
 		instrument Instrument
-		replyTo    chan<- *Orders
+		replyTo    chan<- *OrdersStatus
 	}
 
 	assetRequest struct {
@@ -127,165 +127,145 @@ type (
 		instrument Instrument
 		orderType  OrderType
 		unit       float64
-		replyTo    chan<- *MakeOrderStatus
+		replyTo    chan<- *MadeOrderStatus
 	}
 
 	closerOrderRequest struct {
 		orderID string
-		replyTo chan<- *CloseOrderStatus
+		replyTo chan<- *ClosedOrderStatus
 	}
 )
 
-type (
-	// Instrument is an interface for instrument
-	Instrument interface {
-		String()
-	}
+// Instrument is market instrument
+type Instrument int
 
+const (
 	// GbpUsd is a currency pair for GBP and USD
-	GbpUsd Instrument
+	GbpUsd Instrument = iota
 	// EurUsd is a currency pair for EUR and USD
-	EurUsd Instrument
+	EurUsd
 	// AudUsd is a currency pair for AUD and USD
-	AudUsd Instrument
+	AudUsd
 	// AudJpy is a currency pair for AUD and JPY
-	AudJpy Instrument
+	AudJpy
 	// GbpAud is a currency pair for GBP and AUD
-	GbpAud Instrument
+	GbpAud
 	// EurAud is a currency pair for EUR and AUD
-	EurAud Instrument
+	EurAud
 	// UsdJpy is a currency pair for USD and JPY
-	UsdJpy Instrument
+	UsdJpy
 	// GbpJpy is a currency pair for GBP and JPY
-	GbpJpy Instrument
+	GbpJpy
 	// EurJpy is a currency pair for EUR and JPY
-	EurJpy Instrument
+	EurJpy
 )
 
-func (gbpUsd GbpUsd) String() string {
-	return "GBP_USD"
-}
-
-func (eurUsd EurUsd) String() string {
-	return "EUR_USD"
-}
-
-func (audUsd AudUsd) String() string {
-	return "AUD_USD"
-}
-
-func (audJpy AudJpy) String() string {
-	return "AUD_JPY"
-}
-
-func (gbpAud GbpAud) String() string {
-	return "GBP_AUD"
-}
-
-func (eurAud EurAud) String() string {
-	return "EUR_AUD"
-}
-
-func (usdJpy UsdJpy) String() string {
-	return "USD_JPY"
-}
-
-func (gbpJpy GbpJpy) String() string {
-	return "GBP_JPY"
-}
-
-func (eurJpy EurJpy) String() string {
-	return "EUR_JPY"
-}
-
-type (
-	// Granularity is an interface for time granularity
-	Granularity interface {
-		String()
+func (instrument Instrument) String() string {
+	switch instrument {
+	case GbpUsd:
+		return "GBP_USD"
+	case EurUsd:
+		return "EUR_USD"
+	case AudUsd:
+		return "AUD_USD"
+	case AudJpy:
+		return "AUD_JPY"
+	case GbpAud:
+		return "GBP_AUD"
+	case EurAud:
+		return "EUR_AUD"
+	case UsdJpy:
+		return "USD_JPY"
+	case GbpJpy:
+		return "GBP_JPY"
+	case EurJpy:
+		return "EUR_JPY"
+	default:
+		return "Unknown"
 	}
+}
 
+// Granularity is market time granularity
+type Granularity int
+
+const (
 	// S5 is 5 sec
-	S5 Granularity
+	S5 Granularity = iota
 	// S15 is 15 sec
-	S15 Granularity
+	S15
 	// M1 is 1 min
-	M1 Granularity
+	M1
 	// M5 is 5 min
-	M5 Granularity
+	M5
 	// M15 is 15 min
-	M15 Granularity
+	M15
 	// H1 is 1 hour
-	H1 Granularity
+	H1
 	// H4 is 4 hour
-	H4 Granularity
+	H4
 )
 
-func (s5 S5) String() string {
-	return "S5"
-}
-
-func (s15 S15) String() string {
-	return "S15"
-}
-
-func (m1 M1) String() string {
-	return "M1"
-}
-
-func (m5 M5) String() string {
-	return "M5"
-}
-
-func (h1 H1) String() string {
-	return "H1"
-}
-
-func (h4 H4) String() string {
-	return "H4"
-}
-
-type (
-	// PriceType is an interface for price type
-	PriceType interface {
-		String() string
+func (granularity Granularity) String() string {
+	switch granularity {
+	case S5:
+		return "S5"
+	case S15:
+		return "S15"
+	case M1:
+		return "M1"
+	case M5:
+		return "M5"
+	case H1:
+		return "H1"
+	case H4:
+		return "H4"
+	default:
+		return "Unknown"
 	}
+}
 
+// PriceType is market price type
+type PriceType int
+
+const (
 	// Bid is a price type for bid
-	Bid PriceType
+	Bid PriceType = iota
 	// Ask is a price type for ask
-	Ask PriceType
+	Ask
 	// Mid is a price type for mid
-	Mid PriceType
+	Mid
 )
 
-func (bid Bid) String() string {
-	return "B"
-}
-
-func (ask Ask) String() string {
-	return "A"
-}
-
-func (mid Mid) String() string {
-	return "M"
-}
-
-type (
-	// OrderType is an interface for order type
-	OrderType interface {
-		String() string
+func (priceType PriceType) String() string {
+	switch priceType {
+	case Bid:
+		return "B"
+	case Ask:
+		return "A"
+	case Mid:
+		return "M"
+	default:
+		return "Unknown"
 	}
-
-	// Buy is an order type for long
-	Buy OrderType
-	// Sell is an order type for short
-	Sell OrderType
-)
-
-func (buy Buy) String() string {
-	return "BUY"
 }
 
-func (sell Sell) String() string {
-	return "SELL"
+// OrderType is market order type
+type OrderType int
+
+const (
+	// Buy is an order type for long
+	Buy OrderType = iota
+	// Sell is an order type for short
+	Sell
+)
+
+func (orderType OrderType) String() string {
+	switch orderType {
+	case Buy:
+		return "BUY"
+	case Sell:
+		return "SELL"
+	default:
+		return "Unkown"
+	}
 }

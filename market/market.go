@@ -30,7 +30,7 @@ type adaptor interface {
 
 	makeOrder(instrument Instrument, orderType OrderType, unit float64) *MadeOrderStatus
 
-	closeOrder(orderID string) *CloseOrderStatus
+	closeOrder(orderID string) *ClosedOrderStatus
 }
 
 type routine struct {
@@ -51,8 +51,8 @@ func (routine *routine) Start() {
 }
 
 // Prices is a method for prices request
-func (routine *routine) Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequence {
-	replyTo := make(chan *PriceSequence, 1)
+func (routine *routine) Prices(instrument Instrument, granularity Granularity, count int, from int64) <-chan *PriceSequenceStatus {
+	replyTo := make(chan *PriceSequenceStatus, 1)
 
 	routine.request <- &pricesRequest{
 		instrument:  instrument,
@@ -65,8 +65,8 @@ func (routine *routine) Prices(instrument Instrument, granularity Granularity, c
 }
 
 // LatestPrice is a method for latest price request
-func (routine *routine) LatestPrice(instrument Instrument) <-chan *PriceDetail {
-	replyTo := make(chan *PriceDetail, 1)
+func (routine *routine) LatestPrice(instrument Instrument) <-chan *PriceDetailStatus {
+	replyTo := make(chan *PriceDetailStatus, 1)
 
 	routine.request <- &latestPriceRequest{
 		instrument: instrument,
@@ -76,8 +76,8 @@ func (routine *routine) LatestPrice(instrument Instrument) <-chan *PriceDetail {
 }
 
 // Orders is a method for order request
-func (routine *routine) Orders(instrument Instrument) <-chan *Orders {
-	replyTo := make(chan *Orders, 1)
+func (routine *routine) Orders(instrument Instrument) <-chan *OrdersStatus {
+	replyTo := make(chan *OrdersStatus, 1)
 
 	routine.request <- &ordersRequest{
 		instrument: instrument,
@@ -95,8 +95,8 @@ func (routine *routine) Asset() <-chan *AssetStatus {
 	return replyTo
 }
 
-func (routine *routine) MakeOrder(instrument Instrument, orderType OrderType, unit float64) <-chan *MakeOrderStatus {
-	replyTo := make(chan *MakeOrderStatus, 1)
+func (routine *routine) MakeOrder(instrument Instrument, orderType OrderType, unit float64) <-chan *MadeOrderStatus {
+	replyTo := make(chan *MadeOrderStatus, 1)
 
 	routine.request <- &makeOrderRequest{
 		instrument: instrument,
@@ -107,8 +107,8 @@ func (routine *routine) MakeOrder(instrument Instrument, orderType OrderType, un
 	return replyTo
 }
 
-func (routine *routine) CloseOrder(orderID string) <-chan *CloseOrderStatus {
-	replyTo := make(chan *CloseOrderStatus, 1)
+func (routine *routine) CloseOrder(orderID string) <-chan *ClosedOrderStatus {
+	replyTo := make(chan *ClosedOrderStatus, 1)
 
 	routine.request <- &closerOrderRequest{
 		orderID: orderID,
