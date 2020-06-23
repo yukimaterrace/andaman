@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"yukimaterrace/andaman/app"
+)
 
 func main() {
-	fmt.Println("OK")
+	app.CreateApp().Start()
+
+	log.Println("Andaman Started")
 }
