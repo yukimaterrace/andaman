@@ -8,7 +8,12 @@ import (
 type zoneTradeStrategy struct{}
 
 func (strategy *zoneTradeStrategy) requireIndicators() []indicator.Indicator {
-	return nil
+	return []indicator.Indicator{
+		indicator.CreateSMA25(),
+		indicator.CreateSMA75(),
+		indicator.CreateSMA150(),
+		indicator.CreateSMA600(),
+	}
 }
 
 func (strategy *zoneTradeStrategy) requireGranularity() market.Granularity {
