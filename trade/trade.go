@@ -23,6 +23,16 @@ type routine struct {
 	priceCount  int
 }
 
+func newRoutine(instrument market.Instrument, market market.Market, recorder recorder.Recorder, tradeStrategy tradeStrategy) *routine {
+	return &routine{
+		instrument:    instrument,
+		Pricer:        market,
+		Orderer:       market,
+		Recorder:      recorder,
+		tradeStrategy: tradeStrategy,
+	}
+}
+
 type tradeStrategy interface {
 	requireInidicators() []indicator.Indicator
 	requireGranularity() market.Granularity
