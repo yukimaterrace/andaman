@@ -34,14 +34,14 @@ func newRoutine(instrument market.Instrument, market market.Market, recorder rec
 }
 
 type tradeStrategy interface {
-	requireInidicators() []indicator.Indicator
+	requireIndicators() []indicator.Indicator
 	requireGranularity() market.Granularity
 	requirePriceCount() int
 	processOrder(orderer market.Orderer, tradePrice *market.TradePrice, indicatorValues []*indicator.Value) (*market.MadeOrder, []*market.ClosedOrder)
 }
 
 func (routine *routine) Start() {
-	routine.indicators = routine.requireInidicators()
+	routine.indicators = routine.requireIndicators()
 	routine.granularity = routine.requireGranularity()
 	routine.priceCount = routine.requirePriceCount()
 
