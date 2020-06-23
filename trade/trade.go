@@ -17,13 +17,13 @@ type routine struct {
 	market.Pricer
 	market.Orderer
 	recorder.Recorder
-	orderStrategy
+	tradeStrategy
 	indicators  []indicator.Indicator
 	granularity market.Granularity
 	priceCount  int
 }
 
-type orderStrategy interface {
+type tradeStrategy interface {
 	requireInidicators() []indicator.Indicator
 	requireGranularity() market.Granularity
 	requirePriceCount() int
