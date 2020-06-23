@@ -2,19 +2,19 @@ package main
 
 import (
 	"log"
-	"yukimaterrace/andaman/app"
+	ap "yukimaterrace/andaman/app"
 	"yukimaterrace/andaman/config"
 )
 
 func main() {
-	var ap *app.App
+	var app *ap.App
 	if config.OandaPractice {
-		ap = app.CreatePracticeApp()
+		app = ap.CreatePracticeApp()
 	} else {
-		ap = app.CreateApp()
+		app = ap.CreateApp()
 	}
 
-	ap.Start()
+	app.Start()
 
 	log.Println("Andaman Started")
 }
