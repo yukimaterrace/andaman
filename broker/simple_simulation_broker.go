@@ -107,7 +107,7 @@ func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID Or
 	}
 
 	if order == nil {
-		panic("no open order exists")
+		panic(fmt.Sprintf("no open order exists: orderID %d", int(orderID)))
 	}
 
 	price := broker.price(order.tradePair)
