@@ -35,6 +35,6 @@ func priceGap2Pips(tradePair TradePair) float64 {
 	case AudJpy, UsdJpy, GbpJpy, EurJpy:
 		return 0.01
 	default:
-		panic(fmt.Sprintf("unknown tradepair: %s", string(tradePair))
+		panic(fmt.Sprintf("unknown tradepair: %s", string(tradePair)))
 	}
 }
