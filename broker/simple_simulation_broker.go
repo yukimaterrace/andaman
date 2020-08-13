@@ -27,6 +27,7 @@ func (broker *SimpleSimulationBroker) price(tradePair TradePair) *Price {
 	return price
 }
 
+// CreateOrder is a method to create order
 func (broker *SimpleSimulationBroker) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan CreatedOrder {
 	price := broker.price(tradePair)
 
@@ -66,6 +67,7 @@ func (broker *SimpleSimulationBroker) CreateOrder(accountID AccountID, tradePair
 	return done
 }
 
+// OpenOrders is a method to open orders
 func (broker *SimpleSimulationBroker) OpenOrders(accountID AccountID) <-chan []OpenOrder {
 	if _, ok := broker.currentOrdersMap[accountID]; !ok {
 		broker.currentOrdersMap[accountID] = make([]*order, 0)
@@ -86,6 +88,7 @@ func (broker *SimpleSimulationBroker) OpenOrders(accountID AccountID) <-chan []O
 	return done
 }
 
+// CloseOrder is a method to close order
 func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID OrderID) <-chan ClosedOrder {
 	if _, ok := broker.currentOrdersMap[accountID]; !ok {
 		broker.currentOrdersMap[accountID] = make([]*order, 0)
