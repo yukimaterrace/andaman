@@ -117,8 +117,9 @@ type (
 
 	// OandaOrderFillTransaction is a definition for oanda order fill transaction
 	OandaOrderFillTransaction struct {
+		Time         float64            `json:"time,string"`
 		AccountID    string             `json:"accountID"`
-		Pl           float64            `json:"pl,string"`
+		Instrument   string             `json:"instrument"`
 		TradeOpened  OandaTradeOpen     `json:"tradeOpened,omitempty"`
 		TradesClosed []OandaTradeReduce `json:"tradesClosed"`
 	}
