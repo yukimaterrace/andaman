@@ -1,4 +1,4 @@
-package api
+package broker
 
 import "strconv"
 
@@ -15,13 +15,13 @@ type (
 
 	// OandaAccount is a definition for oanda account
 	OandaAccount struct {
-		LastTransactionID string `json:"lastTransactionID"`
+		LastTransactionID int `json:"lastTransactionID,string"`
 	}
 
 	// OandaAccountChanges is a definition for oanda account changes
 	OandaAccountChanges struct {
 		State             OandaAccountState `json:"state"`
-		LastTransactionID string            `json:"lastTransactionID"`
+		LastTransactionID int               `json:"lastTransactionID,string"`
 	}
 
 	// OandaAccountState is a definition for oanda account state
@@ -89,7 +89,7 @@ type (
 
 	// OandaTrade is a definition for oanda trade
 	OandaTrade struct {
-		ID           string  `json:"id"`
+		ID           int     `json:"id,string"`
 		Instrument   string  `json:"instrument"`
 		Price        float64 `json:"price,string"`
 		OpenTime     float64 `json:"openTime,string"`
@@ -100,14 +100,39 @@ type (
 		UnrealizedPL float64 `json:"unrealizedPL,string"`
 	}
 
+	// OandaTradeOpen is a definition for oanda trade open
+	OandaTradeOpen struct {
+		TradeID int     `json:"tradeID,string"`
+		Units   float64 `json:"units,string"`
+		Price   float64 `json:"price,string"`
+	}
+
+	// OandaTradeReduce is a definition for oanda trade reduce
+	OandaTradeReduce struct {
+		TradeID    int     `json:"tradeID,string"`
+		Units      float64 `json:"units,string"`
+		Price      float64 `json:"price,string"`
+		RealizedPL float64 `json:"realizedPL,string"`
+	}
+
+	// OandaOrderFillTransaction is a definition for oanda order fill transaction
+	OandaOrderFillTransaction struct {
+		AccountID    string             `json:"accountID"`
+		Pl           float64            `json:"pl,string"`
+		TradeOpened  OandaTradeOpen     `json:"tradeOpened,omitempty"`
+		TradesClosed []OandaTradeReduce `json:"tradesClosed"`
+	}
+
 	// OandaOrderCreated is a definition for oanda order created
 	OandaOrderCreated struct {
-		LastTransactionID string `json:"lastTransactionID"`
+		OrderFillTransaction OandaOrderFillTransaction `json:"orderFillTransaction"`
+		LastTransactionID    int                       `json:"lastTransactionID,string"`
 	}
 
 	// OandaTradeClosed is a definition for oanda trade closed
 	OandaTradeClosed struct {
-		LastTransactionID string `json:"lastTransactionID"`
+		OrderFillTransaction OandaOrderFillTransaction `json:"orderFillTransaction"`
+		LastTransactionID    int                       `json:"lastTransactionID,string"`
 	}
 )
 

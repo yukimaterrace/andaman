@@ -1,4 +1,4 @@
-package api
+package broker
 
 import (
 	"bytes"
@@ -19,21 +19,21 @@ func (err HTTPStatusError) Error() string {
 	return fmt.Sprintf("code:%v message:%s", err.Code, err.Message)
 }
 
-type client struct {
+type apiClient struct {
 	host         string
 	commonHeader http.Header
 	client       *http.Client
 }
 
-func newClient(host string, commonHeader http.Header) *client {
-	return &client{
+func newAPIClient(host string, commonHeader http.Header) *apiClient {
+	return &apiClient{
 		host:         host,
 		commonHeader: commonHeader,
 		client:       &http.Client{},
 	}
 }
 
-func (client *client) request(method string, path string, query url.Values, requestBody interface{}, response interface{}) error {
+func (client *apiClient) request(method string, path string, query url.Values, requestBody interface{}, response interface{}) error {
 	rawQuery := ""
 	if query != nil {
 		rawQuery = query.Encode()
@@ -96,14 +96,14 @@ func (client *client) request(method string, path string, query url.Values, requ
 	return nil
 }
 
-func (client *client) get(path string, query url.Values, response interface{}) error {
+func (client *apiClient) get(path string, query url.Values, response interface{}) error {
 	return client.request("GET", path, query, nil, response)
 }
 
-func (client *client) post(path string, requestBody interface{}, response interface{}) error {
+func (client *apiClient) post(path string, requestBody interface{}, response interface{}) error {
 	return client.request("POST", path, nil, requestBody, response)
 }
 
-func (client *client) put(path string, requestBody interface{}, response interface{}) error {
+func (client *apiClient) put(path string, requestBody interface{}, response interface{}) error {
 	return client.request("PUT", path, nil, requestBody, response)
 }
