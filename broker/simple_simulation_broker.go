@@ -28,7 +28,7 @@ func (broker *SimpleSimulationBroker) price(tradePair TradePair) *Price {
 }
 
 // CreateOrder is a method to create order
-func (broker *SimpleSimulationBroker) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan CreatedOrder {
+func (broker *SimpleSimulationBroker) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
 	price := broker.price(tradePair)
 
 	if _, ok := broker.currentOrderIDMap[accountID]; !ok {
@@ -61,14 +61,14 @@ func (broker *SimpleSimulationBroker) CreateOrder(accountID AccountID, tradePair
 	currentOrders := broker.currentOrdersMap[accountID]
 	broker.currentOrdersMap[accountID] = append(currentOrders, order)
 
-	done := make(chan CreatedOrder, 1)
-	done <- order
+	done := make(chan *CreateOrderResult, 1)
+	done <- &CreateOrderResult{order, nil}
 
 	return done
 }
 
 // OpenOrders is a method to open orders
-func (broker *SimpleSimulationBroker) OpenOrders(accountID AccountID) <-chan []OpenOrder {
+func (broker *SimpleSimulationBroker) OpenOrders(accountID AccountID) <-chan *OpenOrdersResult {
 	if _, ok := broker.currentOrdersMap[accountID]; !ok {
 		broker.currentOrdersMap[accountID] = make([]*order, 0)
 	}
@@ -82,14 +82,14 @@ func (broker *SimpleSimulationBroker) OpenOrders(accountID AccountID) <-chan []O
 		openOrders[i] = order
 	}
 
-	done := make(chan []OpenOrder, 1)
-	done <- openOrders
+	done := make(chan *OpenOrdersResult, 1)
+	done <- &OpenOrdersResult{openOrders, nil}
 
 	return done
 }
 
 // CloseOrder is a method to close order
-func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID OrderID) <-chan ClosedOrder {
+func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult {
 	if _, ok := broker.currentOrdersMap[accountID]; !ok {
 		broker.currentOrdersMap[accountID] = make([]*order, 0)
 	}
@@ -124,8 +124,8 @@ func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID Or
 
 	broker.currentOrdersMap[accountID] = append(orders[:pos], orders[pos+1:]...)
 
-	done := make(chan ClosedOrder, 1)
-	done <- order
+	done := make(chan *CloseOrderResult, 1)
+	done <- &CloseOrderResult{order, nil}
 
 	return done
 }

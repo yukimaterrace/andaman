@@ -6,9 +6,9 @@ import (
 
 // Broker is an interface for broker
 type Broker interface {
-	CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan CreatedOrder
-	OpenOrders(accountID AccountID) <-chan []OpenOrder
-	CloseOrder(accountID AccountID, orderID OrderID) <-chan ClosedOrder
+	CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult
+	OpenOrders(accountID AccountID) <-chan *OpenOrdersResult
+	CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult
 }
 
 // SimulationBroker is an interface for simulation broker
@@ -34,6 +34,24 @@ type PriceExtractor interface {
 type Price struct {
 	Bid float64
 	Ask float64
+}
+
+// CreateOrderResult is a result for create order
+type CreateOrderResult struct {
+	CreatedOrder CreatedOrder
+	Err          error
+}
+
+// OpenOrdersResult is a result for open orders
+type OpenOrdersResult struct {
+	OpenOrders []OpenOrder
+	Err        error
+}
+
+// CloseOrderResult is a result for close order
+type CloseOrderResult struct {
+	ClosedOrder ClosedOrder
+	Err         error
 }
 
 // CreatedOrder is an interface for created order

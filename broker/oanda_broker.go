@@ -1,9 +1,5 @@
 package broker
 
-import (
-	"log"
-)
-
 // OandaBroker is a struct for oanda broker
 type OandaBroker struct {
 	*OandaClient
@@ -15,8 +11,8 @@ func NewOandaBroker() *OandaBroker {
 }
 
 // CreateOrder is a method to creates order
-func (broker *OandaBroker) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan CreatedOrder {
-	done := make(chan CreatedOrder, 1)
+func (broker *OandaBroker) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
+	done := make(chan *CreateOrderResult, 1)
 
 	go func() {
 		var u float64
@@ -27,13 +23,8 @@ func (broker *OandaBroker) CreateOrder(accountID AccountID, tradePair TradePair,
 		}
 
 		createdOrder, err := broker.OandaClient.CreateOrder(string(accountID), "MARKET", string(tradePair), u)
-		if err != nil {
-			log.Printf(err.Error())
-			done <- nil
-			return
-		}
 
-		done <- createdOrder
+		done <- &CreateOrderResult{createdOrder, err}
 		return
 	}()
 
@@ -41,14 +32,13 @@ func (broker *OandaBroker) CreateOrder(accountID AccountID, tradePair TradePair,
 }
 
 // OpenOrders is a method to get open orders
-func (broker *OandaBroker) OpenOrders(accountID AccountID) <-chan []OpenOrder {
-	done := make(chan []OpenOrder, 1)
+func (broker *OandaBroker) OpenOrders(accountID AccountID) <-chan *OpenOrdersResult {
+	done := make(chan *OpenOrdersResult, 1)
 
 	go func() {
 		trades, err := broker.OandaClient.OpenTrades(string(accountID))
 		if err != nil {
-			log.Println(err.Error())
-			done <- nil
+			done <- &OpenOrdersResult{nil, err}
 			return
 		}
 
@@ -57,7 +47,7 @@ func (broker *OandaBroker) OpenOrders(accountID AccountID) <-chan []OpenOrder {
 			openOrders[i] = &trade
 		}
 
-		done <- openOrders
+		done <- &OpenOrdersResult{openOrders, nil}
 		return
 	}()
 
@@ -65,17 +55,13 @@ func (broker *OandaBroker) OpenOrders(accountID AccountID) <-chan []OpenOrder {
 }
 
 // CloseOrder is a method to close order
-func (broker *OandaBroker) CloseOrder(accountID AccountID, orderID OrderID) <-chan ClosedOrder {
-	done := make(chan ClosedOrder, 1)
+func (broker *OandaBroker) CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult {
+	done := make(chan *CloseOrderResult, 1)
 
 	go func() {
 		tradeClosed, err := broker.OandaClient.CloseTrade(string(accountID), int(orderID))
-		if err != nil {
-			log.Println(err.Error())
-			done <- nil
-		}
 
-		done <- tradeClosed
+		done <- &CloseOrderResult{tradeClosed, err}
 		return
 	}()
 
