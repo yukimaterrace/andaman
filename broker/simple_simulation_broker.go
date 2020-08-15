@@ -4,7 +4,7 @@ import "fmt"
 
 // SimpleSimulationBroker is a struct for simple simulation broker
 type SimpleSimulationBroker struct {
-	currentPriceMap   map[TradePair]*Price
+	currentPriceMap   map[TradePair]Price
 	currentTime       int
 	currentOrderIDMap map[AccountID]int
 	currentOrdersMap  map[AccountID][]*order
@@ -12,14 +12,14 @@ type SimpleSimulationBroker struct {
 
 // Update is a method to update broker
 func (broker *SimpleSimulationBroker) Update(priceExtractor PriceExtractor) {
-	for _, tradePair := range priceExtractor.TradePairs() {
-		broker.currentPriceMap[tradePair] = priceExtractor.Price(tradePair)
+	for _, tradePair := range priceExtractor.tradePairs() {
+		broker.currentPriceMap[tradePair] = priceExtractor.price(tradePair)
 	}
 
-	broker.currentTime = priceExtractor.Time()
+	broker.currentTime = priceExtractor.time()
 }
 
-func (broker *SimpleSimulationBroker) price(tradePair TradePair) *Price {
+func (broker *SimpleSimulationBroker) price(tradePair TradePair) Price {
 	price, ok := broker.currentPriceMap[tradePair]
 	if !ok {
 		panic(fmt.Sprintf("%s cannot handle in this broker", string(tradePair)))
@@ -48,9 +48,9 @@ func (broker *SimpleSimulationBroker) CreateOrder(accountID AccountID, tradePair
 	}
 
 	if isLong {
-		order.priceAtOpen = price.Ask
+		order.priceAtOpen = price.Ask()
 	} else {
-		order.priceAtOpen = price.Bid
+		order.priceAtOpen = price.Bid()
 	}
 
 	order.unrealizedProfit = profitPips(price, order)
@@ -115,9 +115,9 @@ func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID Or
 	order.timeAtClose = broker.currentTime
 
 	if order.isLong {
-		order.priceAtClose = price.Bid
+		order.priceAtClose = price.Bid()
 	} else {
-		order.priceAtClose = price.Ask
+		order.priceAtClose = price.Ask()
 	}
 
 	order.realizedProfit = profitPips(price, order)
@@ -130,12 +130,12 @@ func (broker *SimpleSimulationBroker) CloseOrder(accountID AccountID, orderID Or
 	return done
 }
 
-func profitPips(price *Price, order *order) float64 {
+func profitPips(price Price, order *order) float64 {
 	var diff float64
 	if order.isLong {
-		diff = price.Bid - order.priceAtOpen
+		diff = price.Bid() - order.priceAtOpen
 	} else {
-		diff = order.priceAtOpen - price.Ask
+		diff = order.priceAtOpen - price.Ask()
 	}
 	return diff / priceGap2Pips(order.tradePair)
 }

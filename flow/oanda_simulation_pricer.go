@@ -6,6 +6,45 @@ import (
 	"yukimaterrace/andaman/broker"
 )
 
+type oandaSimulationPrice struct {
+	*oandaPrice
+	candlesMap map[broker.TradePair]*broker.OandaCandles
+}
+
+func newOandaSimulationPrice(seed *oandaSimulationPricerSeed, priceTime int) *oandaSimulationPrice {
+	return &oandaSimulationPrice{
+		oandaPrice: newOandaPrice(seed.candlesMap, nil, priceTime),
+		candlesMap: seed.candlesMap,
+	}
+}
+
+func (oandaSimulationPrice *oandaSimulationPrice) price(tradePair broker.TradePair) broker.Price {
+	candles, ok := oandaSimulationPrice.candlesMap[tradePair]
+	if !ok {
+		log.Panicf("no candles exist for %v\n", tradePair)
+	}
+
+	candleStick := candles.Candles[len(candles.Candles)-1]
+
+	return &price{
+		bid: candleStick.Bid.C,
+		ask: candleStick.Ask.C,
+	}
+}
+
+type price struct {
+	bid float64
+	ask float64
+}
+
+func (price *price) Bid() float64 {
+	return price.bid
+}
+
+func (price *price) Ask() float64 {
+	return price.ask
+}
+
 type oandaSimulationPricerSeed struct {
 	candlesMap map[broker.TradePair]*broker.OandaCandles
 }

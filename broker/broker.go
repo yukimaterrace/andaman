@@ -25,15 +25,15 @@ type OrderID int
 
 // PriceExtractor is an interface for price extractor
 type PriceExtractor interface {
-	TradePairs() []TradePair
-	Price(tradePair TradePair) *Price
-	Time() int
+	tradePairs() []TradePair
+	price(tradePair TradePair) Price
+	time() int
 }
 
-// Price is a definition for price
-type Price struct {
-	Bid float64
-	Ask float64
+// Price is an interface for price
+type Price interface {
+	Bid() float64
+	Ask() float64
 }
 
 // CreateOrderResult is a result for create order

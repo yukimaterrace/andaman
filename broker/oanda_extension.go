@@ -2,6 +2,16 @@ package broker
 
 import "math"
 
+// Bid is a method to get bid
+func (oandaClientPrice *OandaClientPrice) Bid() float64 {
+	return oandaClientPrice.Bids[0].Price
+}
+
+// Ask is a method to get ask
+func (oandaClientPrice *OandaClientPrice) Ask() float64 {
+	return oandaClientPrice.Asks[0].Price
+}
+
 // OrderID is a method to get order ID
 func (oandaOrderCreated *OandaOrderCreated) OrderID() int {
 	return oandaOrderCreated.OrderFillTransaction.TradeOpened.TradeID
