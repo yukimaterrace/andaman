@@ -6,15 +6,114 @@ import (
 	"yukimaterrace/andaman/broker"
 )
 
+type oandaSimulationPricer struct {
+	seed            *oandaSimulationPricerSeed
+	currentIndexMap map[broker.TradePair]int
+	currentTime     int
+	granularitySec  int
+	unitSize        int
+}
+
+func newOandaSimulationPricer(seed *oandaSimulationPricerSeed) *oandaSimulationPricer {
+	unitSize := 250
+
+	currentTime := 0
+	currentIndexMap := make(map[broker.TradePair]int)
+
+	for pair, candles := range seed.candlesMap {
+		currentIndexMap[pair] = unitSize
+
+		time := int(candles.Candles[unitSize-1].Time)
+		if currentTime == 0 || currentTime > time {
+			currentTime = time
+		}
+	}
+
+	return &oandaSimulationPricer{
+		seed:            seed,
+		currentIndexMap: currentIndexMap,
+		currentTime:     currentTime,
+		granularitySec:  60,
+		unitSize:        unitSize,
+	}
+}
+
+func (pricer *oandaSimulationPricer) hasNext() bool {
+	for pair, candles := range pricer.seed.candlesMap {
+		if pricer.currentIndexMap[pair] < len(candles.Candles) {
+			return true
+		}
+	}
+	return false
+}
+
+func (pricer *oandaSimulationPricer) next() *oandaSimulationPrice {
+	feedCandlesMap := make(map[broker.TradePair]*broker.OandaCandles)
+
+	for pair, candles := range pricer.seed.candlesMap {
+		currentIndex := pricer.currentIndexMap[pair]
+
+		feedCandles := &broker.OandaCandles{
+			Instrument:  candles.Instrument,
+			Granularity: candles.Granularity,
+			Candles:     candles.Candles[currentIndex-pricer.unitSize : currentIndex],
+		}
+		feedCandlesMap[pair] = feedCandles
+
+		if currentIndex+1 <= len(candles.Candles) && pricer.currentTime+pricer.granularitySec >= int(candles.Candles[currentIndex].Time) {
+			pricer.currentIndexMap[pair] = currentIndex + 1
+		}
+	}
+
+	createPrice := newOandaSimulationPrice(feedCandlesMap, pricer.currentTime)
+	pricer.currentTime += pricer.granularitySec
+
+	return createPrice
+}
+
+func (pricer *oandaSimulationPricer) createPrice(done chan<- *createPriceResult) {
+	if !pricer.hasNext() {
+		done <- &createPriceResult{
+			tradeMaterial: nil,
+			err:           errNoMorePrice,
+		}
+		return
+	}
+
+	done <- &createPriceResult{
+		tradeMaterial: pricer.next(),
+		err:           nil,
+	}
+}
+
+// OandaSimulationPricerFactory is a pricer factory for oanda simulation pricer
+type OandaSimulationPricerFactory struct {
+	start int
+	end   int
+}
+
+// NewOandaSimulationPricerFactory is a constructor for OandaSimulationPricerFactory
+func NewOandaSimulationPricerFactory(startTime time.Time, endTime time.Time) *OandaSimulationPricerFactory {
+	return &OandaSimulationPricerFactory{
+		start: int(startTime.Unix()),
+		end:   int(endTime.Unix()),
+	}
+}
+
+func (factory *OandaSimulationPricerFactory) create(broker broker.Broker, tradePairs []broker.TradePair) pricer {
+	seed := fetchOandaSimulationPricerSeed(tradePairs, "M1", factory.start, factory.end)
+	return newOandaSimulationPricer(seed)
+}
+
 type oandaSimulationPrice struct {
 	*oandaPrice
 	candlesMap map[broker.TradePair]*broker.OandaCandles
 }
 
-func newOandaSimulationPrice(seed *oandaSimulationPricerSeed, priceTime int) *oandaSimulationPrice {
+func newOandaSimulationPrice(candlesMap map[broker.TradePair]*broker.OandaCandles, priceTime int) *oandaSimulationPrice {
 	return &oandaSimulationPrice{
-		oandaPrice: newOandaPrice(seed.candlesMap, nil, priceTime),
-		candlesMap: seed.candlesMap,
+		oandaPrice: newOandaPrice(candlesMap, nil, priceTime),
+		candlesMap: candlesMap,
 	}
 }
 
