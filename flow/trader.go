@@ -8,8 +8,11 @@ type trader interface {
 
 // TraderFactory provides factory method of trader
 type TraderFactory interface {
-	create(broker broker.Broker) trader
+	create(broker broker.Broker, ordererFactory broker.OrdererFactory, tradableFunc TradableFunc) trader
 }
+
+// TradableFunc is a function to calculate tradable
+type TradableFunc func(time interface{}) bool
 
 type tradeMaterial interface{}
 

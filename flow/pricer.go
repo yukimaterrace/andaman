@@ -10,7 +10,7 @@ type pricer interface {
 	createPrice(done chan<- *createPriceResult)
 }
 
-// PricerFactory provide factory method of pricer
+// PricerFactory is a factory of pricer
 type PricerFactory interface {
 	create(broker broker.Broker, tradePairs []broker.TradePair) pricer
 }

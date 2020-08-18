@@ -5,16 +5,24 @@ import (
 )
 
 // Broker is an interface for broker
-type Broker interface {
-	CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult
-	OpenOrders(accountID AccountID) <-chan *OpenOrdersResult
-	CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult
-}
+type Broker interface{}
 
 // SimulationBroker is an interface for simulation broker
 type SimulationBroker interface {
 	Broker
 	Update(priceExtractor PriceExtractor)
+}
+
+// Orderer is an interface for orderer
+type Orderer interface {
+	CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult
+	OpenOrders(accountID AccountID) <-chan *OpenOrdersResult
+	CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult
+}
+
+// OrdererFactory is a factory for orderer
+type OrdererFactory interface {
+	Create(broker Broker) Orderer
 }
 
 // AccountID is a type definition for account ID
