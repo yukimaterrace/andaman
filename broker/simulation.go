@@ -162,7 +162,7 @@ func profitPips(price Price, order *order) float64 {
 	} else {
 		diff = order.priceAtOpen - price.Ask()
 	}
-	return diff / order.tradePair.PricePerPips()
+	return diff / order.tradePair.PricePerPip()
 }
 
 type order struct {
