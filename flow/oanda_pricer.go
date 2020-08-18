@@ -25,7 +25,7 @@ func newOandaPrice(
 	}
 }
 
-func (oandaPrice *oandaPrice) tradePairs() []broker.TradePair {
+func (oandaPrice *oandaPrice) TradePairs() []broker.TradePair {
 	tradePairs := make([]broker.TradePair, len(oandaPrice.candlesMap))
 
 	i := 0
@@ -37,7 +37,7 @@ func (oandaPrice *oandaPrice) tradePairs() []broker.TradePair {
 	return tradePairs
 }
 
-func (oandaPrice *oandaPrice) price(tradePair broker.TradePair) broker.Price {
+func (oandaPrice *oandaPrice) Price(tradePair broker.TradePair) broker.Price {
 	price, ok := oandaPrice.pricesMap[tradePair]
 
 	if !ok || len(price.Bids) == 0 || len(price.Asks) == 0 {
@@ -47,7 +47,7 @@ func (oandaPrice *oandaPrice) price(tradePair broker.TradePair) broker.Price {
 	return price
 }
 
-func (oandaPrice *oandaPrice) time() int {
+func (oandaPrice *oandaPrice) Time() int {
 	return oandaPrice.priceTime
 }
 

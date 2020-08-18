@@ -33,9 +33,9 @@ type OrderID int
 
 // PriceExtractor is an interface for price extractor
 type PriceExtractor interface {
-	tradePairs() []TradePair
-	price(tradePair TradePair) Price
-	time() int
+	TradePairs() []TradePair
+	Price(tradePair TradePair) Price
+	Time() int
 }
 
 // Price is an interface for price

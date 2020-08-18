@@ -45,3 +45,8 @@ func (recordWorker *recordWorker) work(exit chan<- bool) {
 		exit <- true
 	}
 }
+
+type summarySpec interface {
+	csvHeaders() []string
+	csvValues() []string
+}

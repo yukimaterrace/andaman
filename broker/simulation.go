@@ -37,11 +37,11 @@ func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 
 // Update is a method to update orderer
 func (orderer *SimpleSimulationOrderer) Update(priceExtractor PriceExtractor) {
-	for _, tradePair := range priceExtractor.tradePairs() {
-		orderer.currentPriceMap[tradePair] = priceExtractor.price(tradePair)
+	for _, tradePair := range priceExtractor.TradePairs() {
+		orderer.currentPriceMap[tradePair] = priceExtractor.Price(tradePair)
 	}
 
-	orderer.currentTime = priceExtractor.time()
+	orderer.currentTime = priceExtractor.Time()
 }
 
 func (orderer *SimpleSimulationOrderer) price(tradePair TradePair) Price {
@@ -162,7 +162,7 @@ func profitPips(price Price, order *order) float64 {
 	} else {
 		diff = order.priceAtOpen - price.Ask()
 	}
-	return diff / priceGap2Pips(order.tradePair)
+	return diff / order.tradePair.PricePerPips()
 }
 
 type order struct {

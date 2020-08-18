@@ -28,7 +28,8 @@ const (
 	EurGbp TradePair = "EUR_GBP"
 )
 
-func priceGap2Pips(tradePair TradePair) float64 {
+// PricePerPip returns
+func (tradePair TradePair) PricePerPip() float64 {
 	switch tradePair {
 	case GbpUsd, EurUsd, AudUsd, GbpAud, EurAud, EurGbp:
 		return 0.0001

@@ -36,7 +36,9 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 	results := make([]*accountOrders, 0)
 	for _, runner := range trader.tradeRunners {
 		accountOrders := <-runner.done
-		results = append(results, accountOrders...)
+		if len(accountOrders.createdOrders) > 0 || len(accountOrders.closedOrders) > 0 {
+			results = append(results, accountOrders)
+		}
 	}
 
 	return results, len(results) > 0
@@ -44,15 +46,20 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 
 // SimpleTradeAlgorithm is an interface for simple trade algorithm
 type SimpleTradeAlgorithm interface {
-	initialTrade(material tradeMaterial, orderer broker.Orderer, accountID broker.AccountID, tradePair broker.TradePair) (*accountOrders, error)
-	proceedTrade(material tradeMaterial, orderer broker.Orderer, openOrders []broker.OpenOrder, accountID broker.AccountID, tradePair broker.TradePair) (*accountOrders, error)
+	initialTrade(
+		material tradeMaterial, orderer broker.Orderer, accountID broker.AccountID, tradePair broker.TradePair,
+	) *simpleTradeAlgorithmResult
+
+	proceedTrade(
+		material tradeMaterial, orderer broker.Orderer, openOrders []broker.OpenOrder, accountID broker.AccountID, tradePair broker.TradePair,
+	) *simpleTradeAlgorithmResult
 }
 
 type simpleTradeRunner struct {
 	accountID    broker.AccountID
 	algorithmMap map[broker.TradePair]SimpleTradeAlgorithm
 	orderer      broker.Orderer
-	done         chan []*accountOrders
+	done         chan *accountOrders
 }
 
 func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tradable bool) {
@@ -73,53 +80,74 @@ func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tra
 		openOrdersMap[openOrder.TradePair()] = append(openOrders, openOrder)
 	}
 
-	results := make([]*accountOrders, 0)
+	results := make([]*simpleTradeAlgorithmResult, 0)
 	for tradePair, openOrders := range openOrdersMap {
 		algorithm, ok := runner.algorithmMap[tradePair]
 		if !ok {
 			log.Printf("no algorithm registered for %v\n", tradePair)
 		}
 
-		var accountOrders *accountOrders
-		var err error
+		var result *simpleTradeAlgorithmResult
 		if len(openOrders) == 0 {
 			if mode != Terminate && tradable {
-				accountOrders, err = algorithm.initialTrade(material, runner.orderer, runner.accountID, tradePair)
+				result = algorithm.initialTrade(material, runner.orderer, runner.accountID, tradePair)
 			}
 		} else {
-			accountOrders, err = algorithm.proceedTrade(material, runner.orderer, openOrders, runner.accountID, tradePair)
+			result = algorithm.proceedTrade(material, runner.orderer, openOrders, runner.accountID, tradePair)
 		}
 
-		if err != nil {
-			log.Println(err.Error())
-		} else if accountOrders != nil {
-			results = append(results, accountOrders)
+		if result != nil {
+			results = append(results, result)
 		}
 	}
 
+	accountCreatedOrders := make([]*accountCreatedOrder, 0)
+	accountClosedOrders := make([]*accountClosedOrder, 0)
 	for _, result := range results {
-		for _, createdOrder := range result.createdOrders {
-			createdOrder.createdOrder = <-createdOrder.done
+		for _, done := range result.createOrderDone {
+			createdOrder := <-done
+			if createdOrder.Err != nil {
+				log.Println(createdOrder.Err.Error())
+			} else {
+				accountCreatedOrders = append(accountCreatedOrders, &accountCreatedOrder{
+					accountID:    runner.accountID,
+					createdOrder: createdOrder.CreatedOrder,
+				})
+			}
 		}
 
-		for _, closedOrder := range result.closedOrders {
-			closedOrder.closedOrder = <-closedOrder.done
+		for _, done := range result.closeOrderDone {
+			closedOrder := <-done
+			if closedOrder.Err != nil {
+				log.Println(closedOrder.Err.Error())
+			} else {
+				accountClosedOrders = append(accountClosedOrders, &accountClosedOrder{
+					accountID:   runner.accountID,
+					closedOrder: closedOrder.ClosedOrder,
+				})
+			}
 		}
 	}
 
-	runner.done <- results
+	runner.done <- &accountOrders{
+		createdOrders: accountCreatedOrders,
+		closedOrders:  accountClosedOrders,
+	}
+}
+
+type simpleTradeAlgorithmResult struct {
+	createOrderDone []<-chan *broker.CreateOrderResult
+	closeOrderDone  []<-chan *broker.CloseOrderResult
 }
 
 type accountCreatedOrder struct {
 	accountID    broker.AccountID
 	createdOrder broker.CreatedOrder
-	done         <-chan broker.CreatedOrder
 }
 
 type accountClosedOrder struct {
 	accountID   broker.AccountID
 	closedOrder broker.ClosedOrder
-	done        <-chan broker.ClosedOrder
 }
 
 type accountOrders struct {
@@ -183,7 +211,7 @@ func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
 			accountID:    accountID,
 			algorithmMap: algorithmMap,
 			orderer:      builder.ordererFactory.Create(builder.broker),
-			done:         make(chan []*accountOrders, 1),
+			done:         make(chan *accountOrders, 1),
 		})
 	}
 
