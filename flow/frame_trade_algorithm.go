@@ -128,8 +128,6 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(
 			createOrderDone: []<-chan *broker.CreateOrderResult{
 				orderer.CreateOrder(accountID, tradePair, algorithm.units, true),
 			},
-
-			closeOrderDone: []<-chan *broker.CloseOrderResult{},
 		}
 	}
 
@@ -140,8 +138,6 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(
 			createOrderDone: []<-chan *broker.CreateOrderResult{
 				orderer.CreateOrder(accountID, tradePair, algorithm.units, false),
 			},
-
-			closeOrderDone: []<-chan *broker.CloseOrderResult{},
 		}
 	}
 

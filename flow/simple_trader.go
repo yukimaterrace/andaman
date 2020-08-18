@@ -104,27 +104,31 @@ func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tra
 	accountCreatedOrders := make([]*accountCreatedOrder, 0)
 	accountClosedOrders := make([]*accountClosedOrder, 0)
 	for _, result := range results {
-		for _, done := range result.createOrderDone {
-			createdOrder := <-done
-			if createdOrder.Err != nil {
-				log.Println(createdOrder.Err.Error())
-			} else {
-				accountCreatedOrders = append(accountCreatedOrders, &accountCreatedOrder{
-					accountID:    runner.accountID,
-					createdOrder: createdOrder.CreatedOrder,
-				})
+		if result.createOrderDone != nil {
+			for _, done := range result.createOrderDone {
+				createdOrder := <-done
+				if createdOrder.Err != nil {
+					log.Println(createdOrder.Err.Error())
+				} else {
+					accountCreatedOrders = append(accountCreatedOrders, &accountCreatedOrder{
+						accountID:    runner.accountID,
+						createdOrder: createdOrder.CreatedOrder,
+					})
+				}
 			}
 		}
 
-		for _, done := range result.closeOrderDone {
-			closedOrder := <-done
-			if closedOrder.Err != nil {
-				log.Println(closedOrder.Err.Error())
-			} else {
-				accountClosedOrders = append(accountClosedOrders, &accountClosedOrder{
-					accountID:   runner.accountID,
-					closedOrder: closedOrder.ClosedOrder,
-				})
+		if result.closeOrderDone != nil {
+			for _, done := range result.closeOrderDone {
+				closedOrder := <-done
+				if closedOrder.Err != nil {
+					log.Println(closedOrder.Err.Error())
+				} else {
+					accountClosedOrders = append(accountClosedOrders, &accountClosedOrder{
+						accountID:   runner.accountID,
+						closedOrder: closedOrder.ClosedOrder,
+					})
+				}
 			}
 		}
 	}
