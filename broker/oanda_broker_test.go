@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var oanda = NewOandaClient()
+var oanda = NewOandaBroker()
 
 var accountID string
 var lastTransactionID int
