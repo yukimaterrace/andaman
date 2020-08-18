@@ -149,7 +149,7 @@ type oandaSimulationPricerSeed struct {
 }
 
 func fetchOandaSimulationPricerSeed(tradePairs []broker.TradePair, granularity string, start int, end int) *oandaSimulationPricerSeed {
-	client := broker.NewOandaClient()
+	client := broker.NewOandaBroker()
 
 	log.Println("start fetch candles...")
 
