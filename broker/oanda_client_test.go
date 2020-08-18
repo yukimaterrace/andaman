@@ -3,7 +3,6 @@ package broker
 import (
 	"testing"
 	"time"
-	"yukimaterrace/andaman/config"
 )
 
 var oanda = NewOandaClient()
@@ -96,7 +95,7 @@ func TestGetOpenTrades(t *testing.T) {
 }
 
 func TestOrder(t *testing.T) {
-	if config.OandaHost != "api-fxpractice.oanda.com" {
+	if oanda.client.host != "api-fxpractice.oanda.com" {
 		t.Skip("not practice mode")
 	}
 

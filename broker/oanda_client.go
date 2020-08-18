@@ -2,10 +2,11 @@ package broker
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
-	"yukimaterrace/andaman/config"
 )
 
 // OandaClient is OANDA API client
@@ -15,14 +16,24 @@ type OandaClient struct {
 
 // NewOandaClient is a constructor for Oanda
 func NewOandaClient() *OandaClient {
+	oandaHost := os.Getenv("OANDA_HOST")
+	if oandaHost == "" {
+		log.Panicln("OANDA_HOST has not been set")
+	}
+
+	oandaToken := os.Getenv("OANDA_TOKEN")
+	if oandaToken == "" {
+		log.Panicln("OANDA_TOKEN has not been set")
+	}
+
 	var header = http.Header{}
 
-	header.Add("Authorization", fmt.Sprintf("Bearer %s", config.OandaToken))
+	header.Add("Authorization", fmt.Sprintf("Bearer %s", oandaToken))
 	header.Add("Connection", "Keep-Alive")
 	header.Add("Content-Type", "application/json")
 	header.Add("Accept-Datetime-Format", "UNIX")
 
-	return &OandaClient{client: newAPIClient(config.OandaHost, header)}
+	return &OandaClient{client: newAPIClient(oandaHost, header)}
 }
 
 // Accounts is a method to get accounts
