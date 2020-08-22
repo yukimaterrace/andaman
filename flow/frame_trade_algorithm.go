@@ -19,6 +19,12 @@ type frame struct {
 	c float64
 }
 
+type paramBool bool
+
+func (b paramBool) String() string {
+	return strconv.FormatBool(bool(b))
+}
+
 type paramInt int
 
 func (i paramInt) String() string {
@@ -33,6 +39,7 @@ func (f paramFloat64) String() string {
 
 // FrameTradeParam is parameters for frame trade algorithm
 type FrameTradeParam struct {
+	tradeDirectionLong     bool
 	SmallFrameLength       int
 	LargeFrameLength       int
 	PipsGapForCreateOrder  float64
@@ -44,11 +51,11 @@ type FrameTradeParam struct {
 	PipsForProfit1         float64
 	PipsForProfit2         float64
 	PipsForProfit3         float64
-	PipsForProfit4         float64
 }
 
 func (param *FrameTradeParam) csvHeader() []string {
 	return []string{
+		"tradeDirectionLong",
 		"smallFrameLength",
 		"largeFrameLength",
 		"pipsGapForCreateOrder",
@@ -60,12 +67,12 @@ func (param *FrameTradeParam) csvHeader() []string {
 		"pipsForProfit1",
 		"pipsForProfit2",
 		"pipsForProfit3",
-		"pipsForProfit4",
 	}
 }
 
 func (param *FrameTradeParam) csvValue() []string {
 	return []string{
+		paramBool(param.tradeDirectionLong).String(),
 		paramInt(param.SmallFrameLength).String(),
 		paramInt(param.LargeFrameLength).String(),
 		paramFloat64(param.PipsGapForCreateOrder).String(),
@@ -77,7 +84,6 @@ func (param *FrameTradeParam) csvValue() []string {
 		paramFloat64(param.PipsForProfit1).String(),
 		paramFloat64(param.PipsForProfit2).String(),
 		paramFloat64(param.PipsForProfit3).String(),
-		paramFloat64(param.PipsForProfit4).String(),
 	}
 }
 
@@ -105,9 +111,7 @@ func NewFrameTradeAlgorithm(param *FrameTradeParam) *FrameTradeAlgorithm {
 	}
 }
 
-func (algorithm *FrameTradeAlgorithm) initialTrade(
-	material tradeMaterial, orderer broker.Orderer, accountID broker.AccountID, tradePair broker.TradePair,
-) *simpleTradeAlgorithmResult {
+func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggregator *orderAggregator, tradePair broker.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
 		panic("wrong type has been passed")
@@ -121,34 +125,70 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(
 
 	gapCond := smallFrame.h-smallFrame.l > algorithm.PipsGapForCreateOrder*tradePair.PricePerPip()+spread
 
-	longCond := smallFrame.h == largeFrame.h && smallFrame.l > largeFrame.l && smallFrame.l == smallFrame.c
+	if algorithm.tradeDirectionLong {
+		longCond := smallFrame.h == largeFrame.h && smallFrame.l > largeFrame.l && smallFrame.l == smallFrame.c
 
-	if longCond && gapCond {
-		return &simpleTradeAlgorithmResult{
-			createOrderDone: []<-chan *broker.CreateOrderResult{
-				orderer.CreateOrder(accountID, tradePair, algorithm.units, true),
-			},
+		if longCond && gapCond {
+			agggregator.createOrder(tradePair, algorithm.units, true)
+		}
+	} else {
+		shortCond := smallFrame.l == largeFrame.l && smallFrame.h < largeFrame.h && smallFrame.h == smallFrame.c
+
+		if shortCond && gapCond {
+			agggregator.createOrder(tradePair, algorithm.units, false)
 		}
 	}
-
-	shortCond := smallFrame.l == largeFrame.l && smallFrame.h < largeFrame.h && smallFrame.h == smallFrame.c
-
-	if shortCond && gapCond {
-		return &simpleTradeAlgorithmResult{
-			createOrderDone: []<-chan *broker.CreateOrderResult{
-				orderer.CreateOrder(accountID, tradePair, algorithm.units, false),
-			},
-		}
-	}
-
-	return nil
 }
 
-func (algorithm *FrameTradeAlgorithm) proceedTrade(
-	material tradeMaterial, orderer broker.Orderer, openOrders []broker.OpenOrder, accountID broker.AccountID, tradePair broker.TradePair,
-) *simpleTradeAlgorithmResult {
+func (algorithm *FrameTradeAlgorithm) proceedTrade(material tradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair) {
+	calculator, ok := material.(frameCalculator)
+	if !ok {
+		panic("wrong type has been passed")
+	}
 
-	return nil
+	if len(openOrders) == 0 {
+		panic("no open orders has been passed")
+	}
+
+	currentPrice := calculator.Price(tradePair)
+
+	initialOrder := openOrders[0]
+	lastOrder := initialOrder
+	totalProfitPips := 0.0
+	for _, openOrder := range openOrders {
+		if initialOrder.TimeAtOpen() > openOrder.TimeAtOpen() {
+			initialOrder = openOrder
+		}
+
+		if lastOrder.TimeAtOpen() < openOrder.TimeAtOpen() {
+			lastOrder = openOrder
+		}
+
+		totalProfitPips += profit(openOrder, currentPrice)
+	}
+
+	totalProfitPips /= tradePair.PricePerPip()
+	tradeTime := calculator.Time() - initialOrder.TimeAtOpen()
+
+	takeProfitCond1 := tradeTime <= algorithm.TimeForProfit1*60 && totalProfitPips >= algorithm.PipsForProfit1
+	takeProfitCond2 := algorithm.TimeForProfit1*60 < tradeTime && tradeTime <= algorithm.TimeForProfit2 && totalProfitPips >= algorithm.PipsForProfit2
+	takeProfitCond3 := algorithm.TimeForProfit2*60 < tradeTime && tradeTime <= algorithm.TimeForProfit3 && totalProfitPips >= algorithm.PipsForProfit3
+	takeProfitCond4 := algorithm.TimeForProfit3*60 < tradeTime && totalProfitPips >= 0
+
+	stopLossCond := totalProfitPips < algorithm.PipsForStopLoss
+
+	if takeProfitCond1 || takeProfitCond2 || takeProfitCond3 || takeProfitCond4 || stopLossCond {
+		for _, openOrder := range openOrders {
+			agggregator.closeOrder(openOrder.OrderID())
+		}
+		return
+	}
+
+	lastOrderProfitPips := profit(lastOrder, currentPrice) / tradePair.PricePerPip()
+
+	if lastOrderProfitPips < algorithm.PipsForAdditionalOrder-spread(currentPrice)/tradePair.PricePerPip() {
+		agggregator.createOrder(tradePair, algorithm.units, lastOrder.IsLong())
+	}
 }
 
 func profit(openOrder broker.OpenOrder, price broker.Price) float64 {

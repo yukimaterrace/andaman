@@ -64,7 +64,7 @@ type CloseOrderResult struct {
 
 // CreatedOrder is an interface for created order
 type CreatedOrder interface {
-	OrderID() int
+	OrderID() OrderID
 	TradePair() TradePair
 	TimeAtOpen() int
 	PriceAtOpen() float64
@@ -80,7 +80,7 @@ type OpenOrder interface {
 
 // ClosedOrder is an inteface for closed order
 type ClosedOrder interface {
-	OrderID() int
+	OrderID() OrderID
 	TradePair() TradePair
 	TimeAtClose() int
 	PriceAtClose() float64

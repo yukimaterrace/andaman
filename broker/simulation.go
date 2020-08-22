@@ -14,7 +14,7 @@ type SimpleSimulationBroker struct {
 // SimpleSimulationOrderer is a struct for simple simulation broker
 type SimpleSimulationOrderer struct {
 	*SimpleSimulationBroker
-	currentOrderIDMap map[AccountID]int
+	currentOrderIDMap map[AccountID]OrderID
 	currentOrdersMap  map[AccountID][]*order
 }
 
@@ -30,7 +30,7 @@ func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 
 	return &SimpleSimulationOrderer{
 		SimpleSimulationBroker: simpleSimulationBroker,
-		currentOrderIDMap:      map[AccountID]int{},
+		currentOrderIDMap:      map[AccountID]OrderID{},
 		currentOrdersMap:       map[AccountID][]*order{},
 	}
 }
@@ -124,7 +124,7 @@ func (orderer *SimpleSimulationOrderer) CloseOrder(accountID AccountID, orderID 
 	var order *order
 	var pos int
 	for i, o := range orders {
-		if o.orderID == int(orderID) {
+		if o.orderID == orderID {
 			order = o
 			pos = i
 			break
@@ -166,7 +166,7 @@ func profitPips(price Price, order *order) float64 {
 }
 
 type order struct {
-	orderID          int
+	orderID          OrderID
 	tradePair        TradePair
 	timeAtOpen       int
 	priceAtOpen      float64
@@ -178,7 +178,7 @@ type order struct {
 	unrealizedProfit float64
 }
 
-func (order *order) OrderID() int {
+func (order *order) OrderID() OrderID {
 	return order.orderID
 }
 

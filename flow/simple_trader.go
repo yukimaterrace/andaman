@@ -46,13 +46,9 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 
 // SimpleTradeAlgorithm is an interface for simple trade algorithm
 type SimpleTradeAlgorithm interface {
-	initialTrade(
-		material tradeMaterial, orderer broker.Orderer, accountID broker.AccountID, tradePair broker.TradePair,
-	) *simpleTradeAlgorithmResult
+	initialTrade(material tradeMaterial, aggregator *orderAggregator, tradePair broker.TradePair)
 
-	proceedTrade(
-		material tradeMaterial, orderer broker.Orderer, openOrders []broker.OpenOrder, accountID broker.AccountID, tradePair broker.TradePair,
-	) *simpleTradeAlgorithmResult
+	proceedTrade(material tradeMaterial, aggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair)
 }
 
 type simpleTradeRunner struct {
@@ -80,68 +76,23 @@ func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tra
 		openOrdersMap[openOrder.TradePair()] = append(openOrders, openOrder)
 	}
 
-	results := make([]*simpleTradeAlgorithmResult, 0)
+	aggregator := newOrderAggregator(runner.orderer, runner.accountID)
 	for tradePair, openOrders := range openOrdersMap {
 		algorithm, ok := runner.algorithmMap[tradePair]
 		if !ok {
-			log.Printf("no algorithm registered for %v\n", tradePair)
+			log.Panicf("no algorithm registered for %v\n", tradePair)
 		}
 
-		var result *simpleTradeAlgorithmResult
 		if len(openOrders) == 0 {
 			if mode != Terminate && tradable {
-				result = algorithm.initialTrade(material, runner.orderer, runner.accountID, tradePair)
+				algorithm.initialTrade(material, aggregator, tradePair)
 			}
 		} else {
-			result = algorithm.proceedTrade(material, runner.orderer, openOrders, runner.accountID, tradePair)
-		}
-
-		if result != nil {
-			results = append(results, result)
+			algorithm.proceedTrade(material, aggregator, openOrders, tradePair)
 		}
 	}
 
-	accountCreatedOrders := make([]*accountCreatedOrder, 0)
-	accountClosedOrders := make([]*accountClosedOrder, 0)
-	for _, result := range results {
-		if result.createOrderDone != nil {
-			for _, done := range result.createOrderDone {
-				createdOrder := <-done
-				if createdOrder.Err != nil {
-					log.Println(createdOrder.Err.Error())
-				} else {
-					accountCreatedOrders = append(accountCreatedOrders, &accountCreatedOrder{
-						accountID:    runner.accountID,
-						createdOrder: createdOrder.CreatedOrder,
-					})
-				}
-			}
-		}
-
-		if result.closeOrderDone != nil {
-			for _, done := range result.closeOrderDone {
-				closedOrder := <-done
-				if closedOrder.Err != nil {
-					log.Println(closedOrder.Err.Error())
-				} else {
-					accountClosedOrders = append(accountClosedOrders, &accountClosedOrder{
-						accountID:   runner.accountID,
-						closedOrder: closedOrder.ClosedOrder,
-					})
-				}
-			}
-		}
-	}
-
-	runner.done <- &accountOrders{
-		createdOrders: accountCreatedOrders,
-		closedOrders:  accountClosedOrders,
-	}
-}
-
-type simpleTradeAlgorithmResult struct {
-	createOrderDone []<-chan *broker.CreateOrderResult
-	closeOrderDone  []<-chan *broker.CloseOrderResult
+	runner.done <- aggregator.reduce()
 }
 
 type accountCreatedOrder struct {
@@ -157,6 +108,65 @@ type accountClosedOrder struct {
 type accountOrders struct {
 	createdOrders []*accountCreatedOrder
 	closedOrders  []*accountClosedOrder
+}
+
+type orderAggregator struct {
+	broker.Orderer
+	accountID       broker.AccountID
+	createOrderDone []<-chan *broker.CreateOrderResult
+	closeOrderDone  []<-chan *broker.CloseOrderResult
+}
+
+func newOrderAggregator(orderer broker.Orderer, accountID broker.AccountID) *orderAggregator {
+	return &orderAggregator{
+		Orderer:         orderer,
+		accountID:       accountID,
+		createOrderDone: []<-chan *broker.CreateOrderResult{},
+		closeOrderDone:  []<-chan *broker.CloseOrderResult{},
+	}
+}
+
+func (aggregator *orderAggregator) createOrder(tradePair broker.TradePair, units float64, isLong bool) {
+	result := aggregator.CreateOrder(aggregator.accountID, tradePair, units, isLong)
+	aggregator.createOrderDone = append(aggregator.createOrderDone, result)
+}
+
+func (aggregator *orderAggregator) closeOrder(orderID broker.OrderID) {
+	result := aggregator.CloseOrder(aggregator.accountID, orderID)
+	aggregator.closeOrderDone = append(aggregator.closeOrderDone, result)
+}
+
+func (aggregator *orderAggregator) reduce() *accountOrders {
+	accountCreatedOrders := []*accountCreatedOrder{}
+	for _, done := range aggregator.createOrderDone {
+		createdOrder := <-done
+		if createdOrder.Err != nil {
+			log.Println(createdOrder.Err.Error())
+		} else {
+			accountCreatedOrders = append(accountCreatedOrders, &accountCreatedOrder{
+				accountID:    aggregator.accountID,
+				createdOrder: createdOrder.CreatedOrder,
+			})
+		}
+	}
+
+	accountClosedOrders := []*accountClosedOrder{}
+	for _, done := range aggregator.closeOrderDone {
+		closedOrder := <-done
+		if closedOrder.Err != nil {
+			log.Println(closedOrder.Err.Error())
+		} else {
+			accountClosedOrders = append(accountClosedOrders, &accountClosedOrder{
+				accountID:   aggregator.accountID,
+				closedOrder: closedOrder.ClosedOrder,
+			})
+		}
+	}
+
+	return &accountOrders{
+		createdOrders: accountCreatedOrders,
+		closedOrders:  accountClosedOrders,
+	}
 }
 
 // SimpleTraderBuilder is a builder for simple trader

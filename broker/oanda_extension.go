@@ -13,8 +13,8 @@ func (oandaClientPrice *OandaClientPrice) Ask() float64 {
 }
 
 // OrderID is a method to get order ID
-func (oandaOrderCreated *OandaOrderCreated) OrderID() int {
-	return oandaOrderCreated.OrderFillTransaction.TradeOpened.TradeID
+func (oandaOrderCreated *OandaOrderCreated) OrderID() OrderID {
+	return OrderID(oandaOrderCreated.OrderFillTransaction.TradeOpened.TradeID)
 }
 
 // TradePair is a method to get trade pair
@@ -43,8 +43,8 @@ func (oandaOrderCreated *OandaOrderCreated) IsLong() bool {
 }
 
 // OrderID is a methdo to get id
-func (oandaTrade *OandaTrade) OrderID() int {
-	return oandaTrade.ID
+func (oandaTrade *OandaTrade) OrderID() OrderID {
+	return OrderID(oandaTrade.ID)
 }
 
 // TradePair is a method to get trade pair
@@ -78,8 +78,8 @@ func (oandaTrade *OandaTrade) UnrealizedProfit() float64 {
 }
 
 // OrderID is a method to get order id
-func (oandaTradeClosed *OandaTradeClosed) OrderID() int {
-	return oandaTradeClosed.OrderFillTransaction.TradesClosed[0].TradeID
+func (oandaTradeClosed *OandaTradeClosed) OrderID() OrderID {
+	return OrderID(oandaTradeClosed.OrderFillTransaction.TradesClosed[0].TradeID)
 }
 
 // TradePair is a method to get trade pair
