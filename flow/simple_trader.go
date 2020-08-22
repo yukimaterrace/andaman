@@ -10,6 +10,7 @@ type SimpleTrader struct {
 	broker       broker.Broker
 	tradableFunc TradableFunc
 	tradeRunners []*simpleTradeRunner
+	executor     *simpleTradeRunnersExecutor
 }
 
 func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recordMaterial, bool) {
@@ -27,21 +28,69 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 
 	tradable := trader.tradableFunc(material)
 
-	for _, runner := range trader.tradeRunners {
-		go func(runner *simpleTradeRunner) {
-			runner.run(material, mode, tradable)
-		}(runner)
-	}
+	trader.executor.run(material, mode, tradable)
 
-	results := make([]*accountOrders, 0)
+	ordersMap := map[broker.AccountID]*combinedOrders{}
 	for _, runner := range trader.tradeRunners {
-		accountOrders := <-runner.done
-		if len(accountOrders.createdOrders) > 0 || len(accountOrders.closedOrders) > 0 {
-			results = append(results, accountOrders)
+		combinedOrders := <-runner.done
+		if len(combinedOrders.createdOrders) > 0 || len(combinedOrders.closedOrders) > 0 {
+			if _, ok := ordersMap[runner.accountID]; ok {
+				panic("duplicate runner for an accountID detected")
+			}
+
+			ordersMap[runner.accountID] = combinedOrders
 		}
 	}
 
-	return results, len(results) > 0
+	return &accountCombinedOrders{ordersMap: ordersMap}, len(ordersMap) > 0
+}
+
+type simpleTradeRunnersExecutor struct {
+	runners       []*simpleTradeRunner
+	runnersGroups [][]*simpleTradeRunner
+	parallel      int
+}
+
+func newSimpleTradeRunnersExecutor(runners []*simpleTradeRunner, parallel int) *simpleTradeRunnersExecutor {
+	if parallel == 0 {
+		return &simpleTradeRunnersExecutor{
+			runners:       runners,
+			runnersGroups: nil,
+			parallel:      0,
+		}
+	}
+
+	if parallel > len(runners) {
+		parallel = len(runners)
+	}
+
+	runnerGroups := make([][]*simpleTradeRunner, parallel)
+	count := len(runners) / parallel
+	for i := 0; i < parallel; i++ {
+		runnerGroups[i] = runners[i*count : (i+1)*count]
+	}
+
+	return &simpleTradeRunnersExecutor{
+		runners:       runners,
+		runnersGroups: runnerGroups,
+		parallel:      parallel,
+	}
+}
+
+func (executor *simpleTradeRunnersExecutor) run(material tradeMaterial, mode TradeMode, tradable bool) {
+	if executor.parallel == 0 {
+		for _, runner := range executor.runners {
+			runner.run(material, mode, tradable)
+		}
+	} else {
+		for i := 0; i < executor.parallel; i++ {
+			go func(runners []*simpleTradeRunner) {
+				for _, runner := range runners {
+					runner.run(material, mode, tradable)
+				}
+			}(executor.runnersGroups[i])
+		}
+	}
 }
 
 // SimpleTradeAlgorithm is an interface for simple trade algorithm
@@ -55,7 +104,7 @@ type simpleTradeRunner struct {
 	accountID    broker.AccountID
 	algorithmMap map[broker.TradePair]SimpleTradeAlgorithm
 	orderer      broker.Orderer
-	done         chan *accountOrders
+	done         chan *combinedOrders
 }
 
 func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tradable bool) {
@@ -95,19 +144,13 @@ func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tra
 	runner.done <- aggregator.reduce()
 }
 
-type accountCreatedOrder struct {
-	accountID    broker.AccountID
-	createdOrder broker.CreatedOrder
+type combinedOrders struct {
+	createdOrders []broker.CreatedOrder
+	closedOrders  []broker.ClosedOrder
 }
 
-type accountClosedOrder struct {
-	accountID   broker.AccountID
-	closedOrder broker.ClosedOrder
-}
-
-type accountOrders struct {
-	createdOrders []*accountCreatedOrder
-	closedOrders  []*accountClosedOrder
+type accountCombinedOrders struct {
+	ordersMap map[broker.AccountID]*combinedOrders
 }
 
 type orderAggregator struct {
@@ -136,36 +179,30 @@ func (aggregator *orderAggregator) closeOrder(orderID broker.OrderID) {
 	aggregator.closeOrderDone = append(aggregator.closeOrderDone, result)
 }
 
-func (aggregator *orderAggregator) reduce() *accountOrders {
-	accountCreatedOrders := []*accountCreatedOrder{}
+func (aggregator *orderAggregator) reduce() *combinedOrders {
+	createdOrders := []broker.CreatedOrder{}
 	for _, done := range aggregator.createOrderDone {
 		createdOrder := <-done
 		if createdOrder.Err != nil {
 			log.Println(createdOrder.Err.Error())
 		} else {
-			accountCreatedOrders = append(accountCreatedOrders, &accountCreatedOrder{
-				accountID:    aggregator.accountID,
-				createdOrder: createdOrder.CreatedOrder,
-			})
+			createdOrders = append(createdOrders, createdOrder.CreatedOrder)
 		}
 	}
 
-	accountClosedOrders := []*accountClosedOrder{}
+	closedOrders := []broker.ClosedOrder{}
 	for _, done := range aggregator.closeOrderDone {
 		closedOrder := <-done
 		if closedOrder.Err != nil {
 			log.Println(closedOrder.Err.Error())
 		} else {
-			accountClosedOrders = append(accountClosedOrders, &accountClosedOrder{
-				accountID:   aggregator.accountID,
-				closedOrder: closedOrder.ClosedOrder,
-			})
+			closedOrders = append(closedOrders, closedOrder.ClosedOrder)
 		}
 	}
 
-	return &accountOrders{
-		createdOrders: accountCreatedOrders,
-		closedOrders:  accountClosedOrders,
+	return &combinedOrders{
+		createdOrders: createdOrders,
+		closedOrders:  closedOrders,
 	}
 }
 
@@ -175,6 +212,7 @@ type SimpleTraderBuilder struct {
 	tradableFunc   TradableFunc
 	broker         broker.Broker
 	ordererFactory broker.OrdererFactory
+	parallel       int
 }
 
 // Trade is a method to add a trade piece in builder
@@ -205,6 +243,12 @@ func (builder *SimpleTraderBuilder) OrdererFactory(ordererFactory broker.Orderer
 	return builder
 }
 
+// Parallel sets parallel parameter in builder
+func (builder *SimpleTraderBuilder) Parallel(paralle int) *SimpleTraderBuilder {
+	builder.parallel = paralle
+	return builder
+}
+
 // Build builds simple trader
 func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
 	configMap := make(map[broker.AccountID]map[broker.TradePair]SimpleTradeAlgorithm)
@@ -225,14 +269,17 @@ func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
 			accountID:    accountID,
 			algorithmMap: algorithmMap,
 			orderer:      builder.ordererFactory.Create(builder.broker),
-			done:         make(chan *accountOrders, 1),
+			done:         make(chan *combinedOrders, 1),
 		})
 	}
+
+	executor := newSimpleTradeRunnersExecutor(tradeRunners, builder.parallel)
 
 	return &SimpleTrader{
 		broker:       builder.broker,
 		tradableFunc: builder.tradableFunc,
 		tradeRunners: tradeRunners,
+		executor:     executor,
 	}
 }
 

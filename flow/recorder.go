@@ -1,7 +1,10 @@
 package flow
 
+import "time"
+
 type recorder interface {
 	record(material recordMaterial)
+	write()
 	close()
 }
 
@@ -18,7 +21,8 @@ type recordRequest struct {
 
 type recordWorker struct {
 	recorder
-	ch chan interface{}
+	ch     chan interface{}
+	ticker *time.Ticker
 }
 
 func (recordWorker *recordWorker) recordRequest(material recordMaterial) {
@@ -32,17 +36,23 @@ func (recordWorker *recordWorker) shutdown() {
 }
 
 func (recordWorker *recordWorker) work(exit chan<- bool) {
-	request := <-recordWorker.ch
+	select {
+	case request := <-recordWorker.ch:
 
-	switch req := request.(type) {
-	case *recordRequest:
-		recordWorker.record(req.material)
-		exit <- false
+		switch req := request.(type) {
+		case *recordRequest:
+			recordWorker.record(req.material)
+			exit <- false
 
-	case *shutdownRequest:
-		recordWorker.close()
-		req.done <- true
-		exit <- true
+		case *shutdownRequest:
+			recordWorker.ticker.Stop()
+			recordWorker.close()
+			req.done <- true
+			exit <- true
+		}
+
+	case <-recordWorker.ticker.C:
+		recordWorker.write()
 	}
 }
 

@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"time"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/config"
 )
@@ -74,6 +75,7 @@ func (builder *Builder) Build() *Flow {
 	recordWorker := &recordWorker{
 		recorder: recorder,
 		ch:       make(chan interface{}, config.FlowChanCap),
+		ticker:   time.NewTicker(time.Minute), // write ever 1 minute
 	}
 
 	tradeWorker := &tradeWorker{
