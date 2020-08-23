@@ -60,8 +60,33 @@ func (recorder *simpleRecorder) close() {
 }
 
 func (recorder *simpleRecorder) makeIdentifiedCompletableOrders(onlyCompleted bool) []*identifiedCompletableOrder {
+	identifiedCompletableOrders := []*identifiedCompletableOrder{}
 
-	return nil
+	for accountID, orderMap := range recorder.orderMap {
+		closedOrderIDs := []broker.OrderID{}
+
+		for orderID, order := range orderMap {
+			if onlyCompleted && order.closedOrder == nil {
+				continue
+			}
+
+			identifiedCompletableOrders = append(identifiedCompletableOrders, &identifiedCompletableOrder{
+				accountID: accountID,
+				tradePair: order.createdOrder.TradePair(),
+				order:     order,
+			})
+
+			if order.closedOrder != nil {
+				closedOrderIDs = append(closedOrderIDs, orderID)
+			}
+		}
+
+		for _, orderID := range closedOrderIDs {
+			delete(orderMap, orderID)
+		}
+	}
+
+	return identifiedCompletableOrders
 }
 
 type completableOrder struct {

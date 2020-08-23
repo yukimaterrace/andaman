@@ -67,7 +67,11 @@ func newSimpleTradeRunnersExecutor(runners []*simpleTradeRunner, parallel int) *
 	runnerGroups := make([][]*simpleTradeRunner, parallel)
 	count := len(runners) / parallel
 	for i := 0; i < parallel; i++ {
-		runnerGroups[i] = runners[i*count : (i+1)*count]
+		if i == parallel-1 {
+			runnerGroups[i] = runners[i*count:]
+		} else {
+			runnerGroups[i] = runners[i*count : (i+1)*count]
+		}
 	}
 
 	return &simpleTradeRunnersExecutor{
