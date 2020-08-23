@@ -55,8 +55,3 @@ func (recordWorker *recordWorker) work(exit chan<- bool) {
 		recordWorker.write()
 	}
 }
-
-type csvSpec interface {
-	csvHeaders() []string
-	csvValues() []string
-}
