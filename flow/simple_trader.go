@@ -3,6 +3,7 @@ package flow
 import (
 	"log"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/util"
 )
 
 // SimpleTrader is a struct for simple trader
@@ -18,7 +19,7 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 		if price, ok := material.(broker.PriceExtractor); ok {
 			simulationBroker.Update(price)
 		} else {
-			panic("wrong type has been passed")
+			panic(util.ErrWrongType)
 		}
 	}
 
@@ -42,7 +43,7 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 		}
 	}
 
-	return &accountCombinedOrders{ordersMap: ordersMap}, len(ordersMap) > 0
+	return accountCombinedOrders(ordersMap), len(ordersMap) > 0
 }
 
 type simpleTradeRunnersExecutor struct {
@@ -153,9 +154,7 @@ type combinedOrders struct {
 	closedOrders  []broker.ClosedOrder
 }
 
-type accountCombinedOrders struct {
-	ordersMap map[broker.AccountID]*combinedOrders
-}
+type accountCombinedOrders map[broker.AccountID]*combinedOrders
 
 type orderAggregator struct {
 	broker.Orderer
@@ -255,19 +254,19 @@ func (builder *SimpleTraderBuilder) Parallel(paralle int) *SimpleTraderBuilder {
 
 // Build builds simple trader
 func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
-	configMap := make(map[broker.AccountID]map[broker.TradePair]SimpleTradeAlgorithm)
+	configMap := map[broker.AccountID]map[broker.TradePair]SimpleTradeAlgorithm{}
 
 	for _, config := range builder.configs {
 		algorithmMap, ok := configMap[config.accountID]
 		if !ok {
-			algorithmMap = make(map[broker.TradePair]SimpleTradeAlgorithm)
+			algorithmMap = map[broker.TradePair]SimpleTradeAlgorithm{}
 			configMap[config.accountID] = algorithmMap
 		}
 
 		algorithmMap[config.tradePair] = config.algorithm
 	}
 
-	tradeRunners := make([]*simpleTradeRunner, 0)
+	tradeRunners := []*simpleTradeRunner{}
 	for accountID, algorithmMap := range configMap {
 		tradeRunners = append(tradeRunners, &simpleTradeRunner{
 			accountID:    accountID,

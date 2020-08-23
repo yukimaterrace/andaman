@@ -3,6 +3,7 @@ package broker
 import (
 	"fmt"
 	"log"
+	"yukimaterrace/andaman/util"
 )
 
 // SimpleSimulationBroker is a broker for simple simulation
@@ -25,7 +26,7 @@ type SimpleSimulationOrdererFactory struct{}
 func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 	simpleSimulationBroker, ok := broker.(*SimpleSimulationBroker)
 	if !ok {
-		panic("wrong type object has been passed")
+		panic(util.ErrWrongType)
 	}
 
 	return &SimpleSimulationOrderer{
@@ -61,7 +62,7 @@ func (orderer *SimpleSimulationOrderer) CreateOrder(accountID AccountID, tradePa
 	}
 
 	if _, ok := orderer.currentOrdersMap[accountID]; !ok {
-		orderer.currentOrdersMap[accountID] = make([]*order, 0)
+		orderer.currentOrdersMap[accountID] = []*order{}
 	}
 
 	order := &order{
@@ -95,7 +96,7 @@ func (orderer *SimpleSimulationOrderer) CreateOrder(accountID AccountID, tradePa
 // OpenOrders is a method to open orders
 func (orderer *SimpleSimulationOrderer) OpenOrders(accountID AccountID) <-chan *OpenOrdersResult {
 	if _, ok := orderer.currentOrdersMap[accountID]; !ok {
-		orderer.currentOrdersMap[accountID] = make([]*order, 0)
+		orderer.currentOrdersMap[accountID] = []*order{}
 	}
 
 	orders := orderer.currentOrdersMap[accountID]
@@ -116,7 +117,7 @@ func (orderer *SimpleSimulationOrderer) OpenOrders(accountID AccountID) <-chan *
 // CloseOrder is a method to close order
 func (orderer *SimpleSimulationOrderer) CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult {
 	if _, ok := orderer.currentOrdersMap[accountID]; !ok {
-		orderer.currentOrdersMap[accountID] = make([]*order, 0)
+		orderer.currentOrdersMap[accountID] = []*order{}
 	}
 
 	orders := orderer.currentOrdersMap[accountID]

@@ -2,11 +2,10 @@ package broker
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
+	"yukimaterrace/andaman/util"
 )
 
 // OandaBroker is OANDA broker
@@ -16,15 +15,8 @@ type OandaBroker struct {
 
 // NewOandaBroker is a constructor for Oanda
 func NewOandaBroker() *OandaBroker {
-	oandaHost := os.Getenv("OANDA_HOST")
-	if oandaHost == "" {
-		log.Panicln("OANDA_HOST has not been set")
-	}
-
-	oandaToken := os.Getenv("OANDA_TOKEN")
-	if oandaToken == "" {
-		log.Panicln("OANDA_TOKEN has not been set")
-	}
+	oandaHost := util.GetEnv("OANDA_HOST")
+	oandaToken := util.GetEnv("OANDA_TOKEN")
 
 	var header = http.Header{}
 

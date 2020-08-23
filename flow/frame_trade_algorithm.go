@@ -2,9 +2,9 @@ package flow
 
 import (
 	"log"
-	"os"
 	"strconv"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/util"
 )
 
 type frameCalculator interface {
@@ -95,10 +95,7 @@ type FrameTradeAlgorithm struct {
 
 // NewFrameTradeAlgorithm is a constructor for new frame trade algorithm
 func NewFrameTradeAlgorithm(param *FrameTradeParam) *FrameTradeAlgorithm {
-	unitsEnv := os.Getenv("UNITS")
-	if unitsEnv == "" {
-		log.Panicln("UNITS has not been set")
-	}
+	unitsEnv := util.GetEnv("UNITS")
 
 	units, err := strconv.ParseFloat(unitsEnv, 64)
 	if err != nil {
@@ -114,7 +111,7 @@ func NewFrameTradeAlgorithm(param *FrameTradeParam) *FrameTradeAlgorithm {
 func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggregator *orderAggregator, tradePair broker.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
-		panic("wrong type has been passed")
+		panic(util.ErrWrongType)
 	}
 
 	price := calculator.Price(tradePair)
@@ -143,7 +140,7 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggr
 func (algorithm *FrameTradeAlgorithm) proceedTrade(material tradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
-		panic("wrong type has been passed")
+		panic(util.ErrWrongType)
 	}
 
 	if len(openOrders) == 0 {

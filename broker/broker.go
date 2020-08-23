@@ -1,9 +1,5 @@
 package broker
 
-import (
-	"strconv"
-)
-
 // Broker is an interface for broker
 type Broker interface{}
 
@@ -85,26 +81,4 @@ type ClosedOrder interface {
 	TimeAtClose() int
 	PriceAtClose() float64
 	RealizedProfit() float64
-}
-
-// MakeOrderCsv makes a csv row of order
-func MakeOrderCsv(created CreatedOrder, closed ClosedOrder) []string {
-	csv := []string{
-		strconv.FormatInt(int64(created.OrderID()), 10),
-		string(created.TradePair()),
-		strconv.FormatInt(int64(created.TimeAtOpen()), 10),
-		strconv.FormatFloat(created.PriceAtOpen(), 'f', 6, 64),
-		strconv.FormatFloat(created.Units(), 'f', 8, 64),
-		strconv.FormatBool(created.IsLong()),
-	}
-
-	if closed != nil {
-		return append(csv, "not closed", "not closed", "0")
-	}
-
-	return append(csv,
-		strconv.FormatInt(int64(closed.TimeAtClose()), 10),
-		strconv.FormatFloat(closed.PriceAtClose(), 'f', 6, 64),
-		strconv.FormatFloat(closed.RealizedProfit(), 'f', 6, 64),
-	)
 }
