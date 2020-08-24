@@ -188,6 +188,14 @@ func (algorithm *FrameTradeAlgorithm) proceedTrade(material tradeMaterial, agggr
 	}
 }
 
+func (algorithm *FrameTradeAlgorithm) paramCsvHeader() []string {
+	return algorithm.FrameTradeParam.csvHeader()
+}
+
+func (algorithm *FrameTradeAlgorithm) paramCsvValue() []string {
+	return algorithm.FrameTradeParam.csvValue()
+}
+
 func profit(openOrder broker.OpenOrder, price broker.Price) float64 {
 	if openOrder.IsLong() {
 		return price.Bid() - openOrder.PriceAtOpen()

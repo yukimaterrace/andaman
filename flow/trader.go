@@ -8,11 +8,14 @@ type trader interface {
 
 // TraderFactory provides factory method of trader
 type TraderFactory interface {
-	create(broker broker.Broker, ordererFactory broker.OrdererFactory, tradableFunc TradableFunc) trader
+	create(broker broker.Broker, ordererFactory broker.OrdererFactory) trader
 }
 
-// TradableFunc is a function to calculate tradable
-type TradableFunc func(time interface{}) bool
+// TradableTimeZone is a struct to judge the time is tradable
+type TradableTimeZone struct {
+	TimeZoneName string
+	OK           func(time interface{}) bool
+}
 
 type tradeMaterial interface{}
 
@@ -79,3 +82,14 @@ const (
 	// Terminate is terminate mode
 	Terminate
 )
+
+type tradeParamLoader interface {
+	paramCsvHeader() []string
+	paramCsvValue() []string
+}
+
+// TradeSpecs is a struct for trade specs
+type TradeSpecs struct {
+	timeZones    map[broker.AccountID]*TradableTimeZone
+	paramLoaders map[broker.AccountID]map[broker.TradePair]tradeParamLoader
+}

@@ -10,7 +10,6 @@ import (
 type Builder struct {
 	broker           broker.Broker
 	ordererFactory   broker.OrdererFactory
-	tradableFunc     TradableFunc
 	pricerTradePairs []broker.TradePair
 	initialTradeMode TradeMode
 	pricerFactory    PricerFactory
@@ -27,12 +26,6 @@ func (builder *Builder) Broker(broker broker.Broker) *Builder {
 // OrdererFactory sets orderer factory in builder
 func (builder *Builder) OrdererFactory(ordererFactory broker.OrdererFactory) *Builder {
 	builder.ordererFactory = ordererFactory
-	return builder
-}
-
-// TradableFunc sets tradablefunc in builder
-func (builder *Builder) TradableFunc(tradableFunc TradableFunc) *Builder {
-	builder.tradableFunc = tradableFunc
 	return builder
 }
 
@@ -69,7 +62,7 @@ func (builder *Builder) RecorderFactory(recorderFactory RecorderFactory) *Builde
 // Build builds flow
 func (builder *Builder) Build() *Flow {
 	pricer := builder.pricerFactory.create(builder.broker, builder.pricerTradePairs)
-	trader := builder.traderFactory.create(builder.broker, builder.ordererFactory, builder.tradableFunc)
+	trader := builder.traderFactory.create(builder.broker, builder.ordererFactory)
 	recorder := builder.recorderFactory.create()
 
 	recordWorker := &recordWorker{

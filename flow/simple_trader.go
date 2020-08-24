@@ -9,7 +9,6 @@ import (
 // SimpleTrader is a struct for simple trader
 type SimpleTrader struct {
 	broker       broker.Broker
-	tradableFunc TradableFunc
 	tradeRunners []*simpleTradeRunner
 	executor     *simpleTradeRunnersExecutor
 }
@@ -27,14 +26,12 @@ func (trader *SimpleTrader) trade(material tradeMaterial, mode TradeMode) (recor
 		return nil, false
 	}
 
-	tradable := trader.tradableFunc(material)
-
-	trader.executor.run(material, mode, tradable)
+	trader.executor.run(material, mode)
 
 	ordersMap := map[broker.AccountID]*combinedOrders{}
 	for _, runner := range trader.tradeRunners {
 		combinedOrders := <-runner.done
-		if len(combinedOrders.createdOrders) > 0 || len(combinedOrders.closedOrders) > 0 {
+		if combinedOrders != nil && (len(combinedOrders.createdOrders) > 0 || len(combinedOrders.closedOrders) > 0) {
 			if _, ok := ordersMap[runner.accountID]; ok {
 				panic("duplicate runner for an accountID detected")
 			}
@@ -82,16 +79,16 @@ func newSimpleTradeRunnersExecutor(runners []*simpleTradeRunner, parallel int) *
 	}
 }
 
-func (executor *simpleTradeRunnersExecutor) run(material tradeMaterial, mode TradeMode, tradable bool) {
+func (executor *simpleTradeRunnersExecutor) run(material tradeMaterial, mode TradeMode) {
 	if executor.parallel == 0 {
 		for _, runner := range executor.runners {
-			runner.run(material, mode, tradable)
+			runner.run(material, mode)
 		}
 	} else {
 		for i := 0; i < executor.parallel; i++ {
 			go func(runners []*simpleTradeRunner) {
 				for _, runner := range runners {
-					runner.run(material, mode, tradable)
+					runner.run(material, mode)
 				}
 			}(executor.runnersGroups[i])
 		}
@@ -101,23 +98,38 @@ func (executor *simpleTradeRunnersExecutor) run(material tradeMaterial, mode Tra
 // SimpleTradeAlgorithm is an interface for simple trade algorithm
 type SimpleTradeAlgorithm interface {
 	initialTrade(material tradeMaterial, aggregator *orderAggregator, tradePair broker.TradePair)
-
 	proceedTrade(material tradeMaterial, aggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair)
+	tradeParamLoader
 }
 
 type simpleTradeRunner struct {
-	accountID    broker.AccountID
-	algorithmMap map[broker.TradePair]SimpleTradeAlgorithm
-	orderer      broker.Orderer
-	done         chan *combinedOrders
+	accountID         broker.AccountID
+	tradableTimeZone  *TradableTimeZone
+	algorithmMap      map[broker.TradePair]SimpleTradeAlgorithm
+	orderer           broker.Orderer
+	done              chan *combinedOrders
+	openOrdersExisted bool
 }
 
-func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode, tradable bool) {
+func (runner *simpleTradeRunner) run(material tradeMaterial, mode TradeMode) {
+	tradable := runner.tradableTimeZone.OK(material)
+
+	if !runner.openOrdersExisted && !tradable {
+		runner.done <- nil
+		return
+	}
+
 	res := <-runner.orderer.OpenOrders(runner.accountID)
 	if res.Err != nil {
 		log.Println(res.Err.Error())
 		runner.done <- nil
 		return
+	}
+
+	if len(res.OpenOrders) > 0 {
+		runner.openOrdersExisted = true
+	} else {
+		runner.openOrdersExisted = false
 	}
 
 	openOrdersMap := map[broker.TradePair][]broker.OpenOrder{}
@@ -211,26 +223,39 @@ func (aggregator *orderAggregator) reduce() *combinedOrders {
 
 // SimpleTraderBuilder is a builder for simple trader
 type SimpleTraderBuilder struct {
-	configs        []*simpleTraderConfig
-	tradableFunc   TradableFunc
-	broker         broker.Broker
-	ordererFactory broker.OrdererFactory
-	parallel       int
+	tradableTimeZoneMap map[broker.AccountID]*TradableTimeZone
+	algorithmMap        map[broker.AccountID]map[broker.TradePair]SimpleTradeAlgorithm
+	broker              broker.Broker
+	ordererFactory      broker.OrdererFactory
+	parallel            int
+}
+
+// NewSimpleTraderBuilder is a constructor for simple trader builder
+func NewSimpleTraderBuilder() *SimpleTraderBuilder {
+	return &SimpleTraderBuilder{
+		tradableTimeZoneMap: map[broker.AccountID]*TradableTimeZone{},
+		algorithmMap:        map[broker.AccountID]map[broker.TradePair]SimpleTradeAlgorithm{},
+	}
+}
+
+// TradableTimeZone is a method to add a tradable time zone
+func (builder *SimpleTraderBuilder) TradableTimeZone(accountID broker.AccountID, tradableTimeZone *TradableTimeZone) *SimpleTraderBuilder {
+	if _, ok := builder.tradableTimeZoneMap[accountID]; ok {
+		panic("duplicate tradable time zone for an account ID detected")
+	}
+
+	builder.tradableTimeZoneMap[accountID] = tradableTimeZone
+	return builder
 }
 
 // Trade is a method to add a trade piece in builder
 func (builder *SimpleTraderBuilder) Trade(accountID broker.AccountID, tradePair broker.TradePair, algorithm SimpleTradeAlgorithm) *SimpleTraderBuilder {
-	builder.configs = append(builder.configs, &simpleTraderConfig{
-		accountID: accountID,
-		tradePair: tradePair,
-		algorithm: algorithm,
-	})
-	return builder
-}
+	_, ok := builder.algorithmMap[accountID]
+	if !ok {
+		builder.algorithmMap[accountID] = map[broker.TradePair]SimpleTradeAlgorithm{}
+	}
 
-// TradableFunc sets tradablefunc in builder
-func (builder *SimpleTraderBuilder) TradableFunc(tradableFunc TradableFunc) *SimpleTraderBuilder {
-	builder.tradableFunc = tradableFunc
+	builder.algorithmMap[accountID][tradePair] = algorithm
 	return builder
 }
 
@@ -254,25 +279,19 @@ func (builder *SimpleTraderBuilder) Parallel(paralle int) *SimpleTraderBuilder {
 
 // Build builds simple trader
 func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
-	configMap := map[broker.AccountID]map[broker.TradePair]SimpleTradeAlgorithm{}
-
-	for _, config := range builder.configs {
-		algorithmMap, ok := configMap[config.accountID]
+	tradeRunners := []*simpleTradeRunner{}
+	for accountID, algorithmMap := range builder.algorithmMap {
+		tradableTimeZone, ok := builder.tradableTimeZoneMap[accountID]
 		if !ok {
-			algorithmMap = map[broker.TradePair]SimpleTradeAlgorithm{}
-			configMap[config.accountID] = algorithmMap
+			panic("no tradable time zone specified")
 		}
 
-		algorithmMap[config.tradePair] = config.algorithm
-	}
-
-	tradeRunners := []*simpleTradeRunner{}
-	for accountID, algorithmMap := range configMap {
 		tradeRunners = append(tradeRunners, &simpleTradeRunner{
-			accountID:    accountID,
-			algorithmMap: algorithmMap,
-			orderer:      builder.ordererFactory.Create(builder.broker),
-			done:         make(chan *combinedOrders, 1),
+			accountID:        accountID,
+			tradableTimeZone: tradableTimeZone,
+			algorithmMap:     algorithmMap,
+			orderer:          builder.ordererFactory.Create(builder.broker),
+			done:             make(chan *combinedOrders, 1),
 		})
 	}
 
@@ -280,16 +299,29 @@ func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
 
 	return &SimpleTrader{
 		broker:       builder.broker,
-		tradableFunc: builder.tradableFunc,
 		tradeRunners: tradeRunners,
 		executor:     executor,
 	}
 }
 
-type simpleTraderConfig struct {
-	accountID broker.AccountID
-	tradePair broker.TradePair
-	algorithm SimpleTradeAlgorithm
+// BuildTradeSpecs builds trade specs
+func (builder *SimpleTraderBuilder) BuildTradeSpecs() *TradeSpecs {
+	paramLoaders := map[broker.AccountID]map[broker.TradePair]tradeParamLoader{}
+
+	for accountID, algorithmMap := range builder.algorithmMap {
+		if _, ok := paramLoaders[accountID]; !ok {
+			paramLoaders[accountID] = map[broker.TradePair]tradeParamLoader{}
+		}
+
+		for tradePair, algorithm := range algorithmMap {
+			paramLoaders[accountID][tradePair] = algorithm
+		}
+	}
+
+	return &TradeSpecs{
+		timeZones:    builder.tradableTimeZoneMap,
+		paramLoaders: paramLoaders,
+	}
 }
 
 // SimpleTraderFactory is a factory for simple trader
