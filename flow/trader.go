@@ -13,8 +13,8 @@ type TraderFactory interface {
 
 // TradableTimeZone is a struct to judge the time is tradable
 type TradableTimeZone struct {
-	TimeZoneName string
-	OK           func(time interface{}) bool
+	Name string
+	OK   func(time interface{}) bool
 }
 
 type tradeMaterial interface{}
@@ -88,8 +88,16 @@ type tradeParamLoader interface {
 	paramCsvValue() []string
 }
 
+// TradableTimeZones is a type for tradable time zones
+type TradableTimeZones map[broker.AccountID]*TradableTimeZone
+
+type keyAccountIDTradePair struct {
+	accountID broker.AccountID
+	tradePair broker.TradePair
+}
+
 // TradeSpecs is a struct for trade specs
 type TradeSpecs struct {
-	timeZones    map[broker.AccountID]*TradableTimeZone
-	paramLoaders map[broker.AccountID]map[broker.TradePair]tradeParamLoader
+	timeZones    TradableTimeZones
+	paramLoaders map[keyAccountIDTradePair]tradeParamLoader
 }

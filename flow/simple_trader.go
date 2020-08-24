@@ -306,15 +306,11 @@ func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
 
 // BuildTradeSpecs builds trade specs
 func (builder *SimpleTraderBuilder) BuildTradeSpecs() *TradeSpecs {
-	paramLoaders := map[broker.AccountID]map[broker.TradePair]tradeParamLoader{}
+	paramLoaders := map[keyAccountIDTradePair]tradeParamLoader{}
 
 	for accountID, algorithmMap := range builder.algorithmMap {
-		if _, ok := paramLoaders[accountID]; !ok {
-			paramLoaders[accountID] = map[broker.TradePair]tradeParamLoader{}
-		}
-
 		for tradePair, algorithm := range algorithmMap {
-			paramLoaders[accountID][tradePair] = algorithm
+			paramLoaders[keyAccountIDTradePair{accountID, tradePair}] = algorithm
 		}
 	}
 
@@ -322,6 +318,11 @@ func (builder *SimpleTraderBuilder) BuildTradeSpecs() *TradeSpecs {
 		timeZones:    builder.tradableTimeZoneMap,
 		paramLoaders: paramLoaders,
 	}
+}
+
+// BuildTradableTimeZones builds tradable time zones
+func (builder *SimpleTraderBuilder) BuildTradableTimeZones() TradableTimeZones {
+	return builder.tradableTimeZoneMap
 }
 
 // SimpleTraderFactory is a factory for simple trader
