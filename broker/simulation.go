@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"fmt"
 	"log"
 	"yukimaterrace/andaman/util"
 )
@@ -12,37 +11,21 @@ type SimpleSimulationBroker struct {
 	currentTime     int
 }
 
+// Update is a method to update orderer
+func (broker *SimpleSimulationBroker) Update(priceExtractor PriceExtractor) {
+	for _, tradePair := range priceExtractor.TradePairs() {
+		broker.currentPriceMap[tradePair] = priceExtractor.Price(tradePair)
+	}
+
+	broker.currentTime = priceExtractor.Time()
+}
+
 // SimpleSimulationOrderer is a struct for simple simulation broker
 type SimpleSimulationOrderer struct {
 	*SimpleSimulationBroker
-	currentOrderIDMap map[AccountID]OrderID
-	currentOrdersMap  map[AccountID][]*order
-}
-
-// SimpleSimulationOrdererFactory is a factory for simple simulation orderer
-type SimpleSimulationOrdererFactory struct{}
-
-// Create is a factory method for simple simulation orderer
-func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
-	simpleSimulationBroker, ok := broker.(*SimpleSimulationBroker)
-	if !ok {
-		panic(util.ErrWrongType)
-	}
-
-	return &SimpleSimulationOrderer{
-		SimpleSimulationBroker: simpleSimulationBroker,
-		currentOrderIDMap:      map[AccountID]OrderID{},
-		currentOrdersMap:       map[AccountID][]*order{},
-	}
-}
-
-// Update is a method to update orderer
-func (orderer *SimpleSimulationOrderer) Update(priceExtractor PriceExtractor) {
-	for _, tradePair := range priceExtractor.TradePairs() {
-		orderer.currentPriceMap[tradePair] = priceExtractor.Price(tradePair)
-	}
-
-	orderer.currentTime = priceExtractor.Time()
+	currentOrderID OrderID
+	currentOrders  []*order
+	ch             chan interface{}
 }
 
 func (orderer *SimpleSimulationOrderer) price(tradePair TradePair) Price {
@@ -53,20 +36,64 @@ func (orderer *SimpleSimulationOrderer) price(tradePair TradePair) Price {
 	return price
 }
 
+type createOrderRequest struct {
+	tradePair TradePair
+	units     float64
+	isLong    bool
+	done      chan<- *CreateOrderResult
+}
+
+type openOrdersRequest struct {
+	done chan<- *OpenOrdersResult
+}
+
+type closeOrderRequest struct {
+	orderID OrderID
+	done    chan<- *CloseOrderResult
+}
+
 // CreateOrder is a method to create order
-func (orderer *SimpleSimulationOrderer) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
+func (orderer *SimpleSimulationOrderer) CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
+	done := make(chan *CreateOrderResult, 1)
+
+	orderer.ch <- &createOrderRequest{
+		tradePair: tradePair,
+		units:     units,
+		isLong:    isLong,
+		done:      done,
+	}
+
+	return done
+}
+
+// OpenOrders is a method to open orders
+func (orderer *SimpleSimulationOrderer) OpenOrders() <-chan *OpenOrdersResult {
+	done := make(chan *OpenOrdersResult, 1)
+
+	orderer.ch <- &openOrdersRequest{
+		done: done,
+	}
+
+	return done
+}
+
+// CloseOrder is a method to close order
+func (orderer *SimpleSimulationOrderer) CloseOrder(orderID OrderID) <-chan *CloseOrderResult {
+	done := make(chan *CloseOrderResult, 1)
+
+	orderer.ch <- &closeOrderRequest{
+		orderID: orderID,
+		done:    done,
+	}
+
+	return done
+}
+
+func (orderer *SimpleSimulationOrderer) createOrder(tradePair TradePair, units float64, isLong bool) CreatedOrder {
 	price := orderer.price(tradePair)
 
-	if _, ok := orderer.currentOrderIDMap[accountID]; !ok {
-		orderer.currentOrderIDMap[accountID] = 0
-	}
-
-	if _, ok := orderer.currentOrdersMap[accountID]; !ok {
-		orderer.currentOrdersMap[accountID] = []*order{}
-	}
-
 	order := &order{
-		orderID:    orderer.currentOrderIDMap[accountID],
+		orderID:    orderer.currentOrderID,
 		tradePair:  tradePair,
 		units:      units,
 		isLong:     isLong,
@@ -81,50 +108,28 @@ func (orderer *SimpleSimulationOrderer) CreateOrder(accountID AccountID, tradePa
 
 	order.unrealizedProfit = profitPips(price, order)
 
-	currentOrderID := orderer.currentOrderIDMap[accountID]
-	orderer.currentOrderIDMap[accountID] = currentOrderID + 1
+	orderer.currentOrderID++
+	orderer.currentOrders = append(orderer.currentOrders, order)
 
-	currentOrders := orderer.currentOrdersMap[accountID]
-	orderer.currentOrdersMap[accountID] = append(currentOrders, order)
-
-	done := make(chan *CreateOrderResult, 1)
-	done <- &CreateOrderResult{order, nil}
-
-	return done
+	return order
 }
 
-// OpenOrders is a method to open orders
-func (orderer *SimpleSimulationOrderer) OpenOrders(accountID AccountID) <-chan *OpenOrdersResult {
-	if _, ok := orderer.currentOrdersMap[accountID]; !ok {
-		orderer.currentOrdersMap[accountID] = []*order{}
-	}
+func (orderer *SimpleSimulationOrderer) openOrders() []OpenOrder {
+	openOrders := make([]OpenOrder, len(orderer.currentOrders))
 
-	orders := orderer.currentOrdersMap[accountID]
-	openOrders := make([]OpenOrder, len(orders))
-
-	for i, order := range orders {
+	for i, order := range orderer.currentOrders {
 		price := orderer.price(order.tradePair)
 		order.unrealizedProfit = profitPips(price, order)
 		openOrders[i] = order
 	}
 
-	done := make(chan *OpenOrdersResult, 1)
-	done <- &OpenOrdersResult{openOrders, nil}
-
-	return done
+	return openOrders
 }
 
-// CloseOrder is a method to close order
-func (orderer *SimpleSimulationOrderer) CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult {
-	if _, ok := orderer.currentOrdersMap[accountID]; !ok {
-		orderer.currentOrdersMap[accountID] = []*order{}
-	}
-
-	orders := orderer.currentOrdersMap[accountID]
-
+func (orderer *SimpleSimulationOrderer) closeOrder(orderID OrderID) ClosedOrder {
 	var order *order
 	var pos int
-	for i, o := range orders {
+	for i, o := range orderer.currentOrders {
 		if o.orderID == orderID {
 			order = o
 			pos = i
@@ -133,7 +138,7 @@ func (orderer *SimpleSimulationOrderer) CloseOrder(accountID AccountID, orderID 
 	}
 
 	if order == nil {
-		panic(fmt.Sprintf("no open order exists: orderID %d", int(orderID)))
+		log.Panicf("no open order exists: orderID %d", int(orderID))
 	}
 
 	price := orderer.price(order.tradePair)
@@ -148,12 +153,45 @@ func (orderer *SimpleSimulationOrderer) CloseOrder(accountID AccountID, orderID 
 
 	order.realizedProfit = profitPips(price, order)
 
-	orderer.currentOrdersMap[accountID] = append(orders[:pos], orders[pos+1:]...)
+	currentOrders := orderer.currentOrders
+	orderer.currentOrders = append(currentOrders[:pos], currentOrders[pos+1:]...)
 
-	done := make(chan *CloseOrderResult, 1)
-	done <- &CloseOrderResult{order, nil}
+	return order
+}
 
-	return done
+func (orderer *SimpleSimulationOrderer) run() {
+	go func() {
+		for {
+			orderer.work()
+		}
+	}()
+}
+
+func (orderer *SimpleSimulationOrderer) work() {
+	request := <-orderer.ch
+
+	switch req := request.(type) {
+	case *createOrderRequest:
+		createdOrder := orderer.createOrder(req.tradePair, req.units, req.isLong)
+		req.done <- &CreateOrderResult{
+			CreatedOrder: createdOrder,
+			Err:          nil,
+		}
+
+	case *openOrdersRequest:
+		openOrders := orderer.openOrders()
+		req.done <- &OpenOrdersResult{
+			OpenOrders: openOrders,
+			Err:        nil,
+		}
+
+	case *closeOrderRequest:
+		closedOrder := orderer.closeOrder(req.orderID)
+		req.done <- &CloseOrderResult{
+			ClosedOrder: closedOrder,
+			Err:         nil,
+		}
+	}
 }
 
 func profitPips(price Price, order *order) float64 {
@@ -164,6 +202,26 @@ func profitPips(price Price, order *order) float64 {
 		diff = order.priceAtOpen - price.Ask()
 	}
 	return diff / order.tradePair.PricePerPip()
+}
+
+// SimpleSimulationOrdererFactory is a factory for simple simulation orderer
+type SimpleSimulationOrdererFactory struct{}
+
+// Create is a factory method for simple simulation orderer
+func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
+	simpleSimulationBroker, ok := broker.(*SimpleSimulationBroker)
+	if !ok {
+		panic(util.ErrWrongType)
+	}
+
+	orderer := &SimpleSimulationOrderer{
+		SimpleSimulationBroker: simpleSimulationBroker,
+		currentOrderID:         0,
+		currentOrders:          []*order{},
+	}
+
+	orderer.run()
+	return orderer
 }
 
 type order struct {
