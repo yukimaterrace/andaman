@@ -11,18 +11,15 @@ type SimulationBroker interface {
 
 // Orderer is an interface for orderer
 type Orderer interface {
-	CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult
-	OpenOrders(accountID AccountID) <-chan *OpenOrdersResult
-	CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult
+	CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult
+	OpenOrders() <-chan *OpenOrdersResult
+	CloseOrder(orderID OrderID) <-chan *CloseOrderResult
 }
 
 // OrdererFactory is a factory for orderer
 type OrdererFactory interface {
 	Create(broker Broker) Orderer
 }
-
-// AccountID is a type definition for account ID
-type AccountID string
 
 // OrderID is a type definition for order ID
 type OrderID int

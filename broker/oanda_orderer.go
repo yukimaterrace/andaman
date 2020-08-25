@@ -18,7 +18,7 @@ func (factory *OandaOrdererFactory) Create(broker Broker) Orderer {
 }
 
 // CreateOrder is a method to creates order
-func (orderer *OandaOrderer) CreateOrder(accountID AccountID, tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
+func (orderer *OandaOrderer) CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
 	done := make(chan *CreateOrderResult, 1)
 
 	go func() {
@@ -29,7 +29,7 @@ func (orderer *OandaOrderer) CreateOrder(accountID AccountID, tradePair TradePai
 			u = -units
 		}
 
-		createdOrder, err := orderer.OandaBroker.CreateOrder(string(accountID), "MARKET", string(tradePair), u)
+		createdOrder, err := orderer.OandaBroker.CreateOrder("MARKET", string(tradePair), u)
 
 		done <- &CreateOrderResult{createdOrder, err}
 		return
@@ -39,11 +39,11 @@ func (orderer *OandaOrderer) CreateOrder(accountID AccountID, tradePair TradePai
 }
 
 // OpenOrders is a method to get open orders
-func (orderer *OandaOrderer) OpenOrders(accountID AccountID) <-chan *OpenOrdersResult {
+func (orderer *OandaOrderer) OpenOrders() <-chan *OpenOrdersResult {
 	done := make(chan *OpenOrdersResult, 1)
 
 	go func() {
-		trades, err := orderer.OandaBroker.OpenTrades(string(accountID))
+		trades, err := orderer.OandaBroker.OpenTrades()
 		if err != nil {
 			done <- &OpenOrdersResult{nil, err}
 			return
@@ -62,11 +62,11 @@ func (orderer *OandaOrderer) OpenOrders(accountID AccountID) <-chan *OpenOrdersR
 }
 
 // CloseOrder is a method to close order
-func (orderer *OandaOrderer) CloseOrder(accountID AccountID, orderID OrderID) <-chan *CloseOrderResult {
+func (orderer *OandaOrderer) CloseOrder(orderID OrderID) <-chan *CloseOrderResult {
 	done := make(chan *CloseOrderResult, 1)
 
 	go func() {
-		tradeClosed, err := orderer.OandaBroker.CloseTrade(string(accountID), int(orderID))
+		tradeClosed, err := orderer.OandaBroker.CloseTrade(int(orderID))
 
 		done <- &CloseOrderResult{tradeClosed, err}
 		return

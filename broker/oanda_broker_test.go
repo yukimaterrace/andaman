@@ -7,7 +7,6 @@ import (
 
 var oanda = NewOandaBroker()
 
-var accountID string
 var lastTransactionID int
 
 func TestAccounts(t *testing.T) {
@@ -16,12 +15,10 @@ func TestAccounts(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 	t.Logf("%+v", accounts)
-
-	accountID = accounts.Accounts[0].ID
 }
 
 func TestAccount(t *testing.T) {
-	account, err := oanda.Account(accountID)
+	account, err := oanda.Account()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -31,7 +28,7 @@ func TestAccount(t *testing.T) {
 }
 
 func TestAccountChanges(t *testing.T) {
-	accountChanges, err := oanda.AccountChanges(accountID, lastTransactionID)
+	accountChanges, err := oanda.AccountChanges(lastTransactionID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -69,7 +66,7 @@ func TestPricing(t *testing.T) {
 	since := time.Date(2020, 4, 1, 8, 0, 0, 0, time.UTC).Unix()
 	instruments := []string{"GBP_USD", "EUR_AUD"}
 
-	prices, err := oanda.Pricing(accountID, instruments, int(since))
+	prices, err := oanda.Pricing(instruments, int(since))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -79,7 +76,7 @@ func TestPricing(t *testing.T) {
 func TestGetLatestCandles(t *testing.T) {
 	specs := oanda.makeCandleSpecs("M1", "GBP_USD", "EUR_USD")
 
-	latestCandles, err := oanda.LatestCandles(accountID, specs)
+	latestCandles, err := oanda.LatestCandles(specs)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -87,7 +84,7 @@ func TestGetLatestCandles(t *testing.T) {
 }
 
 func TestGetOpenTrades(t *testing.T) {
-	trades, err := oanda.OpenTrades(accountID)
+	trades, err := oanda.OpenTrades()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -101,19 +98,19 @@ func TestOrder(t *testing.T) {
 
 	units := 1000.0
 
-	orderCreated, err := oanda.CreateOrder(accountID, "MARKET", "GBP_USD", units)
+	orderCreated, err := oanda.CreateOrder("MARKET", "GBP_USD", units)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 	t.Logf("%+v", orderCreated)
 
-	openTrades, _ := oanda.OpenTrades(accountID)
+	openTrades, _ := oanda.OpenTrades()
 	t.Logf("%+v", openTrades)
 
 	time.Sleep(time.Second)
 
 	tradeID := openTrades.Trades[0].ID
-	tradeClosed, err := oanda.CloseTrade(accountID, tradeID)
+	tradeClosed, err := oanda.CloseTrade(tradeID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

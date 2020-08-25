@@ -10,7 +10,8 @@ import (
 
 // OandaBroker is OANDA broker
 type OandaBroker struct {
-	client *apiClient
+	client    *apiClient
+	accountID string
 }
 
 // NewOandaBroker is a constructor for Oanda
@@ -25,7 +26,17 @@ func NewOandaBroker() *OandaBroker {
 	header.Add("Content-Type", "application/json")
 	header.Add("Accept-Datetime-Format", "UNIX")
 
-	return &OandaBroker{client: newAPIClient(oandaHost, header)}
+	oanda := &OandaBroker{
+		client: newAPIClient(oandaHost, header),
+	}
+
+	resp, err := oanda.Accounts()
+	if err != nil {
+		panic(err)
+	}
+	oanda.accountID = resp.Accounts[0].ID
+
+	return oanda
 }
 
 // Accounts is a method to get accounts
@@ -38,8 +49,8 @@ func (oanda *OandaBroker) Accounts() (*OandaAccounts, error) {
 }
 
 // Account is a method to get account
-func (oanda *OandaBroker) Account(accountID string) (*OandaAccount, error) {
-	path := fmt.Sprintf("/v3/accounts/%s", accountID)
+func (oanda *OandaBroker) Account() (*OandaAccount, error) {
+	path := fmt.Sprintf("/v3/accounts/%s", oanda.accountID)
 
 	var account OandaAccount
 	if err := oanda.client.get(path, nil, &account); err != nil {
@@ -49,8 +60,8 @@ func (oanda *OandaBroker) Account(accountID string) (*OandaAccount, error) {
 }
 
 // AccountChanges is a method to get account changes
-func (oanda *OandaBroker) AccountChanges(accountID string, sinceTransactionID int) (*OandaAccountChanges, error) {
-	path := fmt.Sprintf("/v3/accounts/%s/changes", accountID)
+func (oanda *OandaBroker) AccountChanges(sinceTransactionID int) (*OandaAccountChanges, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/changes", oanda.accountID)
 
 	query := url.Values{}
 	query.Add("sinceTransactionID", oandaInt(sinceTransactionID).String())
@@ -92,8 +103,8 @@ func (oanda *OandaBroker) Candles(instrument string, granularity string, count i
 }
 
 // Pricing is a method to get pricing
-func (oanda *OandaBroker) Pricing(accountID string, instruments []string, since int) (*OandaPrices, error) {
-	path := fmt.Sprintf("/v3/accounts/%s/pricing", accountID)
+func (oanda *OandaBroker) Pricing(instruments []string, since int) (*OandaPrices, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/pricing", oanda.accountID)
 
 	query := url.Values{}
 	query.Add("instruments", strings.Join(instruments, ","))
@@ -107,8 +118,8 @@ func (oanda *OandaBroker) Pricing(accountID string, instruments []string, since 
 }
 
 // LatestCandles is a method to get latest candles
-func (oanda *OandaBroker) LatestCandles(accountID string, specs []string) (*OandaLatestCandles, error) {
-	path := fmt.Sprintf("/v3/accounts/%s/candles/latest", accountID)
+func (oanda *OandaBroker) LatestCandles(specs []string) (*OandaLatestCandles, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/candles/latest", oanda.accountID)
 
 	query := url.Values{}
 	query.Add("candleSpecifications", strings.Join(specs, ","))
@@ -121,8 +132,8 @@ func (oanda *OandaBroker) LatestCandles(accountID string, specs []string) (*Oand
 }
 
 // OpenTrades is a method to get open trades
-func (oanda *OandaBroker) OpenTrades(accountID string) (*OandaTrades, error) {
-	path := fmt.Sprintf("/v3/accounts/%s/openTrades", accountID)
+func (oanda *OandaBroker) OpenTrades() (*OandaTrades, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/openTrades", oanda.accountID)
 
 	var trades OandaTrades
 	if err := oanda.client.get(path, nil, &trades); err != nil {
@@ -132,8 +143,8 @@ func (oanda *OandaBroker) OpenTrades(accountID string) (*OandaTrades, error) {
 }
 
 // CreateOrder is a method to post order
-func (oanda *OandaBroker) CreateOrder(accountID string, orderType string, instrument string, units float64) (*OandaOrderCreated, error) {
-	path := fmt.Sprintf("/v3/accounts/%s/orders", accountID)
+func (oanda *OandaBroker) CreateOrder(orderType string, instrument string, units float64) (*OandaOrderCreated, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/orders", oanda.accountID)
 
 	requestBody := oandaOrder{
 		Order: oandaOrderRequest{
@@ -151,8 +162,8 @@ func (oanda *OandaBroker) CreateOrder(accountID string, orderType string, instru
 }
 
 // CloseTrade is a method to put close trade
-func (oanda *OandaBroker) CloseTrade(accountID string, tradeID int) (*OandaTradeClosed, error) {
-	path := fmt.Sprintf("/v3/accounts/%s/trades/%d/close", accountID, tradeID)
+func (oanda *OandaBroker) CloseTrade(tradeID int) (*OandaTradeClosed, error) {
+	path := fmt.Sprintf("/v3/accounts/%s/trades/%d/close", oanda.accountID, tradeID)
 
 	requestBody := oandaCloseTrade{
 		Units: "ALL",
