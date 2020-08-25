@@ -12,28 +12,28 @@ import (
 
 type simpleRecorder struct {
 	writer   writer
-	orderMap map[broker.AccountID]map[broker.OrderID]*completableOrder
+	orderMap map[PartitionID]map[broker.OrderID]*completableOrder
 }
 
 func newSimpleRecorder(writer writer) *simpleRecorder {
 	return &simpleRecorder{
 		writer:   writer,
-		orderMap: map[broker.AccountID]map[broker.OrderID]*completableOrder{},
+		orderMap: map[PartitionID]map[broker.OrderID]*completableOrder{},
 	}
 }
 
 func (recorder *simpleRecorder) record(material recordMaterial) {
-	accountCombinedOrders, ok := material.(accountCombinedOrders)
+	partitionCombinedOrders, ok := material.(partitionCombinedOrders)
 	if !ok {
 		panic(util.ErrWrongType)
 	}
 
-	for accountID, combinedOrders := range accountCombinedOrders {
-		if _, ok := recorder.orderMap[accountID]; !ok {
-			recorder.orderMap[accountID] = map[broker.OrderID]*completableOrder{}
+	for partitionID, combinedOrders := range partitionCombinedOrders {
+		if _, ok := recorder.orderMap[partitionID]; !ok {
+			recorder.orderMap[partitionID] = map[broker.OrderID]*completableOrder{}
 		}
 
-		completableOrderMap := recorder.orderMap[accountID]
+		completableOrderMap := recorder.orderMap[partitionID]
 		for _, createdOrder := range combinedOrders.createdOrders {
 			if _, ok := completableOrderMap[createdOrder.OrderID()]; ok {
 				panic("duplicate order id for created order detected")
@@ -71,7 +71,7 @@ func (recorder *simpleRecorder) close() {
 func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableOrders {
 	identifiedCompletableOrders := []*identifiedCompletableOrder{}
 
-	for accountID, orderMap := range recorder.orderMap {
+	for partitionID, orderMap := range recorder.orderMap {
 		closedOrderIDs := []broker.OrderID{}
 
 		for orderID, order := range orderMap {
@@ -80,9 +80,9 @@ func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableO
 			}
 
 			identifiedCompletableOrders = append(identifiedCompletableOrders, &identifiedCompletableOrder{
-				accountID: accountID,
-				tradePair: order.createdOrder.TradePair(),
-				order:     order,
+				partitionID: partitionID,
+				tradePair:   order.createdOrder.TradePair(),
+				order:       order,
 			})
 
 			if order.closedOrder != nil {
@@ -104,9 +104,9 @@ type completableOrder struct {
 }
 
 type identifiedCompletableOrder struct {
-	accountID broker.AccountID
-	tradePair broker.TradePair
-	order     *completableOrder
+	partitionID PartitionID
+	tradePair   broker.TradePair
+	order       *completableOrder
 }
 
 func (identifiedCompletableOrder *identifiedCompletableOrder) csvHeaders() []string {
@@ -156,16 +156,16 @@ type writer interface {
 
 type simpleWriter struct {
 	recordDir         string
-	tradableTimeZones TradableTimeZones
-	csvWriterMap      map[keyAccountIDTradePair]*csv.Writer
+	tradableTimeZones tradableTimeZones
+	csvWriterMap      map[keyPartitionIDTradePair]*csv.Writer
 	files             []*os.File
 }
 
-func newSimpleWriter(tradableTimeZones TradableTimeZones) *simpleWriter {
+func newSimpleWriter(tradableTimeZones tradableTimeZones) *simpleWriter {
 	return &simpleWriter{
 		recordDir:         util.GetEnv("RECORD_DIR"),
 		tradableTimeZones: tradableTimeZones,
-		csvWriterMap:      map[keyAccountIDTradePair]*csv.Writer{},
+		csvWriterMap:      map[keyPartitionIDTradePair]*csv.Writer{},
 		files:             []*os.File{},
 	}
 }
@@ -176,14 +176,14 @@ func (writer *simpleWriter) write(orders identifiedCompletableOrders) {
 	}
 
 	for _, order := range orders {
-		key := keyAccountIDTradePair{order.accountID, order.tradePair}
+		key := keyPartitionIDTradePair{order.partitionID, order.tradePair}
 		if _, ok := writer.csvWriterMap[key]; !ok {
-			tradableTimeZone, ok := writer.tradableTimeZones[key.accountID]
+			tradableTimeZone, ok := writer.tradableTimeZones[key.partitionID]
 			if !ok {
 				panic("no tradable time zone specified")
 			}
 
-			path := fmt.Sprintf("%s/%s_%s_%s", writer.recordDir, string(order.tradePair), tradableTimeZone.Name, string(order.accountID))
+			path := fmt.Sprintf("%s/%s_%s_%d", writer.recordDir, string(order.tradePair), tradableTimeZone.Name, order.partitionID)
 
 			file, err := os.Create(path)
 			if err != nil {
@@ -230,7 +230,7 @@ func NewSimpleRecorderFactory(builder *SimpleTraderBuilder) *SimpleRecorderFacto
 }
 
 func (factory *SimpleRecorderFactory) create() recorder {
-	tradableTimeZones := factory.builder.BuildTradableTimeZones()
+	tradableTimeZones := factory.builder.buildTradableTimeZones()
 	return newSimpleRecorder(newSimpleWriter(tradableTimeZones))
 }
 
@@ -245,18 +245,18 @@ type keyTradePairTradableTimeZone struct {
 }
 
 type tradePairSummaryWriter struct {
-	tradeSpecs      *TradeSpecs
+	tradeSpecs      *tradeSpecs
 	recordDir       string
-	tradeSummaryMap map[keyAccountIDTradePair]*tradeSummary
+	tradeSummaryMap map[keyPartitionIDTradePair]*tradeSummary
 	writerMap       map[keyTradePairTradableTimeZone]*csv.Writer
 	files           []*os.File
 }
 
-func newTradePairSummaryWriter(tradeSpecs *TradeSpecs) *tradePairSummaryWriter {
+func newTradePairSummaryWriter(tradeSpecs *tradeSpecs) *tradePairSummaryWriter {
 	return &tradePairSummaryWriter{
 		tradeSpecs:      tradeSpecs,
 		recordDir:       util.GetEnv("RECORD_DIR"),
-		tradeSummaryMap: map[keyAccountIDTradePair]*tradeSummary{},
+		tradeSummaryMap: map[keyPartitionIDTradePair]*tradeSummary{},
 		writerMap:       map[keyTradePairTradableTimeZone]*csv.Writer{},
 		files:           []*os.File{},
 	}
@@ -267,7 +267,7 @@ func (writer *tradePairSummaryWriter) write(orders identifiedCompletableOrders) 
 		closedOrder := order.order.closedOrder
 
 		if closedOrder != nil {
-			key := keyAccountIDTradePair{order.accountID, order.tradePair}
+			key := keyPartitionIDTradePair{order.partitionID, order.tradePair}
 			if _, ok := writer.tradeSummaryMap[key]; !ok {
 				writer.tradeSummaryMap[key] = &tradeSummary{}
 			}
@@ -281,7 +281,7 @@ func (writer *tradePairSummaryWriter) write(orders identifiedCompletableOrders) 
 
 func (writer *tradePairSummaryWriter) close() {
 	for key, tradeSummary := range writer.tradeSummaryMap {
-		tradableTimeZone, ok := writer.tradeSpecs.timeZones[key.accountID]
+		tradableTimeZone, ok := writer.tradeSpecs.timeZones[key.partitionID]
 		if !ok {
 			panic("no tradable time zone specified")
 		}
@@ -333,6 +333,6 @@ func NewSimpleTradePairSummaryRecorderFactory(builder *SimpleTraderBuilder) *Sim
 }
 
 func (factory *SimpleTradePairSummaryRecorderFactory) create() recorder {
-	tradeSpecs := factory.builder.BuildTradeSpecs()
+	tradeSpecs := factory.builder.buildTradeSpecs()
 	return newSimpleRecorder(newTradePairSummaryWriter(tradeSpecs))
 }

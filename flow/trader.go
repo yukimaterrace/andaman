@@ -11,12 +11,6 @@ type TraderFactory interface {
 	create(broker broker.Broker, ordererFactory broker.OrdererFactory) trader
 }
 
-// TradableTimeZone is a struct to judge the time is tradable
-type TradableTimeZone struct {
-	Name string
-	OK   func(time interface{}) bool
-}
-
 type tradeMaterial interface{}
 
 type tradeRequest struct {
@@ -82,22 +76,3 @@ const (
 	// Terminate is terminate mode
 	Terminate
 )
-
-type tradeParamLoader interface {
-	paramCsvHeader() []string
-	paramCsvValue() []string
-}
-
-// TradableTimeZones is a type for tradable time zones
-type TradableTimeZones map[broker.AccountID]*TradableTimeZone
-
-type keyAccountIDTradePair struct {
-	accountID broker.AccountID
-	tradePair broker.TradePair
-}
-
-// TradeSpecs is a struct for trade specs
-type TradeSpecs struct {
-	timeZones    TradableTimeZones
-	paramLoaders map[keyAccountIDTradePair]tradeParamLoader
-}
