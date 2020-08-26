@@ -13,13 +13,15 @@ type TraderFactory interface {
 
 type tradeMaterial interface{}
 
-type tradeRequest struct {
-	material tradeMaterial
-}
+type (
+	tradeRequest struct {
+		material tradeMaterial
+	}
 
-type changeTradeModeRequest struct {
-	mode TradeMode
-}
+	changeTradeModeRequest struct {
+		mode TradeMode
+	}
+)
 
 type tradeWorker struct {
 	trader

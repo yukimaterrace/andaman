@@ -36,21 +36,23 @@ func (orderer *SimpleSimulationOrderer) price(tradePair TradePair) Price {
 	return price
 }
 
-type createOrderRequest struct {
-	tradePair TradePair
-	units     float64
-	isLong    bool
-	done      chan<- *CreateOrderResult
-}
+type (
+	createOrderRequest struct {
+		tradePair TradePair
+		units     float64
+		isLong    bool
+		done      chan<- *CreateOrderResult
+	}
 
-type openOrdersRequest struct {
-	done chan<- *OpenOrdersResult
-}
+	openOrdersRequest struct {
+		done chan<- *OpenOrdersResult
+	}
 
-type closeOrderRequest struct {
-	orderID OrderID
-	done    chan<- *CloseOrderResult
-}
+	closeOrderRequest struct {
+		orderID OrderID
+		done    chan<- *CloseOrderResult
+	}
+)
 
 // CreateOrder is a method to create order
 func (orderer *SimpleSimulationOrderer) CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {

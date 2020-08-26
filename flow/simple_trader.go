@@ -150,12 +150,14 @@ func (runner *simpleTradeRunner) run(material tradeMaterial, partitionedOpenOrde
 	runner.done <- aggregator.reduce()
 }
 
-type combinedOrders struct {
-	createdOrders []broker.CreatedOrder
-	closedOrders  []broker.ClosedOrder
-}
+type (
+	combinedOrders struct {
+		createdOrders []broker.CreatedOrder
+		closedOrders  []broker.ClosedOrder
+	}
 
-type partitionCombinedOrders map[PartitionID]*combinedOrders
+	partitionCombinedOrders map[PartitionID]*combinedOrders
+)
 
 type orderAggregator struct {
 	broker.Orderer
@@ -247,19 +249,21 @@ func newOrderPartitionAggregator() *orderPartitionAggregator {
 	}
 }
 
-type putOrderPartitionRequest struct {
-	orderID     broker.OrderID
-	partitionID PartitionID
-}
+type (
+	putOrderPartitionRequest struct {
+		orderID     broker.OrderID
+		partitionID PartitionID
+	}
 
-type deleteOrderPartitionRequest struct {
-	orderID broker.OrderID
-}
+	deleteOrderPartitionRequest struct {
+		orderID broker.OrderID
+	}
 
-type partitionedOpenOrdersRequest struct {
-	openOrders []broker.OpenOrder
-	done       chan<- partitionedOpenOrders
-}
+	partitionedOpenOrdersRequest struct {
+		openOrders []broker.OpenOrder
+		done       chan<- partitionedOpenOrders
+	}
+)
 
 func (aggregator *orderPartitionAggregator) put(orderID broker.OrderID, partitionID PartitionID) {
 	aggregator.ch <- &putOrderPartitionRequest{
@@ -333,28 +337,30 @@ func (aggregator *orderPartitionAggregator) work() {
 	}
 }
 
-type tradeParamLoader interface {
-	paramCsvHeader() []string
-	paramCsvValue() []string
-}
+type (
+	tradeParamLoader interface {
+		paramCsvHeader() []string
+		paramCsvValue() []string
+	}
 
-// TradableTimeZone is a struct for tradable time zone
-type TradableTimeZone struct {
-	Name string
-	OK   func(time interface{}) bool
-}
+	// TradableTimeZone is a struct for tradable time zone
+	TradableTimeZone struct {
+		Name string
+		OK   func(time interface{}) bool
+	}
 
-type tradableTimeZones map[PartitionID]*TradableTimeZone
+	tradableTimeZones map[PartitionID]*TradableTimeZone
 
-type keyPartitionIDTradePair struct {
-	partitionID PartitionID
-	tradePair   broker.TradePair
-}
+	keyPartitionIDTradePair struct {
+		partitionID PartitionID
+		tradePair   broker.TradePair
+	}
 
-type tradeSpecs struct {
-	timeZones    tradableTimeZones
-	paramLoaders map[keyPartitionIDTradePair]tradeParamLoader
-}
+	tradeSpecs struct {
+		timeZones    tradableTimeZones
+		paramLoaders map[keyPartitionIDTradePair]tradeParamLoader
+	}
+)
 
 // SimpleTraderBuilder is a builder for simple trader
 type SimpleTraderBuilder struct {

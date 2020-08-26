@@ -98,16 +98,18 @@ func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableO
 	return identifiedCompletableOrders
 }
 
-type completableOrder struct {
-	createdOrder broker.CreatedOrder
-	closedOrder  broker.ClosedOrder
-}
+type (
+	completableOrder struct {
+		createdOrder broker.CreatedOrder
+		closedOrder  broker.ClosedOrder
+	}
 
-type identifiedCompletableOrder struct {
-	partitionID PartitionID
-	tradePair   broker.TradePair
-	order       *completableOrder
-}
+	identifiedCompletableOrder struct {
+		partitionID PartitionID
+		tradePair   broker.TradePair
+		order       *completableOrder
+	}
+)
 
 func (identifiedCompletableOrder *identifiedCompletableOrder) csvHeaders() []string {
 	return []string{
