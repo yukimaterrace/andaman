@@ -7,20 +7,20 @@ import (
 )
 
 type oandaSimulationPricer struct {
-	seed            *oandaSimulationPricerSeed
+	seed            OandaSimulationPricerSeed
 	currentIndexMap map[broker.TradePair]int
 	currentTime     int
 	granularitySec  int
 	unitSize        int
 }
 
-func newOandaSimulationPricer(seed *oandaSimulationPricerSeed) *oandaSimulationPricer {
+func newOandaSimulationPricer(seed OandaSimulationPricerSeed) *oandaSimulationPricer {
 	unitSize := 250
 
 	currentTime := 0
 	currentIndexMap := make(map[broker.TradePair]int)
 
-	for pair, candles := range seed.candlesMap {
+	for pair, candles := range seed {
 		currentIndexMap[pair] = unitSize
 
 		time := int(candles.Candles[unitSize-1].Time)
@@ -39,7 +39,7 @@ func newOandaSimulationPricer(seed *oandaSimulationPricerSeed) *oandaSimulationP
 }
 
 func (pricer *oandaSimulationPricer) hasNext() bool {
-	for pair, candles := range pricer.seed.candlesMap {
+	for pair, candles := range pricer.seed {
 		if pricer.currentIndexMap[pair] < len(candles.Candles) {
 			return true
 		}
@@ -50,7 +50,7 @@ func (pricer *oandaSimulationPricer) hasNext() bool {
 func (pricer *oandaSimulationPricer) next() *oandaSimulationPrice {
 	feedCandlesMap := make(map[broker.TradePair]*broker.OandaCandles)
 
-	for pair, candles := range pricer.seed.candlesMap {
+	for pair, candles := range pricer.seed {
 		currentIndex := pricer.currentIndexMap[pair]
 
 		feedCandles := &broker.OandaCandles{
@@ -101,7 +101,7 @@ func NewOandaSimulationPricerFactory(startTime time.Time, endTime time.Time) *Oa
 }
 
 func (factory *OandaSimulationPricerFactory) create(broker broker.Broker, tradePairs []broker.TradePair) pricer {
-	seed := fetchOandaSimulationPricerSeed(tradePairs, "M1", factory.start, factory.end)
+	seed := FetchOandaSimulationPricerSeed(tradePairs, "M1", factory.start, factory.end)
 	return newOandaSimulationPricer(seed)
 }
 
@@ -144,11 +144,11 @@ func (price *price) Ask() float64 {
 	return price.ask
 }
 
-type oandaSimulationPricerSeed struct {
-	candlesMap map[broker.TradePair]*broker.OandaCandles
-}
+// OandaSimulationPricerSeed is a definition for oanda simulation pricer seed
+type OandaSimulationPricerSeed map[broker.TradePair]*broker.OandaCandles
 
-func fetchOandaSimulationPricerSeed(tradePairs []broker.TradePair, granularity string, start int, end int) *oandaSimulationPricerSeed {
+// FetchOandaSimulationPricerSeed is a method to fetch oanda simulation pricer seed
+func FetchOandaSimulationPricerSeed(tradePairs []broker.TradePair, granularity string, start int, end int) OandaSimulationPricerSeed {
 	client := broker.NewOandaBroker()
 
 	log.Println("start fetch candles...")
@@ -234,5 +234,5 @@ func fetchOandaSimulationPricerSeed(tradePairs []broker.TradePair, granularity s
 	endTime := time.Now().Unix()
 	log.Printf("finish fetch candles / %d requets for %d s\n", requestCount, endTime-startTime)
 
-	return &oandaSimulationPricerSeed{candlesMap: candlesMap}
+	return candlesMap
 }
