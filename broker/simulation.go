@@ -11,6 +11,14 @@ type SimpleSimulationBroker struct {
 	currentTime     int
 }
 
+// NewSimpleSimulationBroker is a constructor for simple simulation broker
+func NewSimpleSimulationBroker() *SimpleSimulationBroker {
+	return &SimpleSimulationBroker{
+		currentPriceMap: map[TradePair]Price{},
+		currentTime:     0,
+	}
+}
+
 // Update is a method to update orderer
 func (broker *SimpleSimulationBroker) Update(priceExtractor PriceExtractor) {
 	for _, tradePair := range priceExtractor.TradePairs() {
