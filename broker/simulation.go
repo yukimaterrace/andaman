@@ -217,6 +217,11 @@ func profitPips(price Price, order *order) float64 {
 // SimpleSimulationOrdererFactory is a factory for simple simulation orderer
 type SimpleSimulationOrdererFactory struct{}
 
+// NewSimpleSimulationOrdererFactory is a constructor for simple simulation orderer
+func NewSimpleSimulationOrdererFactory() *SimpleSimulationOrdererFactory {
+	return &SimpleSimulationOrdererFactory{}
+}
+
 // Create is a factory method for simple simulation orderer
 func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 	simpleSimulationBroker, ok := broker.(*SimpleSimulationBroker)
