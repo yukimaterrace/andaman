@@ -9,21 +9,21 @@ import (
 type oandaSimulationPricer struct {
 	seed            oandaSimulationPriceSeed
 	currentIndexMap map[broker.TradePair]int
-	currentTime     int
-	granularitySec  int
+	currentTime     int64
+	granularitySec  int64
 	unitSize        int
 }
 
 func newOandaSimulationPricer(seed oandaSimulationPriceSeed) *oandaSimulationPricer {
 	unitSize := 250
 
-	currentTime := 0
+	currentTime := int64(0)
 	currentIndexMap := make(map[broker.TradePair]int)
 
 	for pair, candles := range seed {
 		currentIndexMap[pair] = unitSize
 
-		time := int(candles.Candles[unitSize-1].Time)
+		time := int64(candles.Candles[unitSize-1].Time)
 		if currentTime == 0 || currentTime > time {
 			currentTime = time
 		}
@@ -60,7 +60,7 @@ func (pricer *oandaSimulationPricer) next() *oandaSimulationPrice {
 		}
 		feedCandlesMap[pair] = feedCandles
 
-		if currentIndex+1 <= len(candles.Candles) && pricer.currentTime+pricer.granularitySec >= int(candles.Candles[currentIndex].Time) {
+		if currentIndex+1 <= len(candles.Candles) && pricer.currentTime+pricer.granularitySec >= int64(candles.Candles[currentIndex].Time) {
 			pricer.currentIndexMap[pair] = currentIndex + 1
 		}
 	}
@@ -110,14 +110,14 @@ type oandaSimulationPrice struct {
 	candlesMap map[broker.TradePair]*broker.OandaCandles
 }
 
-func newOandaSimulationPrice(candlesMap map[broker.TradePair]*broker.OandaCandles, priceTime int) *oandaSimulationPrice {
+func newOandaSimulationPrice(candlesMap map[broker.TradePair]*broker.OandaCandles, priceTime int64) *oandaSimulationPrice {
 	return &oandaSimulationPrice{
 		oandaPrice: newOandaPrice(candlesMap, nil, priceTime),
 		candlesMap: candlesMap,
 	}
 }
 
-func (oandaSimulationPrice *oandaSimulationPrice) price(tradePair broker.TradePair) broker.Price {
+func (oandaSimulationPrice *oandaSimulationPrice) Price(tradePair broker.TradePair) broker.Price {
 	candles, ok := oandaSimulationPrice.candlesMap[tradePair]
 	if !ok {
 		log.Panicf("no candles exist for %v\n", tradePair)

@@ -9,13 +9,13 @@ import (
 type oandaPrice struct {
 	candlesMap map[broker.TradePair]*broker.OandaCandles
 	pricesMap  map[broker.TradePair]*broker.OandaClientPrice
-	priceTime  int
+	priceTime  int64
 }
 
 func newOandaPrice(
 	candlesMap map[broker.TradePair]*broker.OandaCandles,
 	pricesMap map[broker.TradePair]*broker.OandaClientPrice,
-	priceTime int,
+	priceTime int64,
 ) *oandaPrice {
 
 	return &oandaPrice{
@@ -47,7 +47,7 @@ func (oandaPrice *oandaPrice) Price(tradePair broker.TradePair) broker.Price {
 	return price
 }
 
-func (oandaPrice *oandaPrice) Time() int {
+func (oandaPrice *oandaPrice) Time() int64 {
 	return oandaPrice.priceTime
 }
 
