@@ -16,4 +16,5 @@
 
 .vscode
 
+env_local.sh
 env_local.ps1
