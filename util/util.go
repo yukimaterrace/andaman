@@ -15,7 +15,7 @@ var (
 func GetEnv(name string) string {
 	env := os.Getenv(name)
 	if env == "" {
-		panic(fmt.Sprintf("%s has not been set", env))
+		panic(fmt.Sprintf("%s has not been set", name))
 	}
 	return env
 }

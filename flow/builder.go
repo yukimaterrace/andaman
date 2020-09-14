@@ -17,6 +17,11 @@ type Builder struct {
 	recorderFactory  RecorderFactory
 }
 
+// NewFlowBuilder is a constructor for flow builder
+func NewFlowBuilder() *Builder {
+	return &Builder{}
+}
+
 // Broker sets broker in builder
 func (builder *Builder) Broker(broker broker.Broker) *Builder {
 	builder.broker = broker

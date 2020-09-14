@@ -39,7 +39,7 @@ func (f paramFloat64) String() string {
 
 // FrameTradeParam is parameters for frame trade algorithm
 type FrameTradeParam struct {
-	tradeDirectionLong     bool
+	TradeDirectionLong     bool
 	SmallFrameLength       int
 	LargeFrameLength       int
 	PipsGapForCreateOrder  float64
@@ -72,7 +72,7 @@ func (param *FrameTradeParam) csvHeader() []string {
 
 func (param *FrameTradeParam) csvValue() []string {
 	return []string{
-		paramBool(param.tradeDirectionLong).String(),
+		paramBool(param.TradeDirectionLong).String(),
 		paramInt(param.SmallFrameLength).String(),
 		paramInt(param.LargeFrameLength).String(),
 		paramFloat64(param.PipsGapForCreateOrder).String(),
@@ -122,7 +122,7 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggr
 
 	gapCond := smallFrame.h-smallFrame.l > algorithm.PipsGapForCreateOrder*tradePair.PricePerPip()+spread
 
-	if algorithm.tradeDirectionLong {
+	if algorithm.TradeDirectionLong {
 		longCond := smallFrame.h == largeFrame.h && smallFrame.l > largeFrame.l && smallFrame.l == smallFrame.c
 
 		if longCond && gapCond {

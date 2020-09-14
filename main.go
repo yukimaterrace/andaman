@@ -1,9 +1,12 @@
 package main
 
 import (
-	"log"
+	"yukimaterrace/andaman/factory"
 )
 
 func main() {
-	log.Println("Andaman Started")
+	flow := factory.CreateSimulationApp()
+
+	flow.Start()
+	flow.WaitForCompletion()
 }

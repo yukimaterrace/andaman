@@ -47,8 +47,8 @@ func (flow *Flow) Start() {
 	newRunner(flow.recordWorker).run(flow.recordWorkerDone)
 }
 
-// WaitCompletion waits until shutdown of the flow
-func (flow *Flow) WaitCompletion() {
+// WaitForCompletion waits until shutdown of the flow
+func (flow *Flow) WaitForCompletion() {
 	<-flow.priceWorkerDone
 	<-flow.tradeWorkerDone
 	<-flow.recordWorkerDone
