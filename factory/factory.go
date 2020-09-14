@@ -52,21 +52,42 @@ func CreateSimulationApp() *flow.Flow {
 	}
 
 	longTradeAlgorithm := flow.NewFrameTradeAlgorithm(longTradeParam)
-	shortTradeAlhorithm := flow.NewFrameTradeAlgorithm(shortTradeParam)
+	shortTradeAlgorithm := flow.NewFrameTradeAlgorithm(shortTradeParam)
+
+	tokyoAM := flow.CreateTokyoAMTimeZone()
+	tokyoPM := flow.CreateTokyoPMTimeZone()
+	londonAM := flow.CreateLondonAMTimeZone()
+	londonPM := flow.CreateLondonPMTimeZone()
+	newyorkAM := flow.CreateNewYorkAMTimeZone()
+	newyorkPM := flow.CreateNewYorkPMTimeZone()
 
 	tradeBuilder := flow.NewSimpleTraderBuilder().
-		TradableTimeZone(0, flow.CreateWeekdayTradableTimeZone()).
-		TradableTimeZone(1, flow.CreateWeekdayTradableTimeZone())
+		TradableTimeZone(0, tokyoAM).
+		TradableTimeZone(1, tokyoAM).
+		TradableTimeZone(2, tokyoPM).
+		TradableTimeZone(3, tokyoPM).
+		TradableTimeZone(4, londonAM).
+		TradableTimeZone(5, londonAM).
+		TradableTimeZone(6, londonPM).
+		TradableTimeZone(7, londonPM).
+		TradableTimeZone(8, newyorkAM).
+		TradableTimeZone(9, newyorkAM).
+		TradableTimeZone(10, newyorkPM).
+		TradableTimeZone(11, newyorkPM)
 
 	for _, tradePair := range pricerTradePairs {
-		tradeBuilder.
-			Trade(0, tradePair, longTradeAlgorithm).
-			Trade(1, tradePair, shortTradeAlhorithm)
+		for i := 0; i < 12; i++ {
+			if i%2 == 0 {
+				tradeBuilder.Trade(flow.PartitionID(i), tradePair, longTradeAlgorithm)
+			} else {
+				tradeBuilder.Trade(flow.PartitionID(i), tradePair, shortTradeAlgorithm)
+			}
+		}
 	}
 
 	tradeBuilder.Parallel(1)
 
-	start := time.Date(2020, time.July, 1, 0, 0, 0, 0, time.Local)
+	start := time.Date(2020, time.June, 1, 0, 0, 0, 0, time.Local)
 	end := time.Date(2020, time.July, 23, 23, 59, 59, 0, time.Local)
 
 	flow := flow.NewFlowBuilder().

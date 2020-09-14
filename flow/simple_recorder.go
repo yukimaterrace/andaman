@@ -258,8 +258,8 @@ type tradeSummary struct {
 }
 
 type keyTradePairTradableTimeZone struct {
-	tradePair        broker.TradePair
-	tradableTimeZone *TradableTimeZone
+	tradePair            broker.TradePair
+	tradableTimeZoneName string
 }
 
 type tradePairSummaryWriter struct {
@@ -309,7 +309,7 @@ func (writer *tradePairSummaryWriter) close() {
 			panic("no param loader specified")
 		}
 
-		_key := keyTradePairTradableTimeZone{key.tradePair, tradableTimeZone}
+		_key := keyTradePairTradableTimeZone{key.tradePair, tradableTimeZone.Name}
 		if _, ok := writer.writerMap[_key]; !ok {
 			path := fmt.Sprintf("%s/%s_%s.csv", writer.recordDir, string(key.tradePair), tradableTimeZone.Name)
 			file, err := os.Create(path)
