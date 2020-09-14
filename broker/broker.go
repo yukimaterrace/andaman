@@ -25,11 +25,16 @@ type (
 	// OrderID is a type definition for order ID
 	OrderID int
 
+	// TimeExtractor is an interface for time extractor
+	TimeExtractor interface {
+		Time() int64
+	}
+
 	// PriceExtractor is an interface for price extractor
 	PriceExtractor interface {
 		TradePairs() []TradePair
 		Price(tradePair TradePair) Price
-		Time() int
+		TimeExtractor
 	}
 
 	// Price is an interface for price
@@ -60,7 +65,7 @@ type (
 	CreatedOrder interface {
 		OrderID() OrderID
 		TradePair() TradePair
-		TimeAtOpen() int
+		TimeAtOpen() int64
 		PriceAtOpen() float64
 		Units() float64
 		IsLong() bool
@@ -76,7 +81,7 @@ type (
 	ClosedOrder interface {
 		OrderID() OrderID
 		TradePair() TradePair
-		TimeAtClose() int
+		TimeAtClose() int64
 		PriceAtClose() float64
 		RealizedProfit() float64
 	}

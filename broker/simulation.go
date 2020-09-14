@@ -8,7 +8,7 @@ import (
 // SimpleSimulationBroker is a broker for simple simulation
 type SimpleSimulationBroker struct {
 	currentPriceMap map[TradePair]Price
-	currentTime     int
+	currentTime     int64
 }
 
 // NewSimpleSimulationBroker is a constructor for simple simulation broker
@@ -242,11 +242,11 @@ func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 type order struct {
 	orderID          OrderID
 	tradePair        TradePair
-	timeAtOpen       int
+	timeAtOpen       int64
 	priceAtOpen      float64
 	units            float64
 	isLong           bool
-	timeAtClose      int
+	timeAtClose      int64
 	priceAtClose     float64
 	realizedProfit   float64
 	unrealizedProfit float64
@@ -260,7 +260,7 @@ func (order *order) TradePair() TradePair {
 	return order.tradePair
 }
 
-func (order *order) TimeAtOpen() int {
+func (order *order) TimeAtOpen() int64 {
 	return order.timeAtOpen
 }
 
@@ -276,7 +276,7 @@ func (order *order) IsLong() bool {
 	return order.isLong
 }
 
-func (order *order) TimeAtClose() int {
+func (order *order) TimeAtClose() int64 {
 	return order.timeAtClose
 }
 

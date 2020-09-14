@@ -23,8 +23,8 @@ func (oandaOrderCreated *OandaOrderCreated) TradePair() TradePair {
 }
 
 // TimeAtOpen is a method to get time at open
-func (oandaOrderCreated *OandaOrderCreated) TimeAtOpen() int {
-	return int(oandaOrderCreated.OrderFillTransaction.Time)
+func (oandaOrderCreated *OandaOrderCreated) TimeAtOpen() int64 {
+	return int64(oandaOrderCreated.OrderFillTransaction.Time)
 }
 
 // PriceAtOpen is a method to get price at open
@@ -53,8 +53,8 @@ func (oandaTrade *OandaTrade) TradePair() TradePair {
 }
 
 // TimeAtOpen is a method to get open time
-func (oandaTrade *OandaTrade) TimeAtOpen() int {
-	return int(oandaTrade.OpenTime)
+func (oandaTrade *OandaTrade) TimeAtOpen() int64 {
+	return int64(oandaTrade.OpenTime)
 }
 
 // PriceAtOpen is a method to get open price
@@ -88,8 +88,8 @@ func (oandaTradeClosed *OandaTradeClosed) TradePair() TradePair {
 }
 
 // TimeAtClose is a method to get time to close
-func (oandaTradeClosed *OandaTradeClosed) TimeAtClose() int {
-	return int(oandaTradeClosed.OrderFillTransaction.Time)
+func (oandaTradeClosed *OandaTradeClosed) TimeAtClose() int64 {
+	return int64(oandaTradeClosed.OrderFillTransaction.Time)
 }
 
 // PriceAtClose is a method to get price at close

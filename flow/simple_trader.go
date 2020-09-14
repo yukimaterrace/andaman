@@ -120,7 +120,12 @@ type simpleTradeRunner struct {
 }
 
 func (runner *simpleTradeRunner) run(material tradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode TradeMode) {
-	tradable := runner.tradableTimeZone.OK(material)
+	timeExtractor, ok := material.(broker.TimeExtractor)
+	if !ok {
+		panic(util.ErrWrongType)
+	}
+
+	tradable := runner.tradableTimeZone.OK(timeExtractor)
 
 	if !runner.openOrdersExisted && !tradable {
 		runner.done <- nil
@@ -346,7 +351,7 @@ type (
 	// TradableTimeZone is a struct for tradable time zone
 	TradableTimeZone struct {
 		Name string
-		OK   func(time interface{}) bool
+		OK   func(timeExtractor broker.TimeExtractor) bool
 	}
 
 	tradableTimeZones map[PartitionID]*TradableTimeZone

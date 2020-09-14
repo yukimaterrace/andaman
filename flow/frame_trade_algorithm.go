@@ -45,9 +45,9 @@ type FrameTradeParam struct {
 	PipsGapForCreateOrder  float64
 	PipsForStopLoss        float64
 	PipsForAdditionalOrder float64
-	TimeForProfit1         int
-	TimeForProfit2         int
-	TimeForProfit3         int
+	TimeForProfit1         int64
+	TimeForProfit2         int64
+	TimeForProfit3         int64
 	PipsForProfit1         float64
 	PipsForProfit2         float64
 	PipsForProfit3         float64
