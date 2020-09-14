@@ -2,6 +2,7 @@ package broker
 
 import (
 	"log"
+	"yukimaterrace/andaman/config"
 	"yukimaterrace/andaman/util"
 )
 
@@ -233,6 +234,7 @@ func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 		SimpleSimulationBroker: simpleSimulationBroker,
 		currentOrderID:         0,
 		currentOrders:          []*order{},
+		ch:                     make(chan interface{}, config.SimulationOrdererChanCap),
 	}
 
 	orderer.run()

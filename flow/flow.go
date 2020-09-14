@@ -18,10 +18,14 @@ func newRunner(worker worker) *runner {
 
 func (runner *runner) run(done chan<- bool) {
 	go func() {
+	Loop:
 		for {
 			runner.work(runner.exit)
 
-			if <-runner.exit {
+			select {
+			case <-runner.exit:
+				break Loop
+			default:
 				break
 			}
 		}

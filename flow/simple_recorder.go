@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/util"
@@ -69,7 +70,7 @@ func (recorder *simpleRecorder) close() {
 }
 
 func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableOrders {
-	identifiedCompletableOrders := []*identifiedCompletableOrder{}
+	orders := identifiedCompletableOrders{}
 
 	for partitionID, orderMap := range recorder.orderMap {
 		closedOrderIDs := []broker.OrderID{}
@@ -79,7 +80,7 @@ func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableO
 				continue
 			}
 
-			identifiedCompletableOrders = append(identifiedCompletableOrders, &identifiedCompletableOrder{
+			orders = append(orders, &identifiedCompletableOrder{
 				partitionID: partitionID,
 				tradePair:   order.createdOrder.TradePair(),
 				order:       order,
@@ -95,7 +96,8 @@ func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableO
 		}
 	}
 
-	return identifiedCompletableOrders
+	sort.Sort(orders)
+	return orders
 }
 
 type (
@@ -132,24 +134,38 @@ func (identifiedCompletableOrder *identifiedCompletableOrder) csvValues() []stri
 	csv := []string{
 		strconv.FormatInt(int64(created.OrderID()), 10),
 		string(created.TradePair()),
-		strconv.FormatInt(int64(created.TimeAtOpen()), 10),
+		strconv.FormatInt(created.TimeAtOpen(), 10),
 		strconv.FormatFloat(created.PriceAtOpen(), 'f', 6, 64),
 		strconv.FormatFloat(created.Units(), 'f', 8, 64),
 		strconv.FormatBool(created.IsLong()),
 	}
 
-	if closed != nil {
+	if closed == nil {
 		return append(csv, "not closed", "not closed", "0")
 	}
 
 	return append(csv,
-		strconv.FormatInt(int64(closed.TimeAtClose()), 10),
+		strconv.FormatInt(closed.TimeAtClose(), 10),
 		strconv.FormatFloat(closed.PriceAtClose(), 'f', 6, 64),
 		strconv.FormatFloat(closed.RealizedProfit(), 'f', 6, 64),
 	)
 }
 
 type identifiedCompletableOrders []*identifiedCompletableOrder
+
+func (orders identifiedCompletableOrders) Len() int {
+	return len(orders)
+}
+
+func (orders identifiedCompletableOrders) Less(i, j int) bool {
+	return orders[i].order.createdOrder.OrderID() < orders[j].order.createdOrder.OrderID()
+}
+
+func (orders identifiedCompletableOrders) Swap(i, j int) {
+	order := orders[i]
+	orders[i] = orders[j]
+	orders[j] = order
+}
 
 type writer interface {
 	write(orders identifiedCompletableOrders)
@@ -185,7 +201,7 @@ func (writer *simpleWriter) write(orders identifiedCompletableOrders) {
 				panic("no tradable time zone specified")
 			}
 
-			path := fmt.Sprintf("%s/%s_%s_%d", writer.recordDir, string(order.tradePair), tradableTimeZone.Name, order.partitionID)
+			path := fmt.Sprintf("%s/%s_%s_%d.csv", writer.recordDir, string(order.tradePair), tradableTimeZone.Name, order.partitionID)
 
 			file, err := os.Create(path)
 			if err != nil {

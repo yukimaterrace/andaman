@@ -42,7 +42,6 @@ func (recordWorker *recordWorker) work(exit chan<- bool) {
 		switch req := request.(type) {
 		case *recordRequest:
 			recordWorker.record(req.material)
-			exit <- false
 
 		case *shutdownRequest:
 			recordWorker.ticker.Stop()

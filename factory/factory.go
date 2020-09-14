@@ -26,8 +26,8 @@ func CreateSimulationApp() *flow.Flow {
 		SmallFrameLength:       30,
 		LargeFrameLength:       60,
 		PipsGapForCreateOrder:  10.0,
-		PipsForAdditionalOrder: 5.0,
-		PipsForStopLoss:        100.0,
+		PipsForAdditionalOrder: -5.0,
+		PipsForStopLoss:        -100.0,
 		TimeForProfit1:         40,
 		TimeForProfit2:         60,
 		TimeForProfit3:         80,
@@ -36,17 +36,32 @@ func CreateSimulationApp() *flow.Flow {
 		PipsForProfit3:         5.0,
 	}
 
-	// shortTradeParam := &(*longTradeParam)
-	// shortTradeParam.TradeDirectionLong = false
+	shortTradeParam := &flow.FrameTradeParam{
+		TradeDirectionLong:     false,
+		SmallFrameLength:       30,
+		LargeFrameLength:       60,
+		PipsGapForCreateOrder:  10.0,
+		PipsForAdditionalOrder: -5.0,
+		PipsForStopLoss:        -100.0,
+		TimeForProfit1:         40,
+		TimeForProfit2:         60,
+		TimeForProfit3:         80,
+		PipsForProfit1:         20.0,
+		PipsForProfit2:         10.0,
+		PipsForProfit3:         5.0,
+	}
 
 	longTradeAlgorithm := flow.NewFrameTradeAlgorithm(longTradeParam)
-	// shortTradeAlhorithm := flow.NewFrameTradeAlgorithm(shortTradeParam)
+	shortTradeAlhorithm := flow.NewFrameTradeAlgorithm(shortTradeParam)
 
 	tradeBuilder := flow.NewSimpleTraderBuilder().
-		TradableTimeZone(0, flow.CreateWeekdayTradableTimeZone())
+		TradableTimeZone(0, flow.CreateWeekdayTradableTimeZone()).
+		TradableTimeZone(1, flow.CreateWeekdayTradableTimeZone())
 
 	for _, tradePair := range pricerTradePairs {
-		tradeBuilder = tradeBuilder.Trade(0, tradePair, longTradeAlgorithm)
+		tradeBuilder.
+			Trade(0, tradePair, longTradeAlgorithm).
+			Trade(1, tradePair, shortTradeAlhorithm)
 	}
 
 	tradeBuilder.Parallel(1)
@@ -61,7 +76,7 @@ func CreateSimulationApp() *flow.Flow {
 		InitialTradeMode(flow.Trade).
 		PricerFactory(flow.NewOandaSimulationPricerFactory(start, end)).
 		TraderFactory(flow.NewSimpleTraderFactory(tradeBuilder)).
-		RecorderFactory(flow.NewSimpleRecorderFactory(tradeBuilder)).
+		RecorderFactory(flow.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
 		Build()
 
 	return flow

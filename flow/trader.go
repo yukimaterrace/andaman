@@ -1,6 +1,8 @@
 package flow
 
-import "yukimaterrace/andaman/broker"
+import (
+	"yukimaterrace/andaman/broker"
+)
 
 type trader interface {
 	trade(material tradeMaterial, mode TradeMode) (recordMaterial, bool)
@@ -54,11 +56,9 @@ func (tradeWorker *tradeWorker) work(exit chan<- bool) {
 		if ok {
 			tradeWorker.recordRequest(recordMaterial)
 		}
-		exit <- false
 
 	case *changeTradeModeRequest:
 		tradeWorker.mode = req.mode
-		exit <- false
 
 	case *shutdownRequest:
 		tradeWorker.recordWorker.shutdown()

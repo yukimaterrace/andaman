@@ -168,8 +168,8 @@ func (algorithm *FrameTradeAlgorithm) proceedTrade(material tradeMaterial, agggr
 	tradeTime := calculator.Time() - initialOrder.TimeAtOpen()
 
 	takeProfitCond1 := tradeTime <= algorithm.TimeForProfit1*60 && totalProfitPips >= algorithm.PipsForProfit1
-	takeProfitCond2 := algorithm.TimeForProfit1*60 < tradeTime && tradeTime <= algorithm.TimeForProfit2 && totalProfitPips >= algorithm.PipsForProfit2
-	takeProfitCond3 := algorithm.TimeForProfit2*60 < tradeTime && tradeTime <= algorithm.TimeForProfit3 && totalProfitPips >= algorithm.PipsForProfit3
+	takeProfitCond2 := algorithm.TimeForProfit1*60 < tradeTime && tradeTime <= algorithm.TimeForProfit2*60 && totalProfitPips >= algorithm.PipsForProfit2
+	takeProfitCond3 := algorithm.TimeForProfit2*60 < tradeTime && tradeTime <= algorithm.TimeForProfit3*60 && totalProfitPips >= algorithm.PipsForProfit3
 	takeProfitCond4 := algorithm.TimeForProfit3*60 < tradeTime && totalProfitPips >= 0
 
 	stopLossCond := totalProfitPips < algorithm.PipsForStopLoss
