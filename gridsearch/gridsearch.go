@@ -74,3 +74,17 @@ func (iterator *partialParamSetsIterator) next() []PartialParamSet {
 
 	return []PartialParamSet{set}
 }
+
+// ParamsForGridSearch is a method to get params for grid search
+func ParamsForGridSearch(param Param) []Param {
+	result := []Param{}
+
+	iterator := newPartialParamSetsIterator(param)
+	for iterator.hasNext() {
+		paramSets := iterator.next()
+		p := param.CreateParam(paramSets)
+		result = append(result, p)
+	}
+
+	return result
+}

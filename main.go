@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	flow := factory.CreateSimulationApp()
+	flow := factory.CreateSimulationFlow()
 
 	start := time.Now().UnixNano()
 

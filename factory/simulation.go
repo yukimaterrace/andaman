@@ -6,8 +6,8 @@ import (
 	"yukimaterrace/andaman/flow"
 )
 
-// CreateSimulationApp is a factory method to create simulation app
-func CreateSimulationApp() *flow.Flow {
+// CreateSimulationFlow is a factory method to create simulation app
+func CreateSimulationFlow() *flow.Flow {
 	pricerTradePairs := []broker.TradePair{
 		broker.GbpUsd,
 		broker.EurUsd,
