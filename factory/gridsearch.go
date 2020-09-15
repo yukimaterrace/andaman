@@ -36,7 +36,7 @@ func CreateGridSearchFlow() *flow.Flow {
 	tradeBuilder := flow.NewSimpleTraderBuilder()
 	for i, timezone := range timezones {
 		for j, param := range paramsForGridSearch {
-			algorithm := flow.NewFrameTradeAlgorithm(&param)
+			algorithm := flow.NewFrameTradeAlgorithm(param)
 			paritionID := flow.PartitionID(j + i*len(paramsForGridSearch))
 
 			tradeBuilder.TradableTimeZone(paritionID, timezone)
@@ -48,8 +48,8 @@ func CreateGridSearchFlow() *flow.Flow {
 
 	tradeBuilder.Parallel(2)
 
-	start := time.Date(2020, time.July, 1, 0, 0, 0, 0, time.Local)
-	end := time.Date(2020, time.August, 31, 23, 59, 59, 0, time.Local)
+	start := time.Date(2020, time.June, 1, 0, 0, 0, 0, time.Local)
+	end := time.Date(2020, time.July, 31, 23, 59, 59, 0, time.Local)
 
 	flow := flow.NewFlowBuilder().
 		Broker(broker.NewSimpleSimulationBroker()).

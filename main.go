@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	flow := factory.CreateSimulationFlow()
+	flow := factory.CreateGridSearchFlow()
 
 	start := time.Now().UnixNano()
 

@@ -1,6 +1,7 @@
 package gridsearch
 
 import (
+	"log"
 	"reflect"
 	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/util"
@@ -44,9 +45,13 @@ func (param frameTradeParam) getPartialParamSet(paramSetID partialParamSetID, pa
 	case flow.FrameTradeParamSet0:
 		switch paramSetValueID {
 		case 0:
-			return true
+			return flow.FrameTradeParamSet0{
+				TradeDirectionLong: true,
+			}
 		case 1:
-			return false
+			return flow.FrameTradeParamSet0{
+				TradeDirectionLong: false,
+			}
 		default:
 			panicForValue()
 		}
@@ -193,17 +198,20 @@ func panicForValue() {
 }
 
 // FrameTradeParamsForGridSearch is a method to get frame trade params for grid search
-func FrameTradeParamsForGridSearch() []flow.FrameTradeParam {
+func FrameTradeParamsForGridSearch() []*flow.FrameTradeParam {
 	params := paramsForGridSearch(frameTradeParam{})
 
-	frameTradeParams := make([]flow.FrameTradeParam, len(params))
+	frameTradeParams := make([]*flow.FrameTradeParam, len(params))
 	for i, param := range params {
-		frameTradeParam, ok := param.(frameTradeParam)
+		p, ok := param.(frameTradeParam)
 		if !ok {
 			panic(util.ErrWrongType)
 		}
-		frameTradeParams[i] = flow.FrameTradeParam(frameTradeParam)
+		frameTradeParam := flow.FrameTradeParam(p)
+		frameTradeParams[i] = &frameTradeParam
 	}
+
+	log.Printf("%d grids for search\n", len(frameTradeParams))
 
 	return frameTradeParams
 }

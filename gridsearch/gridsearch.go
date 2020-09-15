@@ -18,9 +18,8 @@ type (
 type partialParamSetsIterator struct {
 	param             param
 	setID             partialParamSetID
-	tailIterator      *partialParamSetsIterator
 	currentSetValueID partialParamSetValueID
-	tailSets          []partialParamSet
+	tailIterator      *partialParamSetsIterator
 }
 
 func newPartialParamSetsIterator(param param) *partialParamSetsIterator {
@@ -39,9 +38,8 @@ func _newPartialParamSetsIterator(param param, paramSetID partialParamSetID) *pa
 	return &partialParamSetsIterator{
 		param:             param,
 		setID:             paramSetID,
+		currentSetValueID: -1,
 		tailIterator:      _newPartialParamSetsIterator(param, paramSetID+1),
-		currentSetValueID: 0,
-		tailSets:          nil,
 	}
 }
 
@@ -56,16 +54,23 @@ func (iterator *partialParamSetsIterator) hasNext() bool {
 
 func (iterator *partialParamSetsIterator) next() []partialParamSet {
 	if iterator.tailIterator != nil && iterator.tailIterator.hasNext() {
-		tailSets := iterator.tailIterator.next()
-		iterator.tailSets = tailSets
+		if iterator.currentSetValueID < 0 {
+			iterator.currentSetValueID++
+		}
+
 		set := iterator.param.getPartialParamSet(iterator.setID, iterator.currentSetValueID)
+		tailSets := iterator.tailIterator.next()
 		return append([]partialParamSet{set}, tailSets...)
 	}
 
+	iterator.tailIterator = _newPartialParamSetsIterator(iterator.param, iterator.setID+1)
+
 	iterator.currentSetValueID++
 	set := iterator.param.getPartialParamSet(iterator.setID, iterator.currentSetValueID)
-	if iterator.tailSets != nil {
-		return append([]partialParamSet{set}, iterator.tailSets...)
+
+	if iterator.tailIterator != nil && iterator.tailIterator.hasNext() {
+		tailSets := iterator.tailIterator.next()
+		return append([]partialParamSet{set}, tailSets...)
 	}
 
 	return []partialParamSet{set}

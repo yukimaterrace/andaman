@@ -103,8 +103,8 @@ func CreateSimulationFlow() *flow.Flow {
 
 	tradeBuilder.Parallel(1)
 
-	start := time.Date(2020, time.June, 1, 0, 0, 0, 0, time.Local)
-	end := time.Date(2020, time.July, 23, 23, 59, 59, 0, time.Local)
+	start := time.Date(2020, time.July, 1, 0, 0, 0, 0, time.Local)
+	end := time.Date(2020, time.August, 31, 23, 59, 59, 0, time.Local)
 
 	flow := flow.NewFlowBuilder().
 		Broker(broker.NewSimpleSimulationBroker()).
