@@ -21,38 +21,54 @@ func CreateSimulationApp() *flow.Flow {
 		broker.EurJpy,
 	}
 
-	longTradeParam := &flow.FrameTradeParam{
-		TradeDirectionLong:     true,
-		SmallFrameLength:       30,
-		LargeFrameLength:       60,
-		PipsGapForCreateOrder:  10.0,
-		PipsForAdditionalOrder: -5.0,
-		PipsForStopLoss:        -100.0,
-		TimeForProfit1:         40,
-		TimeForProfit2:         60,
-		TimeForProfit3:         80,
-		PipsForProfit1:         20.0,
-		PipsForProfit2:         10.0,
-		PipsForProfit3:         5.0,
+	paramSet0 := flow.FrameTradeParamSet0{
+		TradeDirectionLong: true,
 	}
 
-	shortTradeParam := &flow.FrameTradeParam{
-		TradeDirectionLong:     false,
-		SmallFrameLength:       30,
-		LargeFrameLength:       60,
-		PipsGapForCreateOrder:  10.0,
-		PipsForAdditionalOrder: -5.0,
-		PipsForStopLoss:        -100.0,
-		TimeForProfit1:         40,
-		TimeForProfit2:         60,
-		TimeForProfit3:         80,
-		PipsForProfit1:         20.0,
-		PipsForProfit2:         10.0,
-		PipsForProfit3:         5.0,
+	paramSet1 := flow.FrameTradeParamSet1{
+		SmallFrameLength: 30,
+		LargeFrameLength: 60,
 	}
 
-	longTradeAlgorithm := flow.NewFrameTradeAlgorithm(longTradeParam)
-	shortTradeAlgorithm := flow.NewFrameTradeAlgorithm(shortTradeParam)
+	paramSet2 := flow.FrameTradeParamSet2{
+		PipsGapForCreateOrder: 10.0,
+	}
+
+	paramSet3 := flow.FrameTradeParamSet3{
+		PipsForStopLoss: -100.0,
+	}
+
+	paramSet4 := flow.FrameTradeParamSet4{
+		PipsForAdditionalOrder: -5.0,
+	}
+
+	paramSet5 := flow.FrameTradeParamSet5{
+		TimeForProfit1: 40,
+		TimeForProfit2: 60,
+		TimeForProfit3: 80,
+	}
+
+	paramSet6 := flow.FrameTradeParamSet6{
+		PipsForProfit1: 20.0,
+		PipsForProfit2: 10.0,
+		PipsForProfit3: 5.0,
+	}
+
+	longTradeParam := flow.FrameTradeParam{
+		FrameTradeParamSet0: paramSet0,
+		FrameTradeParamSet1: paramSet1,
+		FrameTradeParamSet2: paramSet2,
+		FrameTradeParamSet3: paramSet3,
+		FrameTradeParamSet4: paramSet4,
+		FrameTradeParamSet5: paramSet5,
+		FrameTradeParamSet6: paramSet6,
+	}
+
+	shortTradeParam := longTradeParam
+	shortTradeParam.TradeDirectionLong = false
+
+	longTradeAlgorithm := flow.NewFrameTradeAlgorithm(&longTradeParam)
+	shortTradeAlgorithm := flow.NewFrameTradeAlgorithm(&shortTradeParam)
 
 	tokyoAM := flow.CreateTokyoAMTimeZone()
 	tokyoPM := flow.CreateTokyoPMTimeZone()

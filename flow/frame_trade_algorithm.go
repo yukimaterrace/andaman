@@ -37,56 +37,6 @@ func (f paramFloat64) String() string {
 	return strconv.FormatFloat(float64(f), 'f', 6, 64)
 }
 
-// FrameTradeParam is parameters for frame trade algorithm
-type FrameTradeParam struct {
-	TradeDirectionLong     bool
-	SmallFrameLength       int
-	LargeFrameLength       int
-	PipsGapForCreateOrder  float64
-	PipsForStopLoss        float64
-	PipsForAdditionalOrder float64
-	TimeForProfit1         int64
-	TimeForProfit2         int64
-	TimeForProfit3         int64
-	PipsForProfit1         float64
-	PipsForProfit2         float64
-	PipsForProfit3         float64
-}
-
-func (param *FrameTradeParam) csvHeader() []string {
-	return []string{
-		"tradeDirectionLong",
-		"smallFrameLength",
-		"largeFrameLength",
-		"pipsGapForCreateOrder",
-		"pipsForStopLoss",
-		"pipsForAdditionalOrder",
-		"timeForProfit1",
-		"timeForProfit2",
-		"timeForProfit3",
-		"pipsForProfit1",
-		"pipsForProfit2",
-		"pipsForProfit3",
-	}
-}
-
-func (param *FrameTradeParam) csvValue() []string {
-	return []string{
-		paramBool(param.TradeDirectionLong).String(),
-		paramInt(param.SmallFrameLength).String(),
-		paramInt(param.LargeFrameLength).String(),
-		paramFloat64(param.PipsGapForCreateOrder).String(),
-		paramFloat64(param.PipsForStopLoss).String(),
-		paramFloat64(param.PipsForAdditionalOrder).String(),
-		paramInt(param.TimeForProfit1).String(),
-		paramInt(param.TimeForProfit2).String(),
-		paramInt(param.TimeForProfit3).String(),
-		paramFloat64(param.PipsForProfit1).String(),
-		paramFloat64(param.PipsForProfit2).String(),
-		paramFloat64(param.PipsForProfit3).String(),
-	}
-}
-
 // FrameTradeAlgorithm is a struct for frame trade algorithm
 type FrameTradeAlgorithm struct {
 	*FrameTradeParam
