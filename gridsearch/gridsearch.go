@@ -1,56 +1,52 @@
 package gridsearch
 
 type (
-	// Param is an interface for param
-	Param interface {
-		PartialParamSetSize() int
-		PartialParamSetValueSize(partialParamSetID PartialParamSetID) int
-		GetPartialParamSet(partialParamSetID PartialParamSetID, partialParamSetValueID PartialParamSetValueID) PartialParamSet
-		CreateParam(partialParamSet ...PartialParamSet) Param
+	param interface {
+		partialParamSetSize() int
+		partialParamSetValueSize(setID partialParamSetID) int
+		getPartialParamSet(setID partialParamSetID, setValueID partialParamSetValueID) partialParamSet
+		createParam(paramSets []partialParamSet) param
 	}
 
-	// PartialParamSet is an inteface for partial param set
-	PartialParamSet interface{}
+	partialParamSet interface{}
 
-	// PartialParamSetID is a definition for partial param set ID
-	PartialParamSetID int
+	partialParamSetID int
 
-	// PartialParamSetValueID is a definition for partioal param set value ID
-	PartialParamSetValueID int
+	partialParamSetValueID int
 )
 
 type partialParamSetsIterator struct {
-	param             Param
-	setID             PartialParamSetID
+	param             param
+	setID             partialParamSetID
 	tailIterator      *partialParamSetsIterator
-	currentSetValueID PartialParamSetValueID
-	tailSets          []PartialParamSet
+	currentSetValueID partialParamSetValueID
+	tailSets          []partialParamSet
 }
 
-func newPartialParamSetsIterator(param Param) *partialParamSetsIterator {
-	if param.PartialParamSetSize() == 0 {
+func newPartialParamSetsIterator(param param) *partialParamSetsIterator {
+	if param.partialParamSetSize() == 0 {
 		panic("invalid param")
 	}
 
 	return _newPartialParamSetsIterator(param, 0)
 }
 
-func _newPartialParamSetsIterator(param Param, partialParamSetID PartialParamSetID) *partialParamSetsIterator {
-	if int(partialParamSetID) >= param.PartialParamSetSize() {
+func _newPartialParamSetsIterator(param param, paramSetID partialParamSetID) *partialParamSetsIterator {
+	if int(paramSetID) >= param.partialParamSetSize() {
 		return nil
 	}
 
 	return &partialParamSetsIterator{
 		param:             param,
-		setID:             partialParamSetID,
-		tailIterator:      _newPartialParamSetsIterator(param, partialParamSetID+1),
+		setID:             paramSetID,
+		tailIterator:      _newPartialParamSetsIterator(param, paramSetID+1),
 		currentSetValueID: 0,
 		tailSets:          nil,
 	}
 }
 
 func (iterator *partialParamSetsIterator) hasNext() bool {
-	cond1 := int(iterator.currentSetValueID) < iterator.param.PartialParamSetValueSize(iterator.setID)-1
+	cond1 := int(iterator.currentSetValueID) < iterator.param.partialParamSetValueSize(iterator.setID)-1
 	cond2 := false
 	if iterator.tailIterator != nil {
 		cond2 = iterator.tailIterator.hasNext()
@@ -58,32 +54,31 @@ func (iterator *partialParamSetsIterator) hasNext() bool {
 	return cond1 || cond2
 }
 
-func (iterator *partialParamSetsIterator) next() []PartialParamSet {
+func (iterator *partialParamSetsIterator) next() []partialParamSet {
 	if iterator.tailIterator != nil && iterator.tailIterator.hasNext() {
 		tailSets := iterator.tailIterator.next()
 		iterator.tailSets = tailSets
-		set := iterator.param.GetPartialParamSet(iterator.setID, iterator.currentSetValueID)
-		return append([]PartialParamSet{set}, tailSets...)
+		set := iterator.param.getPartialParamSet(iterator.setID, iterator.currentSetValueID)
+		return append([]partialParamSet{set}, tailSets...)
 	}
 
 	iterator.currentSetValueID++
-	set := iterator.param.GetPartialParamSet(iterator.setID, iterator.currentSetValueID)
+	set := iterator.param.getPartialParamSet(iterator.setID, iterator.currentSetValueID)
 	if iterator.tailSets != nil {
-		return append([]PartialParamSet{set}, iterator.tailSets...)
+		return append([]partialParamSet{set}, iterator.tailSets...)
 	}
 
-	return []PartialParamSet{set}
+	return []partialParamSet{set}
 }
 
-// ParamsForGridSearch is a method to get params for grid search
-func ParamsForGridSearch(param Param) []Param {
-	result := []Param{}
+func paramsForGridSearch(p param) []param {
+	result := []param{}
 
-	iterator := newPartialParamSetsIterator(param)
+	iterator := newPartialParamSetsIterator(p)
 	for iterator.hasNext() {
 		paramSets := iterator.next()
-		p := param.CreateParam(paramSets)
-		result = append(result, p)
+		_param := p.createParam(paramSets)
+		result = append(result, _param)
 	}
 
 	return result

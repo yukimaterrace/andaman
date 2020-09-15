@@ -37,6 +37,93 @@ func (f paramFloat64) String() string {
 	return strconv.FormatFloat(float64(f), 'f', 6, 64)
 }
 
+type (
+	// FrameTradeParamSet0 is a definition for frame trade param set 0
+	FrameTradeParamSet0 struct {
+		TradeDirectionLong bool
+	}
+
+	// FrameTradeParamSet1 is a definition for frame trade param set 1
+	FrameTradeParamSet1 struct {
+		SmallFrameLength int
+		LargeFrameLength int
+	}
+
+	// FrameTradeParamSet2 is a definition for frame trade param set 2
+	FrameTradeParamSet2 struct {
+		PipsGapForCreateOrder float64
+	}
+
+	// FrameTradeParamSet3 is a definition for frame trade param set 3
+	FrameTradeParamSet3 struct {
+		PipsForStopLoss float64
+	}
+
+	// FrameTradeParamSet4 is a definition for frame trade param set 4
+	FrameTradeParamSet4 struct {
+		PipsForAdditionalOrder float64
+	}
+
+	// FrameTradeParamSet5 is a definition for frame trade param set 5
+	FrameTradeParamSet5 struct {
+		TimeForProfit1 int64
+		TimeForProfit2 int64
+		TimeForProfit3 int64
+	}
+
+	// FrameTradeParamSet6 is a definition for frame trade param set 6
+	FrameTradeParamSet6 struct {
+		PipsForProfit1 float64
+		PipsForProfit2 float64
+		PipsForProfit3 float64
+	}
+)
+
+// FrameTradeParam is parameters for frame trade algorithm
+type FrameTradeParam struct {
+	FrameTradeParamSet0
+	FrameTradeParamSet1
+	FrameTradeParamSet2
+	FrameTradeParamSet3
+	FrameTradeParamSet4
+	FrameTradeParamSet5
+	FrameTradeParamSet6
+}
+
+func (param *FrameTradeParam) csvHeader() []string {
+	return []string{
+		"tradeDirectionLong",
+		"smallFrameLength",
+		"largeFrameLength",
+		"pipsGapForCreateOrder",
+		"pipsForStopLoss",
+		"pipsForAdditionalOrder",
+		"timeForProfit1",
+		"timeForProfit2",
+		"timeForProfit3",
+		"pipsForProfit1",
+		"pipsForProfit2",
+		"pipsForProfit3",
+	}
+}
+
+func (param *FrameTradeParam) csvValue() []string {
+	return []string{
+		paramBool(param.TradeDirectionLong).String(),
+		paramInt(param.SmallFrameLength).String(),
+		paramInt(param.LargeFrameLength).String(),
+		paramFloat64(param.PipsGapForCreateOrder).String(),
+		paramFloat64(param.PipsForStopLoss).String(),
+		paramFloat64(param.PipsForAdditionalOrder).String(),
+		paramInt(param.TimeForProfit1).String(),
+		paramInt(param.TimeForProfit2).String(),
+		paramInt(param.TimeForProfit3).String(),
+		paramFloat64(param.PipsForProfit1).String(),
+		paramFloat64(param.PipsForProfit2).String(),
+		paramFloat64(param.PipsForProfit3).String(),
+	}
+}
+
 // FrameTradeAlgorithm is a struct for frame trade algorithm
 type FrameTradeAlgorithm struct {
 	*FrameTradeParam
