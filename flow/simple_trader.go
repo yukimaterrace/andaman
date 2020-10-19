@@ -209,7 +209,7 @@ func (aggregator *orderAggregator) closeOrder(orderID broker.OrderID) {
 }
 
 func (aggregator *orderAggregator) reduce() *combinedOrders {
-	createdOrders := []broker.CreatedOrder{}
+	var createdOrders []broker.CreatedOrder
 	for _, done := range aggregator.createOrderDone {
 		createdOrder := <-done
 		if createdOrder.Err != nil {
@@ -220,14 +220,14 @@ func (aggregator *orderAggregator) reduce() *combinedOrders {
 		}
 	}
 
-	closedOrders := []broker.ClosedOrder{}
+	var closedOrders []broker.ClosedOrder
 	for _, done := range aggregator.closeOrderDone {
 		closedOrder := <-done
 		if closedOrder.Err != nil {
 			log.Println(closedOrder.Err.Error())
 		} else {
 			closedOrders = append(closedOrders, closedOrder.ClosedOrder)
-			aggregator.orderPartitionAggregator.deelete(closedOrder.ClosedOrder.OrderID())
+			aggregator.orderPartitionAggregator.delete(closedOrder.ClosedOrder.OrderID())
 		}
 	}
 
@@ -277,7 +277,7 @@ func (aggregator *orderPartitionAggregator) put(orderID broker.OrderID, partitio
 	}
 }
 
-func (aggregator *orderPartitionAggregator) deelete(orderID broker.OrderID) {
+func (aggregator *orderPartitionAggregator) delete(orderID broker.OrderID) {
 	aggregator.ch <- &deleteOrderPartitionRequest{
 		orderID: orderID,
 	}
@@ -429,7 +429,7 @@ func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
 	orderPartitionAggregator := newOrderPartitionAggregator()
 	orderAggregatorFactory := newOrderAggregatorFactory(orderer, orderPartitionAggregator)
 
-	tradeRunners := []*simpleTradeRunner{}
+	var tradeRunners []*simpleTradeRunner
 	for partitionID, algorithmMap := range builder.algorithmMap {
 		tradableTimeZone, ok := builder.tradableTimeZoneMap[partitionID]
 		if !ok {

@@ -73,7 +73,7 @@ func (recorder *simpleRecorder) flush(onlyCompleted bool) identifiedCompletableO
 	orders := identifiedCompletableOrders{}
 
 	for partitionID, orderMap := range recorder.orderMap {
-		closedOrderIDs := []broker.OrderID{}
+		var closedOrderIDs []broker.OrderID
 
 		for orderID, order := range orderMap {
 			if onlyCompleted && order.closedOrder == nil {
