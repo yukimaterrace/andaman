@@ -116,6 +116,16 @@ const (
 	Frame TradeAlgorithmType = iota
 )
 
+// TradeDirection is trade direction enums
+type TradeDirection int
+
+const (
+	// Long is long trade direction
+	Long TradeDirection = iota
+	// Short is short trade direction
+	Short
+)
+
 // OrderState is order state enums
 type OrderState int
 
