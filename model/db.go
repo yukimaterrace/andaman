@@ -1,7 +1,9 @@
 package model
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"time"
 	"yukimaterrace/andaman/config"
@@ -103,6 +105,54 @@ func deleteTradeSetByName(name string) error {
 	q := "delete from trade_set where name = ?"
 
 	_, err := db.Exec(q, name)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getHash(data string) string {
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
+}
+
+func getTradeAlgorithmByTypeAndParam(_type TradeAlgorithmType, param string) (*TradeAlgorithm, error) {
+	paramHash := getHash(param)
+
+	q := "select * from trade_algorithm where type = ? and param_hash = ?"
+	row := db.QueryRow(q, _type, paramHash)
+
+	ta := TradeAlgorithm{}
+	err := row.Scan(
+		&ta.TradeAlgorithmID,
+		&ta.Type,
+		&ta.ParamHash,
+		&ta.Param,
+		&ta.TradeDirection,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ta, nil
+}
+
+func addTradeAlgorithm(_type TradeAlgorithmType, param string, tradeDirection TradeDirection) error {
+	paramHash := getHash(param)
+
+	q := "insert into trade_algorithm (type, param_hash, param, trade_direction) values (?, ?, ?, ?)"
+	_, err := db.Exec(q, _type, paramHash, param, tradeDirection)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteTradeAlgorithmByTypeAndParam(_type TradeAlgorithmType, param string) error {
+	paramHash := getHash(param)
+
+	q := "delete from trade_algorithm where type = ? and param_hash = ?"
+	_, err := db.Exec(q, _type, paramHash)
 	if err != nil {
 		return err
 	}

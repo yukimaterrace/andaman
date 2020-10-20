@@ -31,3 +31,25 @@ func TestTradeSet(t *testing.T) {
 	}
 	log.Printf("%v", tradeSets)
 }
+
+func TestTradeAlgorithm(t *testing.T) {
+	_type := Frame
+	param := "{\"a\": 1, \"b\": 2}"
+	tradeDirection := Short
+
+	err := deleteTradeAlgorithmByTypeAndParam(_type, param)
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = addTradeAlgorithm(_type, param, tradeDirection)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ta, err := getTradeAlgorithmByTypeAndParam(_type, param)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%v", ta)
+}
