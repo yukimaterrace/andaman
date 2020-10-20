@@ -36,7 +36,7 @@ func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]TradeSet, 
 	}
 	defer rows.Close()
 
-	var tradeSets []TradeSet
+	tradeSets := []TradeSet{}
 	for rows.Next() {
 		ts := TradeSet{}
 
@@ -195,6 +195,7 @@ func getTradeSetConfigurationRelsByTradeSetID(tradeSetID int) ([]TradeSetConfigu
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var rels []TradeSetConfigurationRel
 	for rows.Next() {

@@ -24,9 +24,9 @@ const (
 func (_type TradeSetType) IsValid() error {
 	switch _type {
 	case Trade, Simulation, GridSearch:
-		return ErrNumber
-	default:
 		return nil
+	default:
+		return ErrNumber
 	}
 }
 
