@@ -7,7 +7,7 @@ type TradeSetType int
 
 const (
 	// Trade is a trade type
-	Trade TradeSetState = iota
+	Trade TradeSetType = iota
 	// Simulation is simulation type
 	Simulation
 	// GridSearch is a grid search type
@@ -86,7 +86,7 @@ func (tradePair TradePair) PricePerPip() float64 {
 	case AudJpy, UsdJpy, GbpJpy, EurJpy:
 		return 0.01
 	default:
-		panic(fmt.Sprintf("unknown tradepair: %s", string(tradePair)))
+		panic(fmt.Sprintf("unknown tradepair: %d", tradePair))
 	}
 }
 
