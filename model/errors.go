@@ -1,0 +1,27 @@
+package model
+
+import (
+	"database/sql"
+	"net/http"
+)
+
+// Error is an erro for model
+type Error struct {
+	Code    int
+	Message string
+}
+
+func (err Error) Error() string {
+	return err.Message
+}
+
+func handleError(err error) *Error {
+	code := http.StatusInternalServerError
+	if err == sql.ErrNoRows {
+		code = http.StatusNotFound
+	}
+	return &Error{
+		Code:    code,
+		Message: err.Error(),
+	}
+}

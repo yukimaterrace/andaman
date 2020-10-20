@@ -20,6 +20,8 @@ var (
 	DBHost string
 	// DBPort is an env for DBPort
 	DBPort string
+	// APIKey is an env for APIKey
+	APIKey string
 )
 
 func panicForEnv(name string) {
@@ -68,6 +70,12 @@ func init() {
 	name = "DB_PORT"
 	DBPort = os.Getenv(name)
 	if DBPort == "" {
+		panicForEnv(name)
+	}
+
+	name = "API_KEY"
+	APIKey = os.Getenv(name)
+	if APIKey == "" {
 		panicForEnv(name)
 	}
 }

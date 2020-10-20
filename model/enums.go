@@ -1,6 +1,12 @@
 package model
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+// ErrNumber is an error for number
+var ErrNumber = errors.New("invalid number")
 
 // TradeSetType is trade set type enums
 type TradeSetType int
@@ -13,6 +19,16 @@ const (
 	// GridSearch is a grid search type
 	GridSearch
 )
+
+// IsValid is a method to validate
+func (_type TradeSetType) IsValid() error {
+	switch _type {
+	case Trade, Simulation, GridSearch:
+		return ErrNumber
+	default:
+		return nil
+	}
+}
 
 // TradeSetState is trade set state enums
 type TradeSetState int
