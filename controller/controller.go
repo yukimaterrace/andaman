@@ -18,7 +18,7 @@ func CreateController() *echo.Echo {
 	e.Use(authMiddleware)
 	e.Use(middleware.Logger())
 
-	e.GET("/trade_sets", getTradeSets)
+	e.GET("/api/trade_sets", getTradeSets)
 
 	return e
 }
