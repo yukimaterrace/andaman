@@ -13,6 +13,7 @@ type frameCalculator interface {
 	calculate(tradePair broker.TradePair, length int) *Frame
 }
 
+// Frame is a struct for frame
 type Frame struct {
 	O float64
 	H float64
