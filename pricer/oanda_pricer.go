@@ -83,5 +83,5 @@ func (oandaPrice *oandaPrice) calculate(tradePair broker.TradePair, length int) 
 		}
 	}
 
-	return &trader.Frame{o, h, l, c}
+	return &trader.Frame{O: o, H: h, L: l, C: c}
 }
