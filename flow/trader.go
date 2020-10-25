@@ -4,20 +4,22 @@ import (
 	"yukimaterrace/andaman/broker"
 )
 
-type trader interface {
-	trade(material tradeMaterial, mode TradeMode) (recordMaterial, bool)
+// Trader is an interface for trader
+type Trader interface {
+	Trade(material TradeMaterial, mode TradeMode) (RecordMaterial, bool)
 }
 
 // TraderFactory provides factory method of trader
 type TraderFactory interface {
-	create(broker broker.Broker, ordererFactory broker.OrdererFactory) trader
+	Create(broker broker.Broker, ordererFactory broker.OrdererFactory) Trader
 }
 
-type tradeMaterial interface{}
+// TradeMaterial is an interface for trade material
+type TradeMaterial interface{}
 
 type (
 	tradeRequest struct {
-		material tradeMaterial
+		material TradeMaterial
 	}
 
 	changeTradeModeRequest struct {
@@ -26,13 +28,13 @@ type (
 )
 
 type tradeWorker struct {
-	trader
+	Trader
 	*recordWorker
 	mode TradeMode
 	ch   chan interface{}
 }
 
-func (tradeWorker *tradeWorker) tradeRequest(material tradeMaterial) {
+func (tradeWorker *tradeWorker) tradeRequest(material TradeMaterial) {
 	tradeWorker.ch <- &tradeRequest{material: material}
 }
 
@@ -51,7 +53,7 @@ func (tradeWorker *tradeWorker) work(exit chan<- bool) {
 
 	switch req := request.(type) {
 	case *tradeRequest:
-		recordMaterial, ok := tradeWorker.trade(req.material, tradeWorker.mode)
+		recordMaterial, ok := tradeWorker.Trade(req.material, tradeWorker.mode)
 
 		if ok {
 			tradeWorker.recordRequest(recordMaterial)

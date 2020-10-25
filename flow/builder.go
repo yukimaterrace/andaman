@@ -66,27 +66,27 @@ func (builder *Builder) RecorderFactory(recorderFactory RecorderFactory) *Builde
 
 // Build builds flow
 func (builder *Builder) Build() *Flow {
-	pricer := builder.pricerFactory.create(builder.broker, builder.pricerTradePairs)
-	trader := builder.traderFactory.create(builder.broker, builder.ordererFactory)
-	recorder := builder.recorderFactory.create()
+	pricer := builder.pricerFactory.Create(builder.broker, builder.pricerTradePairs)
+	trader := builder.traderFactory.Create(builder.broker, builder.ordererFactory)
+	recorder := builder.recorderFactory.Create()
 
 	recordWorker := &recordWorker{
-		recorder: recorder,
+		Recorder: recorder,
 		ch:       make(chan interface{}, config.FlowChanCap),
 		ticker:   time.NewTicker(time.Minute), // write ever 1 minute
 	}
 
 	tradeWorker := &tradeWorker{
-		trader:       trader,
+		Trader:       trader,
 		recordWorker: recordWorker,
 		mode:         builder.initialTradeMode,
 		ch:           make(chan interface{}, config.FlowChanCap),
 	}
 
 	priceWorker := &priceWorker{
-		pricer:            pricer,
+		Pricer:            pricer,
 		tradeWorker:       tradeWorker,
-		createPriceResult: make(chan *createPriceResult, 1),
+		createPriceResult: make(chan *CreatePriceResult, 1),
 		ch:                make(chan interface{}, config.FlowChanCap),
 		init:              false,
 	}

@@ -5,19 +5,22 @@ import (
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/gridsearch"
+	"yukimaterrace/andaman/pricer"
+	"yukimaterrace/andaman/recorder"
+	"yukimaterrace/andaman/trader"
 )
 
 // CreateGridSearchFlow is a factory method to create grid search flow
 func CreateGridSearchFlow() *flow.Flow {
 	paramsForGridSearch := gridsearch.FrameTradeParamsForGridSearch()
 
-	timezones := []*flow.TradableTimeZone{
-		flow.CreateTokyoAMTimeZone(),
-		flow.CreateTokyoPMTimeZone(),
-		flow.CreateLondonAMTimeZone(),
-		flow.CreateLondonPMTimeZone(),
-		flow.CreateNewYorkAMTimeZone(),
-		flow.CreateNewYorkPMTimeZone(),
+	timezones := []*trader.TradableTimeZone{
+		trader.CreateTokyoAMTimeZone(),
+		trader.CreateTokyoPMTimeZone(),
+		trader.CreateLondonAMTimeZone(),
+		trader.CreateLondonPMTimeZone(),
+		trader.CreateNewYorkAMTimeZone(),
+		trader.CreateNewYorkPMTimeZone(),
 	}
 
 	pricerTradePairs := []broker.TradePair{
@@ -33,11 +36,11 @@ func CreateGridSearchFlow() *flow.Flow {
 		broker.EurJpy,
 	}
 
-	tradeBuilder := flow.NewSimpleTraderBuilder()
+	tradeBuilder := trader.NewSimpleTraderBuilder()
 	for i, timezone := range timezones {
 		for j, param := range paramsForGridSearch {
-			algorithm := flow.NewFrameTradeAlgorithm(param)
-			paritionID := flow.PartitionID(j + i*len(paramsForGridSearch))
+			algorithm := trader.NewFrameTradeAlgorithm(param)
+			paritionID := trader.PartitionID(j + i*len(paramsForGridSearch))
 
 			tradeBuilder.TradableTimeZone(paritionID, timezone)
 			for _, tradePair := range pricerTradePairs {
@@ -56,9 +59,9 @@ func CreateGridSearchFlow() *flow.Flow {
 		OrdererFactory(broker.NewSimpleSimulationOrdererFactory()).
 		PricerTradePairs(pricerTradePairs).
 		InitialTradeMode(flow.Trade).
-		PricerFactory(flow.NewOandaSimulationPricerFactory(start, end)).
-		TraderFactory(flow.NewSimpleTraderFactory(tradeBuilder)).
-		RecorderFactory(flow.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
+		PricerFactory(pricer.NewOandaSimulationPricerFactory(start, end)).
+		TraderFactory(trader.NewSimpleTraderFactory(tradeBuilder)).
+		RecorderFactory(recorder.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
 		Build()
 
 	return flow

@@ -4,6 +4,9 @@ import (
 	"time"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/pricer"
+	"yukimaterrace/andaman/recorder"
+	"yukimaterrace/andaman/trader"
 )
 
 // CreateSimulationFlow is a factory method to create simulation app
@@ -21,40 +24,40 @@ func CreateSimulationFlow() *flow.Flow {
 		broker.EurJpy,
 	}
 
-	paramSet0 := flow.FrameTradeParamSet0{
+	paramSet0 := trader.FrameTradeParamSet0{
 		TradeDirectionLong: true,
 	}
 
-	paramSet1 := flow.FrameTradeParamSet1{
+	paramSet1 := trader.FrameTradeParamSet1{
 		SmallFrameLength: 30,
 		LargeFrameLength: 60,
 	}
 
-	paramSet2 := flow.FrameTradeParamSet2{
+	paramSet2 := trader.FrameTradeParamSet2{
 		PipsGapForCreateOrder: 10.0,
 	}
 
-	paramSet3 := flow.FrameTradeParamSet3{
+	paramSet3 := trader.FrameTradeParamSet3{
 		PipsForStopLoss: -100.0,
 	}
 
-	paramSet4 := flow.FrameTradeParamSet4{
+	paramSet4 := trader.FrameTradeParamSet4{
 		PipsForAdditionalOrder: -5.0,
 	}
 
-	paramSet5 := flow.FrameTradeParamSet5{
+	paramSet5 := trader.FrameTradeParamSet5{
 		TimeForProfit1: 40,
 		TimeForProfit2: 60,
 		TimeForProfit3: 80,
 	}
 
-	paramSet6 := flow.FrameTradeParamSet6{
+	paramSet6 := trader.FrameTradeParamSet6{
 		PipsForProfit1: 20.0,
 		PipsForProfit2: 10.0,
 		PipsForProfit3: 5.0,
 	}
 
-	longTradeParam := flow.FrameTradeParam{
+	longTradeParam := trader.FrameTradeParam{
 		FrameTradeParamSet0: paramSet0,
 		FrameTradeParamSet1: paramSet1,
 		FrameTradeParamSet2: paramSet2,
@@ -67,17 +70,17 @@ func CreateSimulationFlow() *flow.Flow {
 	shortTradeParam := longTradeParam
 	shortTradeParam.TradeDirectionLong = false
 
-	longTradeAlgorithm := flow.NewFrameTradeAlgorithm(&longTradeParam)
-	shortTradeAlgorithm := flow.NewFrameTradeAlgorithm(&shortTradeParam)
+	longTradeAlgorithm := trader.NewFrameTradeAlgorithm(&longTradeParam)
+	shortTradeAlgorithm := trader.NewFrameTradeAlgorithm(&shortTradeParam)
 
-	tokyoAM := flow.CreateTokyoAMTimeZone()
-	tokyoPM := flow.CreateTokyoPMTimeZone()
-	londonAM := flow.CreateLondonAMTimeZone()
-	londonPM := flow.CreateLondonPMTimeZone()
-	newyorkAM := flow.CreateNewYorkAMTimeZone()
-	newyorkPM := flow.CreateNewYorkPMTimeZone()
+	tokyoAM := trader.CreateTokyoAMTimeZone()
+	tokyoPM := trader.CreateTokyoPMTimeZone()
+	londonAM := trader.CreateLondonAMTimeZone()
+	londonPM := trader.CreateLondonPMTimeZone()
+	newyorkAM := trader.CreateNewYorkAMTimeZone()
+	newyorkPM := trader.CreateNewYorkPMTimeZone()
 
-	tradeBuilder := flow.NewSimpleTraderBuilder().
+	tradeBuilder := trader.NewSimpleTraderBuilder().
 		TradableTimeZone(0, tokyoAM).
 		TradableTimeZone(1, tokyoAM).
 		TradableTimeZone(2, tokyoPM).
@@ -94,9 +97,9 @@ func CreateSimulationFlow() *flow.Flow {
 	for _, tradePair := range pricerTradePairs {
 		for i := 0; i < 12; i++ {
 			if i%2 == 0 {
-				tradeBuilder.Trade(flow.PartitionID(i), tradePair, longTradeAlgorithm)
+				tradeBuilder.Trade(trader.PartitionID(i), tradePair, longTradeAlgorithm)
 			} else {
-				tradeBuilder.Trade(flow.PartitionID(i), tradePair, shortTradeAlgorithm)
+				tradeBuilder.Trade(trader.PartitionID(i), tradePair, shortTradeAlgorithm)
 			}
 		}
 	}
@@ -111,9 +114,9 @@ func CreateSimulationFlow() *flow.Flow {
 		OrdererFactory(broker.NewSimpleSimulationOrdererFactory()).
 		PricerTradePairs(pricerTradePairs).
 		InitialTradeMode(flow.Trade).
-		PricerFactory(flow.NewOandaSimulationPricerFactory(start, end)).
-		TraderFactory(flow.NewSimpleTraderFactory(tradeBuilder)).
-		RecorderFactory(flow.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
+		PricerFactory(pricer.NewOandaSimulationPricerFactory(start, end)).
+		TraderFactory(trader.NewSimpleTraderFactory(tradeBuilder)).
+		RecorderFactory(recorder.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
 		Build()
 
 	return flow

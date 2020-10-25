@@ -1,4 +1,4 @@
-package flow
+package recorder
 
 import (
 	"encoding/csv"
@@ -8,23 +8,25 @@ import (
 	"sort"
 	"strconv"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/trader"
 	"yukimaterrace/andaman/util"
 )
 
 type simpleRecorder struct {
 	writer   writer
-	orderMap map[PartitionID]map[broker.OrderID]*completableOrder
+	orderMap map[trader.PartitionID]map[broker.OrderID]*completableOrder
 }
 
 func newSimpleRecorder(writer writer) *simpleRecorder {
 	return &simpleRecorder{
 		writer:   writer,
-		orderMap: map[PartitionID]map[broker.OrderID]*completableOrder{},
+		orderMap: map[trader.PartitionID]map[broker.OrderID]*completableOrder{},
 	}
 }
 
-func (recorder *simpleRecorder) record(material recordMaterial) {
-	partitionCombinedOrders, ok := material.(partitionCombinedOrders)
+func (recorder *simpleRecorder) Record(material flow.RecordMaterial) {
+	partitionCombinedOrders, ok := material.(trader.PartitionCombinedOrders)
 	if !ok {
 		panic(util.ErrWrongType)
 	}
@@ -35,7 +37,7 @@ func (recorder *simpleRecorder) record(material recordMaterial) {
 		}
 
 		completableOrderMap := recorder.orderMap[partitionID]
-		for _, createdOrder := range combinedOrders.createdOrders {
+		for _, createdOrder := range combinedOrders.CreatedOrders {
 			if _, ok := completableOrderMap[createdOrder.OrderID()]; ok {
 				panic("duplicate order id for created order detected")
 			}
@@ -46,7 +48,7 @@ func (recorder *simpleRecorder) record(material recordMaterial) {
 			}
 		}
 
-		for _, closedOrder := range combinedOrders.closedOrders {
+		for _, closedOrder := range combinedOrders.ClosedOrders {
 			completableOrder, ok := completableOrderMap[closedOrder.OrderID()]
 			if !ok {
 				panic("no created order for the order id exist")
@@ -57,12 +59,12 @@ func (recorder *simpleRecorder) record(material recordMaterial) {
 	}
 }
 
-func (recorder *simpleRecorder) write() {
+func (recorder *simpleRecorder) Write() {
 	identifiedCompletableOrders := recorder.flush(true)
 	recorder.writer.write(identifiedCompletableOrders)
 }
 
-func (recorder *simpleRecorder) close() {
+func (recorder *simpleRecorder) Close() {
 	identifiedCompletableOrders := recorder.flush(false)
 
 	recorder.writer.write(identifiedCompletableOrders)
@@ -107,7 +109,7 @@ type (
 	}
 
 	identifiedCompletableOrder struct {
-		partitionID PartitionID
+		partitionID trader.PartitionID
 		tradePair   broker.TradePair
 		order       *completableOrder
 	}
@@ -174,16 +176,16 @@ type writer interface {
 
 type simpleWriter struct {
 	recordDir         string
-	tradableTimeZones tradableTimeZones
-	csvWriterMap      map[keyPartitionIDTradePair]*csv.Writer
+	tradableTimeZones trader.TradableTimeZones
+	csvWriterMap      map[trader.KeyPartitionIDTradePair]*csv.Writer
 	files             []*os.File
 }
 
-func newSimpleWriter(tradableTimeZones tradableTimeZones) *simpleWriter {
+func newSimpleWriter(tradableTimeZones trader.TradableTimeZones) *simpleWriter {
 	return &simpleWriter{
 		recordDir:         util.GetEnv("RECORD_DIR"),
 		tradableTimeZones: tradableTimeZones,
-		csvWriterMap:      map[keyPartitionIDTradePair]*csv.Writer{},
+		csvWriterMap:      map[trader.KeyPartitionIDTradePair]*csv.Writer{},
 		files:             []*os.File{},
 	}
 }
@@ -194,9 +196,9 @@ func (writer *simpleWriter) write(orders identifiedCompletableOrders) {
 	}
 
 	for _, order := range orders {
-		key := keyPartitionIDTradePair{order.partitionID, order.tradePair}
+		key := trader.KeyPartitionIDTradePair{PartitionID: order.partitionID, TradePair: order.tradePair}
 		if _, ok := writer.csvWriterMap[key]; !ok {
-			tradableTimeZone, ok := writer.tradableTimeZones[key.partitionID]
+			tradableTimeZone, ok := writer.tradableTimeZones[key.PartitionID]
 			if !ok {
 				panic("no tradable time zone specified")
 			}
@@ -239,16 +241,17 @@ func (writer *simpleWriter) close() {
 
 // SimpleRecorderFactory is a factory for simple trader using simple recorder
 type SimpleRecorderFactory struct {
-	builder *SimpleTraderBuilder
+	builder *trader.SimpleTraderBuilder
 }
 
 // NewSimpleRecorderFactory is a constructor for simple recorder factory
-func NewSimpleRecorderFactory(builder *SimpleTraderBuilder) *SimpleRecorderFactory {
+func NewSimpleRecorderFactory(builder *trader.SimpleTraderBuilder) *SimpleRecorderFactory {
 	return &SimpleRecorderFactory{builder}
 }
 
-func (factory *SimpleRecorderFactory) create() recorder {
-	tradableTimeZones := factory.builder.buildTradableTimeZones()
+// Create is a factory method to create recorder
+func (factory *SimpleRecorderFactory) Create() flow.Recorder {
+	tradableTimeZones := factory.builder.BuildTradableTimeZones()
 	return newSimpleRecorder(newSimpleWriter(tradableTimeZones))
 }
 
@@ -263,18 +266,18 @@ type keyTradePairTradableTimeZone struct {
 }
 
 type tradePairSummaryWriter struct {
-	tradeSpecs      *tradeSpecs
+	tradeSpecs      *trader.TradeSpecs
 	recordDir       string
-	tradeSummaryMap map[keyPartitionIDTradePair]*tradeSummary
+	tradeSummaryMap map[trader.KeyPartitionIDTradePair]*tradeSummary
 	writerMap       map[keyTradePairTradableTimeZone]*csv.Writer
 	files           []*os.File
 }
 
-func newTradePairSummaryWriter(tradeSpecs *tradeSpecs) *tradePairSummaryWriter {
+func newTradePairSummaryWriter(tradeSpecs *trader.TradeSpecs) *tradePairSummaryWriter {
 	return &tradePairSummaryWriter{
 		tradeSpecs:      tradeSpecs,
 		recordDir:       util.GetEnv("RECORD_DIR"),
-		tradeSummaryMap: map[keyPartitionIDTradePair]*tradeSummary{},
+		tradeSummaryMap: map[trader.KeyPartitionIDTradePair]*tradeSummary{},
 		writerMap:       map[keyTradePairTradableTimeZone]*csv.Writer{},
 		files:           []*os.File{},
 	}
@@ -285,7 +288,7 @@ func (writer *tradePairSummaryWriter) write(orders identifiedCompletableOrders) 
 		closedOrder := order.order.closedOrder
 
 		if closedOrder != nil {
-			key := keyPartitionIDTradePair{order.partitionID, order.tradePair}
+			key := trader.KeyPartitionIDTradePair{PartitionID: order.partitionID, TradePair: order.tradePair}
 			if _, ok := writer.tradeSummaryMap[key]; !ok {
 				writer.tradeSummaryMap[key] = &tradeSummary{}
 			}
@@ -299,19 +302,19 @@ func (writer *tradePairSummaryWriter) write(orders identifiedCompletableOrders) 
 
 func (writer *tradePairSummaryWriter) close() {
 	for key, tradeSummary := range writer.tradeSummaryMap {
-		tradableTimeZone, ok := writer.tradeSpecs.timeZones[key.partitionID]
+		tradableTimeZone, ok := writer.tradeSpecs.TimeZones[key.PartitionID]
 		if !ok {
 			panic("no tradable time zone specified")
 		}
 
-		paramLoader, ok := writer.tradeSpecs.paramLoaders[key]
+		paramLoader, ok := writer.tradeSpecs.ParamLoaders[key]
 		if !ok {
 			panic("no param loader specified")
 		}
 
-		_key := keyTradePairTradableTimeZone{key.tradePair, tradableTimeZone.Name}
+		_key := keyTradePairTradableTimeZone{key.TradePair, tradableTimeZone.Name}
 		if _, ok := writer.writerMap[_key]; !ok {
-			path := fmt.Sprintf("%s/%s_%s.csv", writer.recordDir, string(key.tradePair), tradableTimeZone.Name)
+			path := fmt.Sprintf("%s/%s_%s.csv", writer.recordDir, string(key.TradePair), tradableTimeZone.Name)
 			file, err := os.Create(path)
 			if err != nil {
 				panic(err)
@@ -320,7 +323,7 @@ func (writer *tradePairSummaryWriter) close() {
 			writer.files = append(writer.files, file)
 
 			csvWriter := csv.NewWriter(file)
-			csvWriter.Write(paramLoader.paramCsvHeader())
+			csvWriter.Write(paramLoader.ParamCsvHeader())
 
 			writer.writerMap[_key] = csvWriter
 		}
@@ -328,7 +331,7 @@ func (writer *tradePairSummaryWriter) close() {
 		realizedProfit := strconv.FormatFloat(tradeSummary.realizedProfit, 'f', 6, 64)
 		tradeCount := strconv.FormatInt(int64(tradeSummary.tradeCount), 10)
 
-		writer.writerMap[_key].Write(append(paramLoader.paramCsvValue(), realizedProfit, tradeCount))
+		writer.writerMap[_key].Write(append(paramLoader.ParamCsvValue(), realizedProfit, tradeCount))
 	}
 
 	for _, csvWriter := range writer.writerMap {
@@ -342,15 +345,15 @@ func (writer *tradePairSummaryWriter) close() {
 
 // SimpleTradePairSummaryRecorderFactory is a factory for simple trader using trade summary recorder
 type SimpleTradePairSummaryRecorderFactory struct {
-	builder *SimpleTraderBuilder
+	builder *trader.SimpleTraderBuilder
 }
 
 // NewSimpleTradePairSummaryRecorderFactory is a constructor for simple trade pair summary recorder
-func NewSimpleTradePairSummaryRecorderFactory(builder *SimpleTraderBuilder) *SimpleTradePairSummaryRecorderFactory {
+func NewSimpleTradePairSummaryRecorderFactory(builder *trader.SimpleTraderBuilder) *SimpleTradePairSummaryRecorderFactory {
 	return &SimpleTradePairSummaryRecorderFactory{builder}
 }
 
-func (factory *SimpleTradePairSummaryRecorderFactory) create() recorder {
-	tradeSpecs := factory.builder.buildTradeSpecs()
+func (factory *SimpleTradePairSummaryRecorderFactory) Create() flow.Recorder {
+	tradeSpecs := factory.builder.BuildTradeSpecs()
 	return newSimpleRecorder(newTradePairSummaryWriter(tradeSpecs))
 }

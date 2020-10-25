@@ -6,26 +6,29 @@ import (
 	"yukimaterrace/andaman/broker"
 )
 
-type pricer interface {
-	createPrice(done chan<- *createPriceResult)
+// Pricer is an interface for pricer
+type Pricer interface {
+	CreatePrice(done chan<- *CreatePriceResult)
 }
 
 // PricerFactory is a factory of pricer
 type PricerFactory interface {
-	create(broker broker.Broker, tradePairs []broker.TradePair) pricer
+	Create(broker broker.Broker, tradePairs []broker.TradePair) Pricer
 }
 
-type createPriceResult struct {
-	tradeMaterial tradeMaterial
-	err           error
-}
+// ErrNoMorePrice is an error for no more price
+var ErrNoMorePrice = errors.New("no more price")
 
-var errNoMorePrice = errors.New("no more price")
+// CreatePriceResult is a result for create price
+type CreatePriceResult struct {
+	TradeMaterial TradeMaterial
+	Err           error
+}
 
 type priceWorker struct {
-	pricer
+	Pricer
 	*tradeWorker
-	createPriceResult chan *createPriceResult
+	createPriceResult chan *CreatePriceResult
 	ch                chan interface{}
 	init              bool
 }
@@ -40,7 +43,7 @@ func (priceWorker *priceWorker) work(exit chan<- bool) {
 	if !priceWorker.init {
 		go func() {
 			for {
-				priceWorker.createPrice(priceWorker.createPriceResult)
+				priceWorker.CreatePrice(priceWorker.createPriceResult)
 			}
 		}()
 
@@ -49,12 +52,12 @@ func (priceWorker *priceWorker) work(exit chan<- bool) {
 
 	select {
 	case result := <-priceWorker.createPriceResult:
-		if result.err == nil {
-			priceWorker.tradeRequest(result.tradeMaterial)
+		if result.Err == nil {
+			priceWorker.tradeRequest(result.TradeMaterial)
 		} else {
-			log.Println(result.err.Error())
+			log.Println(result.Err.Error())
 
-			if result.err == errNoMorePrice {
+			if result.Err == ErrNoMorePrice {
 				priceWorker.tradeWorker.shutdown()
 				exit <- true
 			}

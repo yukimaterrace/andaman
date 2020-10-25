@@ -1,22 +1,23 @@
-package flow
+package trader
 
 import (
 	"log"
 	"strconv"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/util"
 )
 
 type frameCalculator interface {
 	broker.PriceExtractor
-	calculate(tradePair broker.TradePair, length int) *frame
+	calculate(tradePair broker.TradePair, length int) *Frame
 }
 
-type frame struct {
-	o float64
-	h float64
-	l float64
-	c float64
+type Frame struct {
+	O float64
+	H float64
+	L float64
+	C float64
 }
 
 type paramBool bool
@@ -145,7 +146,7 @@ func NewFrameTradeAlgorithm(param *FrameTradeParam) *FrameTradeAlgorithm {
 	}
 }
 
-func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggregator *orderAggregator, tradePair broker.TradePair) {
+func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, agggregator *orderAggregator, tradePair broker.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
 		panic(util.ErrWrongType)
@@ -157,16 +158,16 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggr
 	smallFrame := calculator.calculate(tradePair, algorithm.SmallFrameLength)
 	largeFrame := calculator.calculate(tradePair, algorithm.LargeFrameLength)
 
-	gapCond := smallFrame.h-smallFrame.l > algorithm.PipsGapForCreateOrder*tradePair.PricePerPip()+spread
+	gapCond := smallFrame.H-smallFrame.L > algorithm.PipsGapForCreateOrder*tradePair.PricePerPip()+spread
 
 	if algorithm.TradeDirectionLong {
-		longCond := smallFrame.h == largeFrame.h && smallFrame.l > largeFrame.l && smallFrame.l == smallFrame.c
+		longCond := smallFrame.H == largeFrame.H && smallFrame.L > largeFrame.L && smallFrame.L == smallFrame.C
 
 		if longCond && gapCond {
 			agggregator.createOrder(tradePair, algorithm.units, true)
 		}
 	} else {
-		shortCond := smallFrame.l == largeFrame.l && smallFrame.h < largeFrame.h && smallFrame.h == smallFrame.c
+		shortCond := smallFrame.L == largeFrame.L && smallFrame.H < largeFrame.H && smallFrame.H == smallFrame.C
 
 		if shortCond && gapCond {
 			agggregator.createOrder(tradePair, algorithm.units, false)
@@ -174,7 +175,7 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material tradeMaterial, agggr
 	}
 }
 
-func (algorithm *FrameTradeAlgorithm) proceedTrade(material tradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair) {
+func (algorithm *FrameTradeAlgorithm) proceedTrade(material flow.TradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
 		panic(util.ErrWrongType)
@@ -225,11 +226,13 @@ func (algorithm *FrameTradeAlgorithm) proceedTrade(material tradeMaterial, agggr
 	}
 }
 
-func (algorithm *FrameTradeAlgorithm) paramCsvHeader() []string {
+// ParamCsvHeader is a method to get param csv header
+func (algorithm *FrameTradeAlgorithm) ParamCsvHeader() []string {
 	return algorithm.FrameTradeParam.csvHeader()
 }
 
-func (algorithm *FrameTradeAlgorithm) paramCsvValue() []string {
+// ParamCsvValue is a method to get param csv value
+func (algorithm *FrameTradeAlgorithm) ParamCsvValue() []string {
 	return algorithm.FrameTradeParam.csvValue()
 }
 

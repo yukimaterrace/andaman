@@ -1,9 +1,10 @@
-package flow
+package pricer
 
 import (
 	"log"
 	"time"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/flow"
 )
 
 type oandaSimulationPricer struct {
@@ -71,18 +72,18 @@ func (pricer *oandaSimulationPricer) next() *oandaSimulationPrice {
 	return createPrice
 }
 
-func (pricer *oandaSimulationPricer) createPrice(done chan<- *createPriceResult) {
+func (pricer *oandaSimulationPricer) CreatePrice(done chan<- *flow.CreatePriceResult) {
 	if !pricer.hasNext() {
-		done <- &createPriceResult{
-			tradeMaterial: nil,
-			err:           errNoMorePrice,
+		done <- &flow.CreatePriceResult{
+			TradeMaterial: nil,
+			Err:           flow.ErrNoMorePrice,
 		}
 		return
 	}
 
-	done <- &createPriceResult{
-		tradeMaterial: pricer.next(),
-		err:           nil,
+	done <- &flow.CreatePriceResult{
+		TradeMaterial: pricer.next(),
+		Err:           nil,
 	}
 }
 
@@ -100,7 +101,8 @@ func NewOandaSimulationPricerFactory(startTime time.Time, endTime time.Time) *Oa
 	}
 }
 
-func (factory *OandaSimulationPricerFactory) create(broker broker.Broker, tradePairs []broker.TradePair) pricer {
+// Create is a factory method to create oanda simulation pricer factory
+func (factory *OandaSimulationPricerFactory) Create(broker broker.Broker, tradePairs []broker.TradePair) flow.Pricer {
 	seed := fetchOandaSimulationPriceSeed(tradePairs, "M1", factory.start, factory.end)
 	return newOandaSimulationPricer(seed)
 }

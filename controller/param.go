@@ -6,7 +6,7 @@ import (
 	"yukimaterrace/andaman/model"
 )
 
-func paramError(err error) *APIError {
+func paramError(err error) error {
 	return &APIError{
 		Code:    http.StatusBadRequest,
 		Message: err.Error(),
