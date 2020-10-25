@@ -8,16 +8,16 @@ import (
 	"yukimaterrace/andaman/util"
 )
 
-// SimpleTrader is a struct for simple trader
-type SimpleTrader struct {
+// Trader is a struct for trader
+type Trader struct {
 	orderer                  broker.Orderer
 	orderPartitionAggregator *orderPartitionAggregator
-	tradeRunners             []*simpleTradeRunner
-	executor                 *simpleTradeRunnersExecutor
+	tradeRunners             []*tradeRunner
+	executor                 *tradeRunnersExecutor
 }
 
 // Trade is a method to trade
-func (trader *SimpleTrader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (flow.RecordMaterial, bool) {
+func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (flow.RecordMaterial, bool) {
 	if simulationBroker, ok := trader.orderer.(broker.SimulationBroker); ok {
 		if price, ok := material.(broker.PriceExtractor); ok {
 			simulationBroker.Update(price)
@@ -53,15 +53,15 @@ func (trader *SimpleTrader) Trade(material flow.TradeMaterial, mode flow.TradeMo
 	return PartitionCombinedOrders(ordersMap), len(ordersMap) > 0
 }
 
-type simpleTradeRunnersExecutor struct {
-	runners       []*simpleTradeRunner
-	runnersGroups [][]*simpleTradeRunner
+type tradeRunnersExecutor struct {
+	runners       []*tradeRunner
+	runnersGroups [][]*tradeRunner
 	parallel      int
 }
 
-func newSimpleTradeRunnersExecutor(runners []*simpleTradeRunner, parallel int) *simpleTradeRunnersExecutor {
+func newTradeRunnersExecutor(runners []*tradeRunner, parallel int) *tradeRunnersExecutor {
 	if parallel == 0 {
-		return &simpleTradeRunnersExecutor{
+		return &tradeRunnersExecutor{
 			runners:       runners,
 			runnersGroups: nil,
 			parallel:      0,
@@ -72,7 +72,7 @@ func newSimpleTradeRunnersExecutor(runners []*simpleTradeRunner, parallel int) *
 		parallel = len(runners)
 	}
 
-	runnerGroups := make([][]*simpleTradeRunner, parallel)
+	runnerGroups := make([][]*tradeRunner, parallel)
 	count := len(runners) / parallel
 	for i := 0; i < parallel; i++ {
 		if i == parallel-1 {
@@ -82,21 +82,21 @@ func newSimpleTradeRunnersExecutor(runners []*simpleTradeRunner, parallel int) *
 		}
 	}
 
-	return &simpleTradeRunnersExecutor{
+	return &tradeRunnersExecutor{
 		runners:       runners,
 		runnersGroups: runnerGroups,
 		parallel:      parallel,
 	}
 }
 
-func (executor *simpleTradeRunnersExecutor) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
+func (executor *tradeRunnersExecutor) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
 	if executor.parallel == 0 {
 		for _, runner := range executor.runners {
 			runner.run(material, partitionedOpenOrders, mode)
 		}
 	} else {
 		for i := 0; i < executor.parallel; i++ {
-			go func(runners []*simpleTradeRunner) {
+			go func(runners []*tradeRunner) {
 				for _, runner := range runners {
 					runner.run(material, partitionedOpenOrders, mode)
 				}
@@ -105,23 +105,23 @@ func (executor *simpleTradeRunnersExecutor) run(material flow.TradeMaterial, par
 	}
 }
 
-// SimpleTradeAlgorithm is an interface for simple trade algorithm
-type SimpleTradeAlgorithm interface {
+// TradeAlgorithm is an interface for trade algorithm
+type TradeAlgorithm interface {
 	initialTrade(material flow.TradeMaterial, aggregator *orderAggregator, tradePair broker.TradePair)
 	proceedTrade(material flow.TradeMaterial, aggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair)
 	TradeParamLoader
 }
 
-type simpleTradeRunner struct {
+type tradeRunner struct {
 	partitionID            PartitionID
 	tradableTimeZone       *TradableTimeZone
-	algorithmMap           map[broker.TradePair]SimpleTradeAlgorithm
+	algorithmMap           map[broker.TradePair]TradeAlgorithm
 	orderAggregatorFactory *orderAggregatorFactory
 	done                   chan *combinedOrders
 	openOrdersExisted      bool
 }
 
-func (runner *simpleTradeRunner) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
+func (runner *tradeRunner) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
 	timeExtractor, ok := material.(broker.TimeExtractor)
 	if !ok {
 		panic(util.ErrWrongType)
@@ -240,15 +240,17 @@ func (aggregator *orderAggregator) reduce() *combinedOrders {
 	}
 }
 
-// PartitionID is a definition for parition id
-type PartitionID int
+type (
+	// PartitionID is a definition for parition id
+	PartitionID int
 
-type partitionedOpenOrders map[PartitionID]map[broker.TradePair][]broker.OpenOrder
+	partitionedOpenOrders map[PartitionID]map[broker.TradePair][]broker.OpenOrder
 
-type orderPartitionAggregator struct {
-	ch                chan interface{}
-	orderPartitionMap map[broker.OrderID]PartitionID
-}
+	orderPartitionAggregator struct {
+		ch                chan interface{}
+		orderPartitionMap map[broker.OrderID]PartitionID
+	}
+)
 
 func newOrderPartitionAggregator() *orderPartitionAggregator {
 	return &orderPartitionAggregator{
@@ -374,131 +376,19 @@ type (
 	}
 )
 
-// SimpleTraderBuilder is a builder for simple trader
-type SimpleTraderBuilder struct {
-	tradableTimeZoneMap map[PartitionID]*TradableTimeZone
-	algorithmMap        map[PartitionID]map[broker.TradePair]SimpleTradeAlgorithm
-	broker              broker.Broker
-	ordererFactory      broker.OrdererFactory
-	parallel            int
+// Factory is a factory for simple trader
+type Factory struct {
+	builder *Builder
 }
 
-// NewSimpleTraderBuilder is a constructor for simple trader builder
-func NewSimpleTraderBuilder() *SimpleTraderBuilder {
-	return &SimpleTraderBuilder{
-		tradableTimeZoneMap: map[PartitionID]*TradableTimeZone{},
-		algorithmMap:        map[PartitionID]map[broker.TradePair]SimpleTradeAlgorithm{},
-	}
-}
-
-// TradableTimeZone is a method to add a tradable time zone
-func (builder *SimpleTraderBuilder) TradableTimeZone(partitionID PartitionID, tradableTimeZone *TradableTimeZone) *SimpleTraderBuilder {
-	if _, ok := builder.tradableTimeZoneMap[partitionID]; ok {
-		panic("duplicate tradable time zone for an partition ID detected")
-	}
-
-	builder.tradableTimeZoneMap[partitionID] = tradableTimeZone
-	return builder
-}
-
-// Trade is a method to add a trade piece in builder
-func (builder *SimpleTraderBuilder) Trade(partitionID PartitionID, tradePair broker.TradePair, algorithm SimpleTradeAlgorithm) *SimpleTraderBuilder {
-	_, ok := builder.algorithmMap[partitionID]
-	if !ok {
-		builder.algorithmMap[partitionID] = map[broker.TradePair]SimpleTradeAlgorithm{}
-	}
-
-	builder.algorithmMap[partitionID][tradePair] = algorithm
-	return builder
-}
-
-// Broker sets broker in builder
-func (builder *SimpleTraderBuilder) Broker(broker broker.Broker) *SimpleTraderBuilder {
-	builder.broker = broker
-	return builder
-}
-
-// OrdererFactory sets orderer factory in builder
-func (builder *SimpleTraderBuilder) OrdererFactory(ordererFactory broker.OrdererFactory) *SimpleTraderBuilder {
-	builder.ordererFactory = ordererFactory
-	return builder
-}
-
-// Parallel sets parallel parameter in builder
-func (builder *SimpleTraderBuilder) Parallel(paralle int) *SimpleTraderBuilder {
-	builder.parallel = paralle
-	return builder
-}
-
-// Build builds simple trader
-func (builder *SimpleTraderBuilder) Build() *SimpleTrader {
-	orderer := builder.ordererFactory.Create(builder.broker)
-	orderPartitionAggregator := newOrderPartitionAggregator()
-	orderAggregatorFactory := newOrderAggregatorFactory(orderer, orderPartitionAggregator)
-
-	var tradeRunners []*simpleTradeRunner
-	for partitionID, algorithmMap := range builder.algorithmMap {
-		tradableTimeZone, ok := builder.tradableTimeZoneMap[partitionID]
-		if !ok {
-			panic("no tradable time zone specified")
-		}
-
-		tradeRunners = append(tradeRunners, &simpleTradeRunner{
-			partitionID:            partitionID,
-			tradableTimeZone:       tradableTimeZone,
-			algorithmMap:           algorithmMap,
-			orderAggregatorFactory: orderAggregatorFactory,
-			done:                   make(chan *combinedOrders, 1),
-		})
-	}
-
-	executor := newSimpleTradeRunnersExecutor(tradeRunners, builder.parallel)
-
-	trader := &SimpleTrader{
-		orderer:                  orderer,
-		orderPartitionAggregator: orderPartitionAggregator,
-		tradeRunners:             tradeRunners,
-		executor:                 executor,
-	}
-
-	orderPartitionAggregator.run()
-	return trader
-}
-
-// BuildTradeSpecs is a method to build trade specs
-func (builder *SimpleTraderBuilder) BuildTradeSpecs() *TradeSpecs {
-	paramLoaders := map[KeyPartitionIDTradePair]TradeParamLoader{}
-
-	for partitionID, algorithmMap := range builder.algorithmMap {
-		for tradePair, algorithm := range algorithmMap {
-			paramLoaders[KeyPartitionIDTradePair{partitionID, tradePair}] = algorithm
-		}
-	}
-
-	return &TradeSpecs{
-		TimeZones:    builder.tradableTimeZoneMap,
-		ParamLoaders: paramLoaders,
-	}
-}
-
-// BuildTradableTimeZones is a method to build tradable timezones
-func (builder *SimpleTraderBuilder) BuildTradableTimeZones() TradableTimeZones {
-	return builder.tradableTimeZoneMap
-}
-
-// SimpleTraderFactory is a factory for simple trader
-type SimpleTraderFactory struct {
-	builder *SimpleTraderBuilder
-}
-
-// NewSimpleTraderFactory is a constructor for simple trader factory
-func NewSimpleTraderFactory(builder *SimpleTraderBuilder) *SimpleTraderFactory {
-	return &SimpleTraderFactory{
+// NewFactory is a constructor for simple trader factory
+func NewFactory(builder *Builder) *Factory {
+	return &Factory{
 		builder: builder,
 	}
 }
 
 // Create is a factory method to create trader
-func (factory *SimpleTraderFactory) Create(broker broker.Broker, ordererFactory broker.OrdererFactory) flow.Trader {
+func (factory *Factory) Create(broker broker.Broker, ordererFactory broker.OrdererFactory) flow.Trader {
 	return factory.builder.Broker(broker).OrdererFactory(ordererFactory).Build()
 }

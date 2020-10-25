@@ -36,7 +36,7 @@ func CreateGridSearchFlow() *flow.Flow {
 		broker.EurJpy,
 	}
 
-	tradeBuilder := trader.NewSimpleTraderBuilder()
+	tradeBuilder := trader.NewBuilder()
 	for i, timezone := range timezones {
 		for j, param := range paramsForGridSearch {
 			algorithm := trader.NewFrameTradeAlgorithm(param)
@@ -60,8 +60,8 @@ func CreateGridSearchFlow() *flow.Flow {
 		PricerTradePairs(pricerTradePairs).
 		InitialTradeMode(flow.Trade).
 		PricerFactory(pricer.NewOandaSimulationPricerFactory(start, end)).
-		TraderFactory(trader.NewSimpleTraderFactory(tradeBuilder)).
-		RecorderFactory(recorder.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
+		TraderFactory(trader.NewFactory(tradeBuilder)).
+		RecorderFactory(recorder.NewTradePairSummaryRecorderFactory(tradeBuilder)).
 		Build()
 
 	return flow

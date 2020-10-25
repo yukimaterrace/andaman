@@ -80,7 +80,7 @@ func CreateSimulationFlow() *flow.Flow {
 	newyorkAM := trader.CreateNewYorkAMTimeZone()
 	newyorkPM := trader.CreateNewYorkPMTimeZone()
 
-	tradeBuilder := trader.NewSimpleTraderBuilder().
+	tradeBuilder := trader.NewBuilder().
 		TradableTimeZone(0, tokyoAM).
 		TradableTimeZone(1, tokyoAM).
 		TradableTimeZone(2, tokyoPM).
@@ -115,8 +115,8 @@ func CreateSimulationFlow() *flow.Flow {
 		PricerTradePairs(pricerTradePairs).
 		InitialTradeMode(flow.Trade).
 		PricerFactory(pricer.NewOandaSimulationPricerFactory(start, end)).
-		TraderFactory(trader.NewSimpleTraderFactory(tradeBuilder)).
-		RecorderFactory(recorder.NewSimpleTradePairSummaryRecorderFactory(tradeBuilder)).
+		TraderFactory(trader.NewFactory(tradeBuilder)).
+		RecorderFactory(recorder.NewTradePairSummaryRecorderFactory(tradeBuilder)).
 		Build()
 
 	return flow
