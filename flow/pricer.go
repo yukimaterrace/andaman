@@ -6,15 +6,17 @@ import (
 	"yukimaterrace/andaman/broker"
 )
 
-// Pricer is an interface for pricer
-type Pricer interface {
-	CreatePrice(done chan<- *CreatePriceResult)
-}
+type (
+	// Pricer is an interface for pricer
+	Pricer interface {
+		CreatePrice(done chan<- *CreatePriceResult)
+	}
 
-// PricerFactory is a factory of pricer
-type PricerFactory interface {
-	Create(broker broker.Broker, tradePairs []broker.TradePair) Pricer
-}
+	// PricerFactory is a factory of pricer
+	PricerFactory interface {
+		Create(broker broker.Broker, tradePairs []broker.TradePair) Pricer
+	}
+)
 
 // ErrNoMorePrice is an error for no more price
 var ErrNoMorePrice = errors.New("no more price")

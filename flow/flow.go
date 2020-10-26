@@ -1,13 +1,15 @@
 package flow
 
-type worker interface {
-	work(exit chan<- bool)
-}
+type (
+	worker interface {
+		work(exit chan<- bool)
+	}
 
-type runner struct {
-	worker
-	exit chan bool
-}
+	runner struct {
+		worker
+		exit chan bool
+	}
+)
 
 func newRunner(worker worker) *runner {
 	return &runner{

@@ -2,24 +2,26 @@ package flow
 
 import "time"
 
-// Recorder is an interface for recorder
-type Recorder interface {
-	Record(material RecordMaterial)
-	Write()
-	Close()
-}
+type (
+	// Recorder is an interface for recorder
+	Recorder interface {
+		Record(material RecordMaterial)
+		Write()
+		Close()
+	}
 
-// RecorderFactory provides factory method of recorder
-type RecorderFactory interface {
-	Create() Recorder
-}
+	// RecorderFactory provides factory method of recorder
+	RecorderFactory interface {
+		Create() Recorder
+	}
 
-// RecordMaterial is a interface for record material
-type RecordMaterial interface{}
+	// RecordMaterial is a interface for record material
+	RecordMaterial interface{}
 
-type recordRequest struct {
-	material RecordMaterial
-}
+	recordRequest struct {
+		material RecordMaterial
+	}
+)
 
 type recordWorker struct {
 	Recorder

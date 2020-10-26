@@ -4,20 +4,20 @@ import (
 	"yukimaterrace/andaman/broker"
 )
 
-// Trader is an interface for trader
-type Trader interface {
-	Trade(material TradeMaterial, mode TradeMode) (RecordMaterial, bool)
-}
-
-// TraderFactory provides factory method of trader
-type TraderFactory interface {
-	Create(broker broker.Broker, ordererFactory broker.OrdererFactory) Trader
-}
-
-// TradeMaterial is an interface for trade material
-type TradeMaterial interface{}
-
 type (
+	// Trader is an interface for trader
+	Trader interface {
+		Trade(material TradeMaterial, mode TradeMode) (RecordMaterial, bool)
+	}
+
+	// TraderFactory provides factory method of trader
+	TraderFactory interface {
+		Create(broker broker.Broker, ordererFactory broker.OrdererFactory) Trader
+	}
+
+	// TradeMaterial is an interface for trade material
+	TradeMaterial interface{}
+
 	tradeRequest struct {
 		material TradeMaterial
 	}
