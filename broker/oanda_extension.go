@@ -1,6 +1,9 @@
 package broker
 
-import "math"
+import (
+	"math"
+	"yukimaterrace/andaman/model"
+)
 
 // Bid is a method to get bid
 func (oandaClientPrice *OandaClientPrice) Bid() float64 {
@@ -18,8 +21,8 @@ func (oandaOrderCreated *OandaOrderCreated) OrderID() OrderID {
 }
 
 // TradePair is a method to get trade pair
-func (oandaOrderCreated *OandaOrderCreated) TradePair() TradePair {
-	return TradePair(oandaOrderCreated.OrderFillTransaction.Instrument)
+func (oandaOrderCreated *OandaOrderCreated) TradePair() model.TradePair {
+	return model.OandaInstrument(oandaOrderCreated.OrderFillTransaction.Instrument).TradePair()
 }
 
 // TimeAtOpen is a method to get time at open
@@ -48,8 +51,8 @@ func (oandaTrade *OandaTrade) OrderID() OrderID {
 }
 
 // TradePair is a method to get trade pair
-func (oandaTrade *OandaTrade) TradePair() TradePair {
-	return TradePair(oandaTrade.Instrument)
+func (oandaTrade *OandaTrade) TradePair() model.TradePair {
+	return model.OandaInstrument(oandaTrade.Instrument).TradePair()
 }
 
 // TimeAtOpen is a method to get open time
@@ -83,8 +86,8 @@ func (oandaTradeClosed *OandaTradeClosed) OrderID() OrderID {
 }
 
 // TradePair is a method to get trade pair
-func (oandaTradeClosed *OandaTradeClosed) TradePair() TradePair {
-	return TradePair(oandaTradeClosed.OrderFillTransaction.Instrument)
+func (oandaTradeClosed *OandaTradeClosed) TradePair() model.TradePair {
+	return model.OandaInstrument(oandaTradeClosed.OrderFillTransaction.Instrument).TradePair()
 }
 
 // TimeAtClose is a method to get time to close

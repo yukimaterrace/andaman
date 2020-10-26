@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 )
 
@@ -74,7 +75,7 @@ func (oanda *OandaBroker) AccountChanges(sinceTransactionID int) (*OandaAccountC
 }
 
 // Candles is a method to get candles
-func (oanda *OandaBroker) Candles(instrument string, granularity string, count int, from int, to int, includeFirst bool) (*OandaCandles, error) {
+func (oanda *OandaBroker) Candles(instrument model.OandaInstrument, granularity string, count int, from int, to int, includeFirst bool) (*OandaCandles, error) {
 	path := fmt.Sprintf("/v3/instruments/%s/candles", instrument)
 
 	query := url.Values{}
@@ -103,11 +104,16 @@ func (oanda *OandaBroker) Candles(instrument string, granularity string, count i
 }
 
 // Pricing is a method to get pricing
-func (oanda *OandaBroker) Pricing(instruments []string, since int) (*OandaPrices, error) {
+func (oanda *OandaBroker) Pricing(instruments []model.OandaInstrument, since int) (*OandaPrices, error) {
 	path := fmt.Sprintf("/v3/accounts/%s/pricing", oanda.accountID)
 
+	var _instruments []string
+	for instrument := range instruments {
+		_instruments = append(_instruments, string(instrument))
+	}
+
 	query := url.Values{}
-	query.Add("instruments", strings.Join(instruments, ","))
+	query.Add("instruments", strings.Join(_instruments, ","))
 	query.Add("since", oandaInt(since).String())
 
 	var prices OandaPrices
@@ -143,13 +149,13 @@ func (oanda *OandaBroker) OpenTrades() (*OandaTrades, error) {
 }
 
 // CreateOrder is a method to post order
-func (oanda *OandaBroker) CreateOrder(orderType string, instrument string, units float64) (*OandaOrderCreated, error) {
+func (oanda *OandaBroker) CreateOrder(orderType string, instrument model.OandaInstrument, units float64) (*OandaOrderCreated, error) {
 	path := fmt.Sprintf("/v3/accounts/%s/orders", oanda.accountID)
 
 	requestBody := oandaOrder{
 		Order: oandaOrderRequest{
 			OrderType:  orderType,
-			Instrument: instrument,
+			Instrument: string(instrument),
 			Units:      units,
 		},
 	}
@@ -176,7 +182,7 @@ func (oanda *OandaBroker) CloseTrade(tradeID int) (*OandaTradeClosed, error) {
 	return &tradeClosed, nil
 }
 
-func (oanda *OandaBroker) makeCandleSpecs(granularity string, instruments ...string) []string {
+func (oanda *OandaBroker) makeCandleSpecs(granularity string, instruments ...model.OandaInstrument) []string {
 	specs := make([]string, 0)
 	for _, instrument := range instruments {
 		spec := fmt.Sprintf("%s:%s:MBA", instrument, granularity)

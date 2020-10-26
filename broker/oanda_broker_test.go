@@ -3,6 +3,7 @@ package broker
 import (
 	"testing"
 	"time"
+	"yukimaterrace/andaman/model"
 )
 
 var oanda = NewOandaBroker()
@@ -36,7 +37,7 @@ func TestAccountChanges(t *testing.T) {
 }
 
 func TestCandlesLatest(t *testing.T) {
-	candles, err := oanda.Candles("GBP_USD", "M1", 5, 0, 0, true)
+	candles, err := oanda.Candles(model.OandaGbpUsd, "M1", 5, 0, 0, true)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -64,7 +65,7 @@ func TestCandlesFromTo(t *testing.T) {
 
 func TestPricing(t *testing.T) {
 	since := time.Date(2020, 4, 1, 8, 0, 0, 0, time.UTC).Unix()
-	instruments := []string{"GBP_USD", "EUR_AUD"}
+	instruments := []model.OandaInstrument{model.OandaGbpUsd, model.OandaEurAud}
 
 	prices, err := oanda.Pricing(instruments, int(since))
 	if err != nil {

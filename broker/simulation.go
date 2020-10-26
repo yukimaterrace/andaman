@@ -3,19 +3,20 @@ package broker
 import (
 	"log"
 	"yukimaterrace/andaman/config"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 )
 
 // SimpleSimulationBroker is a broker for simple simulation
 type SimpleSimulationBroker struct {
-	currentPriceMap map[TradePair]Price
+	currentPriceMap map[model.TradePair]Price
 	currentTime     int64
 }
 
 // NewSimpleSimulationBroker is a constructor for simple simulation broker
 func NewSimpleSimulationBroker() *SimpleSimulationBroker {
 	return &SimpleSimulationBroker{
-		currentPriceMap: map[TradePair]Price{},
+		currentPriceMap: map[model.TradePair]Price{},
 		currentTime:     0,
 	}
 }
@@ -37,7 +38,7 @@ type SimpleSimulationOrderer struct {
 	ch             chan interface{}
 }
 
-func (orderer *SimpleSimulationOrderer) price(tradePair TradePair) Price {
+func (orderer *SimpleSimulationOrderer) price(tradePair model.TradePair) Price {
 	price, ok := orderer.currentPriceMap[tradePair]
 	if !ok {
 		log.Panicf("%s cannot handle in this orderer\n", string(tradePair))
@@ -47,7 +48,7 @@ func (orderer *SimpleSimulationOrderer) price(tradePair TradePair) Price {
 
 type (
 	createOrderRequest struct {
-		tradePair TradePair
+		tradePair model.TradePair
 		units     float64
 		isLong    bool
 		done      chan<- *CreateOrderResult
@@ -64,7 +65,7 @@ type (
 )
 
 // CreateOrder is a method to create order
-func (orderer *SimpleSimulationOrderer) CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
+func (orderer *SimpleSimulationOrderer) CreateOrder(tradePair model.TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
 	done := make(chan *CreateOrderResult, 1)
 
 	orderer.ch <- &createOrderRequest{
@@ -100,7 +101,7 @@ func (orderer *SimpleSimulationOrderer) CloseOrder(orderID OrderID) <-chan *Clos
 	return done
 }
 
-func (orderer *SimpleSimulationOrderer) createOrder(tradePair TradePair, units float64, isLong bool) CreatedOrder {
+func (orderer *SimpleSimulationOrderer) createOrder(tradePair model.TradePair, units float64, isLong bool) CreatedOrder {
 	price := orderer.price(tradePair)
 
 	order := &order{
@@ -243,7 +244,7 @@ func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 
 type order struct {
 	orderID          OrderID
-	tradePair        TradePair
+	tradePair        model.TradePair
 	timeAtOpen       int64
 	priceAtOpen      float64
 	units            float64
@@ -258,7 +259,7 @@ func (order *order) OrderID() OrderID {
 	return order.orderID
 }
 
-func (order *order) TradePair() TradePair {
+func (order *order) TradePair() model.TradePair {
 	return order.tradePair
 }
 

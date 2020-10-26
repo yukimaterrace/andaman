@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/model"
 )
 
 type (
@@ -14,7 +15,7 @@ type (
 
 	// PricerFactory is a factory of pricer
 	PricerFactory interface {
-		Create(broker broker.Broker, tradePairs []broker.TradePair) Pricer
+		Create(broker broker.Broker, tradePairs []model.TradePair) Pricer
 	}
 )
 

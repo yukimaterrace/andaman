@@ -4,18 +4,19 @@ import (
 	"log"
 	"math"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/trader"
 )
 
 type oandaPrice struct {
-	candlesMap map[broker.TradePair]*broker.OandaCandles
-	pricesMap  map[broker.TradePair]*broker.OandaClientPrice
+	candlesMap map[model.TradePair]*broker.OandaCandles
+	pricesMap  map[model.TradePair]*broker.OandaClientPrice
 	priceTime  int64
 }
 
 func newOandaPrice(
-	candlesMap map[broker.TradePair]*broker.OandaCandles,
-	pricesMap map[broker.TradePair]*broker.OandaClientPrice,
+	candlesMap map[model.TradePair]*broker.OandaCandles,
+	pricesMap map[model.TradePair]*broker.OandaClientPrice,
 	priceTime int64,
 ) *oandaPrice {
 
@@ -26,8 +27,8 @@ func newOandaPrice(
 	}
 }
 
-func (oandaPrice *oandaPrice) TradePairs() []broker.TradePair {
-	tradePairs := make([]broker.TradePair, len(oandaPrice.candlesMap))
+func (oandaPrice *oandaPrice) TradePairs() []model.TradePair {
+	tradePairs := make([]model.TradePair, len(oandaPrice.candlesMap))
 
 	i := 0
 	for pair := range oandaPrice.candlesMap {
@@ -38,7 +39,7 @@ func (oandaPrice *oandaPrice) TradePairs() []broker.TradePair {
 	return tradePairs
 }
 
-func (oandaPrice *oandaPrice) Price(tradePair broker.TradePair) broker.Price {
+func (oandaPrice *oandaPrice) Price(tradePair model.TradePair) broker.Price {
 	price, ok := oandaPrice.pricesMap[tradePair]
 
 	if !ok || len(price.Bids) == 0 || len(price.Asks) == 0 {
@@ -52,7 +53,7 @@ func (oandaPrice *oandaPrice) Time() int64 {
 	return oandaPrice.priceTime
 }
 
-func (oandaPrice *oandaPrice) calculate(tradePair broker.TradePair, length int) *trader.Frame {
+func (oandaPrice *oandaPrice) calculate(tradePair model.TradePair, length int) *trader.Frame {
 	candles, ok := oandaPrice.candlesMap[tradePair]
 	if !ok {
 		log.Panicf("no candle exists for %v\n", tradePair)

@@ -1,5 +1,7 @@
 package broker
 
+import "yukimaterrace/andaman/model"
+
 // OandaOrderer is a struct for oanda orderer
 type OandaOrderer struct {
 	*OandaBroker
@@ -18,7 +20,7 @@ func (factory *OandaOrdererFactory) Create(broker Broker) Orderer {
 }
 
 // CreateOrder is a method to creates order
-func (orderer *OandaOrderer) CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
+func (orderer *OandaOrderer) CreateOrder(tradePair model.TradePair, units float64, isLong bool) <-chan *CreateOrderResult {
 	done := make(chan *CreateOrderResult, 1)
 
 	go func() {
@@ -29,7 +31,7 @@ func (orderer *OandaOrderer) CreateOrder(tradePair TradePair, units float64, isL
 			u = -units
 		}
 
-		createdOrder, err := orderer.OandaBroker.CreateOrder("MARKET", string(tradePair), u)
+		createdOrder, err := orderer.OandaBroker.CreateOrder("MARKET", tradePair.OandaInstrument(), u)
 
 		done <- &CreateOrderResult{createdOrder, err}
 		return

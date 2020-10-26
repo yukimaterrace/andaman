@@ -5,12 +5,13 @@ import (
 	"strconv"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 )
 
 type frameCalculator interface {
 	broker.PriceExtractor
-	calculate(tradePair broker.TradePair, length int) *Frame
+	calculate(tradePair model.TradePair, length int) *Frame
 }
 
 // Frame is a struct for frame
@@ -19,24 +20,6 @@ type Frame struct {
 	H float64
 	L float64
 	C float64
-}
-
-type paramBool bool
-
-func (b paramBool) String() string {
-	return strconv.FormatBool(bool(b))
-}
-
-type paramInt int
-
-func (i paramInt) String() string {
-	return strconv.FormatInt(int64(i), 10)
-}
-
-type paramFloat64 float64
-
-func (f paramFloat64) String() string {
-	return strconv.FormatFloat(float64(f), 'f', 6, 64)
 }
 
 type (
@@ -92,40 +75,6 @@ type FrameTradeParam struct {
 	FrameTradeParamSet6
 }
 
-func (param *FrameTradeParam) csvHeader() []string {
-	return []string{
-		"tradeDirectionLong",
-		"smallFrameLength",
-		"largeFrameLength",
-		"pipsGapForCreateOrder",
-		"pipsForStopLoss",
-		"pipsForAdditionalOrder",
-		"timeForProfit1",
-		"timeForProfit2",
-		"timeForProfit3",
-		"pipsForProfit1",
-		"pipsForProfit2",
-		"pipsForProfit3",
-	}
-}
-
-func (param *FrameTradeParam) csvValue() []string {
-	return []string{
-		paramBool(param.TradeDirectionLong).String(),
-		paramInt(param.SmallFrameLength).String(),
-		paramInt(param.LargeFrameLength).String(),
-		paramFloat64(param.PipsGapForCreateOrder).String(),
-		paramFloat64(param.PipsForStopLoss).String(),
-		paramFloat64(param.PipsForAdditionalOrder).String(),
-		paramInt(param.TimeForProfit1).String(),
-		paramInt(param.TimeForProfit2).String(),
-		paramInt(param.TimeForProfit3).String(),
-		paramFloat64(param.PipsForProfit1).String(),
-		paramFloat64(param.PipsForProfit2).String(),
-		paramFloat64(param.PipsForProfit3).String(),
-	}
-}
-
 // FrameTradeAlgorithm is a struct for frame trade algorithm
 type FrameTradeAlgorithm struct {
 	*FrameTradeParam
@@ -147,7 +96,7 @@ func NewFrameTradeAlgorithm(param *FrameTradeParam) *FrameTradeAlgorithm {
 	}
 }
 
-func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, agggregator *orderAggregator, tradePair broker.TradePair) {
+func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, agggregator *orderAggregator, tradePair model.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
 		panic(util.ErrWrongType)
@@ -176,7 +125,7 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, 
 	}
 }
 
-func (algorithm *FrameTradeAlgorithm) proceedTrade(material flow.TradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair) {
+func (algorithm *FrameTradeAlgorithm) proceedTrade(material flow.TradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair model.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
 		panic(util.ErrWrongType)
@@ -225,16 +174,6 @@ func (algorithm *FrameTradeAlgorithm) proceedTrade(material flow.TradeMaterial, 
 	if lastOrderProfitPips < algorithm.PipsForAdditionalOrder-spread(currentPrice)/tradePair.PricePerPip() {
 		agggregator.createOrder(tradePair, algorithm.units, lastOrder.IsLong())
 	}
-}
-
-// ParamCsvHeader is a method to get param csv header
-func (algorithm *FrameTradeAlgorithm) ParamCsvHeader() []string {
-	return algorithm.FrameTradeParam.csvHeader()
-}
-
-// ParamCsvValue is a method to get param csv value
-func (algorithm *FrameTradeAlgorithm) ParamCsvValue() []string {
-	return algorithm.FrameTradeParam.csvValue()
 }
 
 func profit(openOrder broker.OpenOrder, price broker.Price) float64 {

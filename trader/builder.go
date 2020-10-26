@@ -1,42 +1,28 @@
 package trader
 
-import "yukimaterrace/andaman/broker"
+import (
+	"encoding/json"
+	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/util"
+)
 
 // Builder is a builder for trader
 type Builder struct {
-	tradableTimeZoneMap map[PartitionID]*TradableTimeZone
-	algorithmMap        map[PartitionID]map[broker.TradePair]TradeAlgorithm
-	broker              broker.Broker
-	ordererFactory      broker.OrdererFactory
-	parallel            int
+	tradeSetName   string
+	broker         broker.Broker
+	ordererFactory broker.OrdererFactory
+	parallel       int
 }
 
 // NewBuilder is a constructor for trader builder
 func NewBuilder() *Builder {
-	return &Builder{
-		tradableTimeZoneMap: map[PartitionID]*TradableTimeZone{},
-		algorithmMap:        map[PartitionID]map[broker.TradePair]TradeAlgorithm{},
-	}
+	return &Builder{}
 }
 
-// TradableTimeZone is a method to add a tradable time zone
-func (builder *Builder) TradableTimeZone(partitionID PartitionID, tradableTimeZone *TradableTimeZone) *Builder {
-	if _, ok := builder.tradableTimeZoneMap[partitionID]; ok {
-		panic("duplicate tradable time zone for an partition ID detected")
-	}
-
-	builder.tradableTimeZoneMap[partitionID] = tradableTimeZone
-	return builder
-}
-
-// Trade is a method to add a trade piece in builder
-func (builder *Builder) Trade(partitionID PartitionID, tradePair broker.TradePair, algorithm TradeAlgorithm) *Builder {
-	_, ok := builder.algorithmMap[partitionID]
-	if !ok {
-		builder.algorithmMap[partitionID] = map[broker.TradePair]TradeAlgorithm{}
-	}
-
-	builder.algorithmMap[partitionID][tradePair] = algorithm
+// TradeSet sets trade set in builder
+func (builder *Builder) TradeSet(name string) *Builder {
+	builder.tradeSetName = name
 	return builder
 }
 
@@ -60,23 +46,30 @@ func (builder *Builder) Parallel(paralle int) *Builder {
 
 // Build builds simple trader
 func (builder *Builder) Build() *Trader {
+	tradeSet, err := model.GetTradeSetDetail(builder.tradeSetName, tradeParamObjectCreator)
+	if err != nil {
+		panic(err)
+	}
+
 	orderer := builder.ordererFactory.Create(builder.broker)
 	orderPartitionAggregator := newOrderPartitionAggregator()
-	orderAggregatorFactory := newOrderAggregatorFactory(orderer, orderPartitionAggregator)
 
 	var tradeRunners []*tradeRunner
-	for partitionID, algorithmMap := range builder.algorithmMap {
-		tradableTimeZone, ok := builder.tradableTimeZoneMap[partitionID]
-		if !ok {
-			panic("no tradable time zone specified")
+	for _, tradeConfiguration := range tradeSet.Configurations {
+		algorithm, err := createTradeAlgorithm(tradeConfiguration.Algorithm)
+		if err != nil {
+			panic(err)
 		}
 
+		tradeConfigurationKey := tradeConfiguration.Key()
+		orderAggregator := newOrderAggregator(orderer, tradeConfigurationKey, orderPartitionAggregator)
+
 		tradeRunners = append(tradeRunners, &tradeRunner{
-			partitionID:            partitionID,
-			tradableTimeZone:       tradableTimeZone,
-			algorithmMap:           algorithmMap,
-			orderAggregatorFactory: orderAggregatorFactory,
-			done:                   make(chan *combinedOrders, 1),
+			tradeConfigurationKey: tradeConfigurationKey,
+			tradeConfiguration:    tradeConfiguration,
+			algorithm:             algorithm,
+			orderAggregator:       orderAggregator,
+			done:                  make(chan *combinedOrders, 1),
 		})
 	}
 
@@ -93,23 +86,30 @@ func (builder *Builder) Build() *Trader {
 	return trader
 }
 
-// BuildTradeSpecs is a method to build trade specs
-func (builder *Builder) BuildTradeSpecs() *TradeSpecs {
-	paramLoaders := map[KeyPartitionIDTradePair]TradeParamLoader{}
-
-	for partitionID, algorithmMap := range builder.algorithmMap {
-		for tradePair, algorithm := range algorithmMap {
-			paramLoaders[KeyPartitionIDTradePair{partitionID, tradePair}] = algorithm
+func tradeParamObjectCreator(_type model.TradeAlgorithmType, param string) (interface{}, error) {
+	switch _type {
+	case model.Frame:
+		p := FrameTradeParam{}
+		if err := json.Unmarshal([]byte(param), &param); err != nil {
+			return nil, err
 		}
-	}
+		return &p, nil
 
-	return &TradeSpecs{
-		TimeZones:    builder.tradableTimeZoneMap,
-		ParamLoaders: paramLoaders,
+	default:
+		return nil, util.ErrWrongType
 	}
 }
 
-// BuildTradableTimeZones is a method to build tradable timezones
-func (builder *Builder) BuildTradableTimeZones() TradableTimeZones {
-	return builder.tradableTimeZoneMap
+func createTradeAlgorithm(algorithm model.TradeAlgorithmDetail) (TradeAlgorithm, error) {
+	switch algorithm.Type {
+	case model.Frame:
+		param, ok := algorithm.ParamObject.(*FrameTradeParam)
+		if !ok {
+			return nil, util.ErrWrongType
+		}
+		return NewFrameTradeAlgorithm(param), nil
+
+	default:
+		return nil, util.ErrWrongType
+	}
 }

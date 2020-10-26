@@ -32,7 +32,7 @@ func init() {
 	}
 }
 
-func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]TradeSet, error) {
+func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]*TradeSet, error) {
 	q := "select * from trade_set where type = ? order by updated_at desc limit ? offset ?"
 
 	rows, err := db.Query(q, _type, count, offset)
@@ -41,7 +41,7 @@ func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]TradeSet, 
 	}
 	defer rows.Close()
 
-	tradeSets := []TradeSet{}
+	tradeSets := []*TradeSet{}
 	for rows.Next() {
 		ts := TradeSet{}
 
@@ -57,7 +57,7 @@ func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]TradeSet, 
 			return nil, err
 		}
 
-		tradeSets = append(tradeSets, ts)
+		tradeSets = append(tradeSets, &ts)
 	}
 
 	return tradeSets, nil
@@ -193,7 +193,7 @@ func deleteTradeConfiguration(tradeConfigurationID int) error {
 	return nil
 }
 
-func getTradeSetConfigurationRelsByTradeSetID(tradeSetID int) ([]TradeSetConfigurationRel, error) {
+func getTradeSetConfigurationRelsByTradeSetID(tradeSetID int) ([]*TradeSetConfigurationRel, error) {
 	q := "select * from trade_set_configuration_rel where trade_set_id = ?"
 
 	rows, err := db.Query(q, tradeSetID)
@@ -202,13 +202,13 @@ func getTradeSetConfigurationRelsByTradeSetID(tradeSetID int) ([]TradeSetConfigu
 	}
 	defer rows.Close()
 
-	var rels []TradeSetConfigurationRel
+	var rels []*TradeSetConfigurationRel
 	for rows.Next() {
 		rel := TradeSetConfigurationRel{}
 		if err := rows.Scan(&rel.TradeSetID, &rel.TradeConfigurationID); err != nil {
 			return nil, err
 		}
-		rels = append(rels, rel)
+		rels = append(rels, &rel)
 	}
 
 	return rels, nil
@@ -230,4 +230,49 @@ func deleteTradeSetConfigurationRelByTradeSetID(tradeSetID int) error {
 		return err
 	}
 	return nil
+}
+
+func getTradeConfigurationDetailsByTradeSetID(tradeSetID int) ([]*TradeConfigurationDetail, error) {
+	q := `
+		select
+			trade_configuration.trade_pair,
+			trade_configuration.timezone,
+			trade_algorithm.trade_algorithm_id,
+			trade_algorithm.type,
+			trade_algorithm.param,
+			trade_algorithm.trade_direction
+		from 
+			trade_configuration,
+			trade_set_configuration_rel,
+			trade_algorithm
+		where
+			trade_set_configuration_rel.trade_set_id = ? and
+			trade_set_configuration_rel.trade_configuration_id = trade_configuration.trade_configuration_id and
+			trade_configuratgion.trade_algorithm_id = trade_algorithm.trade_algorithm_id
+	`
+
+	rows, err := db.Query(q, tradeSetID)
+	if err != nil {
+		return nil, err
+	}
+
+	var details []*TradeConfigurationDetail
+	for rows.Next() {
+		d := TradeConfigurationDetail{}
+		err := rows.Scan(
+			&d.TradePair,
+			&d.Timezone,
+			&d.Algorithm.TradeAlgorithmID,
+			&d.Algorithm.Type,
+			&d.Algorithm.Param,
+			&d.Algorithm.TradeDirection,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		details = append(details, &d)
+	}
+
+	return details, nil
 }

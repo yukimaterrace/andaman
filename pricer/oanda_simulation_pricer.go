@@ -5,11 +5,12 @@ import (
 	"time"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/model"
 )
 
 type oandaSimulationPricer struct {
 	seed            oandaSimulationPriceSeed
-	currentIndexMap map[broker.TradePair]int
+	currentIndexMap map[model.TradePair]int
 	currentTime     int64
 	granularitySec  int64
 	unitSize        int
@@ -19,7 +20,7 @@ func newOandaSimulationPricer(seed oandaSimulationPriceSeed) *oandaSimulationPri
 	unitSize := 250
 
 	currentTime := int64(0)
-	currentIndexMap := make(map[broker.TradePair]int)
+	currentIndexMap := make(map[model.TradePair]int)
 
 	for pair, candles := range seed {
 		currentIndexMap[pair] = unitSize
@@ -49,7 +50,7 @@ func (pricer *oandaSimulationPricer) hasNext() bool {
 }
 
 func (pricer *oandaSimulationPricer) next() *oandaSimulationPrice {
-	feedCandlesMap := make(map[broker.TradePair]*broker.OandaCandles)
+	feedCandlesMap := make(map[model.TradePair]*broker.OandaCandles)
 
 	for pair, candles := range pricer.seed {
 		currentIndex := pricer.currentIndexMap[pair]
@@ -102,24 +103,24 @@ func NewOandaSimulationPricerFactory(startTime time.Time, endTime time.Time) *Oa
 }
 
 // Create is a factory method to create oanda simulation pricer factory
-func (factory *OandaSimulationPricerFactory) Create(broker broker.Broker, tradePairs []broker.TradePair) flow.Pricer {
+func (factory *OandaSimulationPricerFactory) Create(broker broker.Broker, tradePairs []model.TradePair) flow.Pricer {
 	seed := fetchOandaSimulationPriceSeed(tradePairs, "M1", factory.start, factory.end)
 	return newOandaSimulationPricer(seed)
 }
 
 type oandaSimulationPrice struct {
 	*oandaPrice
-	candlesMap map[broker.TradePair]*broker.OandaCandles
+	candlesMap map[model.TradePair]*broker.OandaCandles
 }
 
-func newOandaSimulationPrice(candlesMap map[broker.TradePair]*broker.OandaCandles, priceTime int64) *oandaSimulationPrice {
+func newOandaSimulationPrice(candlesMap map[model.TradePair]*broker.OandaCandles, priceTime int64) *oandaSimulationPrice {
 	return &oandaSimulationPrice{
 		oandaPrice: newOandaPrice(candlesMap, nil, priceTime),
 		candlesMap: candlesMap,
 	}
 }
 
-func (oandaSimulationPrice *oandaSimulationPrice) Price(tradePair broker.TradePair) broker.Price {
+func (oandaSimulationPrice *oandaSimulationPrice) Price(tradePair model.TradePair) broker.Price {
 	candles, ok := oandaSimulationPrice.candlesMap[tradePair]
 	if !ok {
 		log.Panicf("no candles exist for %v\n", tradePair)
@@ -146,9 +147,9 @@ func (price *price) Ask() float64 {
 	return price.ask
 }
 
-type oandaSimulationPriceSeed map[broker.TradePair]*broker.OandaCandles
+type oandaSimulationPriceSeed map[model.TradePair]*broker.OandaCandles
 
-func fetchOandaSimulationPriceSeed(tradePairs []broker.TradePair, granularity string, start int, end int) oandaSimulationPriceSeed {
+func fetchOandaSimulationPriceSeed(tradePairs []model.TradePair, granularity string, start int, end int) oandaSimulationPriceSeed {
 	client := broker.NewOandaBroker()
 
 	log.Println("start fetch candles...")
@@ -156,12 +157,12 @@ func fetchOandaSimulationPriceSeed(tradePairs []broker.TradePair, granularity st
 	startTime := time.Now().Unix()
 	requestCount := 0
 
-	candlesMap := map[broker.TradePair]*broker.OandaCandles{}
+	candlesMap := map[model.TradePair]*broker.OandaCandles{}
 
-	remainedTradePairs := map[broker.TradePair]bool{}
-	fromMap := make(map[broker.TradePair]int)
-	includeFirstMap := map[broker.TradePair]bool{}
-	resultMap := map[broker.TradePair]chan *broker.OandaCandles{}
+	remainedTradePairs := map[model.TradePair]bool{}
+	fromMap := make(map[model.TradePair]int)
+	includeFirstMap := map[model.TradePair]bool{}
+	resultMap := map[model.TradePair]chan *broker.OandaCandles{}
 
 	for _, pair := range tradePairs {
 		remainedTradePairs[pair] = true
@@ -171,7 +172,7 @@ func fetchOandaSimulationPriceSeed(tradePairs []broker.TradePair, granularity st
 	}
 
 	for len(remainedTradePairs) > 0 {
-		pairs := map[broker.TradePair]bool{}
+		pairs := map[model.TradePair]bool{}
 
 		for pair := range remainedTradePairs {
 			pairs[pair] = true
@@ -191,8 +192,8 @@ func fetchOandaSimulationPriceSeed(tradePairs []broker.TradePair, granularity st
 				count = 0
 			}
 
-			go func(result chan<- *broker.OandaCandles, tradePair broker.TradePair) {
-				candles, err := client.Candles(string(tradePair), granularity, count, from, to, includeFirstMap[tradePair])
+			go func(result chan<- *broker.OandaCandles, tradePair model.TradePair) {
+				candles, err := client.Candles(tradePair.OandaInstrument(), granularity, count, from, to, includeFirstMap[tradePair])
 				if err != nil {
 					log.Println(err.Error())
 					result <- nil

@@ -1,5 +1,7 @@
 package broker
 
+import "yukimaterrace/andaman/model"
+
 type (
 	// Broker is an interface for broker
 	Broker interface{}
@@ -12,7 +14,7 @@ type (
 
 	// Orderer is an interface for orderer
 	Orderer interface {
-		CreateOrder(tradePair TradePair, units float64, isLong bool) <-chan *CreateOrderResult
+		CreateOrder(tradePair model.TradePair, units float64, isLong bool) <-chan *CreateOrderResult
 		OpenOrders() <-chan *OpenOrdersResult
 		CloseOrder(orderID OrderID) <-chan *CloseOrderResult
 	}
@@ -32,8 +34,8 @@ type (
 
 	// PriceExtractor is an interface for price extractor
 	PriceExtractor interface {
-		TradePairs() []TradePair
-		Price(tradePair TradePair) Price
+		TradePairs() []model.TradePair
+		Price(tradePair model.TradePair) Price
 		TimeExtractor
 	}
 
@@ -64,7 +66,7 @@ type (
 	// CreatedOrder is an interface for created order
 	CreatedOrder interface {
 		OrderID() OrderID
-		TradePair() TradePair
+		TradePair() model.TradePair
 		TimeAtOpen() int64
 		PriceAtOpen() float64
 		Units() float64
@@ -80,7 +82,7 @@ type (
 	// ClosedOrder is an inteface for closed order
 	ClosedOrder interface {
 		OrderID() OrderID
-		TradePair() TradePair
+		TradePair() model.TradePair
 		TimeAtClose() int64
 		PriceAtClose() float64
 		RealizedProfit() float64

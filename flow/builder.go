@@ -4,13 +4,14 @@ import (
 	"time"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/config"
+	"yukimaterrace/andaman/model"
 )
 
 // Builder is a builder for flow
 type Builder struct {
 	broker           broker.Broker
 	ordererFactory   broker.OrdererFactory
-	pricerTradePairs []broker.TradePair
+	pricerTradePairs []model.TradePair
 	initialTradeMode TradeMode
 	pricerFactory    PricerFactory
 	traderFactory    TraderFactory
@@ -35,7 +36,7 @@ func (builder *Builder) OrdererFactory(ordererFactory broker.OrdererFactory) *Bu
 }
 
 // PricerTradePairs sets pricer trade pairs in builder
-func (builder *Builder) PricerTradePairs(pricerTradePairs []broker.TradePair) *Builder {
+func (builder *Builder) PricerTradePairs(pricerTradePairs []model.TradePair) *Builder {
 	builder.pricerTradePairs = pricerTradePairs
 	return builder
 }

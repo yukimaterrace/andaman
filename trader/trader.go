@@ -5,6 +5,7 @@ import (
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/config"
 	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 )
 
@@ -38,19 +39,25 @@ func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (f
 	partitionedOpenOrders := <-trader.orderPartitionAggregator.partitionedOpenOrders(openOrdersResult.OpenOrders)
 	trader.executor.run(material, partitionedOpenOrders, mode)
 
-	ordersMap := map[PartitionID]*combinedOrders{}
+	var partitionCombineOrders []*PartitionCombinedOrder
 	for _, runner := range trader.tradeRunners {
 		combinedOrders := <-runner.done
 		if combinedOrders != nil && (len(combinedOrders.CreatedOrders) > 0 || len(combinedOrders.ClosedOrders) > 0) {
-			if _, ok := ordersMap[runner.partitionID]; ok {
-				panic("duplicate runner for an partitionID detected")
+			partitionCombinedOrder := &PartitionCombinedOrder{
+				runner.tradeConfiguration,
+				combinedOrders,
 			}
 
-			ordersMap[runner.partitionID] = combinedOrders
+			partitionCombineOrders = append(partitionCombineOrders, partitionCombinedOrder)
 		}
 	}
 
-	return PartitionCombinedOrders(ordersMap), len(ordersMap) > 0
+	recordMaterial := RecordMaterial{
+		TradeMaterial:           material,
+		PartitionCombinedOrders: partitionCombineOrders,
+	}
+
+	return recordMaterial, len(recordMaterial.PartitionCombinedOrders) > 0
 }
 
 type tradeRunnersExecutor struct {
@@ -107,18 +114,17 @@ func (executor *tradeRunnersExecutor) run(material flow.TradeMaterial, partition
 
 // TradeAlgorithm is an interface for trade algorithm
 type TradeAlgorithm interface {
-	initialTrade(material flow.TradeMaterial, aggregator *orderAggregator, tradePair broker.TradePair)
-	proceedTrade(material flow.TradeMaterial, aggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair broker.TradePair)
-	TradeParamLoader
+	initialTrade(material flow.TradeMaterial, aggregator *orderAggregator, tradePair model.TradePair)
+	proceedTrade(material flow.TradeMaterial, aggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair model.TradePair)
 }
 
 type tradeRunner struct {
-	partitionID            PartitionID
-	tradableTimeZone       *TradableTimeZone
-	algorithmMap           map[broker.TradePair]TradeAlgorithm
-	orderAggregatorFactory *orderAggregatorFactory
-	done                   chan *combinedOrders
-	openOrdersExisted      bool
+	tradeConfigurationKey model.TradeConfigurationKey
+	tradeConfiguration    *model.TradeConfigurationDetail
+	algorithm             TradeAlgorithm
+	orderAggregator       *orderAggregator
+	done                  chan *combinedOrders
+	openOrdersExisted     bool
 }
 
 func (runner *tradeRunner) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
@@ -127,34 +133,31 @@ func (runner *tradeRunner) run(material flow.TradeMaterial, partitionedOpenOrder
 		panic(util.ErrWrongType)
 	}
 
-	tradable := runner.tradableTimeZone.OK(timeExtractor)
+	tradable := runner.tradeConfiguration.Timezone.OK(timeExtractor.Time())
 
 	if !runner.openOrdersExisted && !tradable {
 		runner.done <- nil
 		return
 	}
 
-	openOrdersMap := partitionedOpenOrders[runner.partitionID]
+	openOrders := partitionedOpenOrders[runner.tradeConfigurationKey]
 
-	if len(openOrdersMap) > 0 {
+	if len(openOrders) > 0 {
 		runner.openOrdersExisted = true
 	} else {
 		runner.openOrdersExisted = false
 	}
 
-	aggregator := runner.orderAggregatorFactory.create(runner.partitionID)
-	for tradePair, algorithm := range runner.algorithmMap {
-		openOrders, ok := openOrdersMap[tradePair]
-		if !ok {
-			if mode != flow.Terminate && tradable {
-				algorithm.initialTrade(material, aggregator, tradePair)
-			}
-		} else {
-			algorithm.proceedTrade(material, aggregator, openOrders, tradePair)
+	tradePair := runner.tradeConfiguration.TradePair
+	if !runner.openOrdersExisted {
+		if mode != flow.Terminate && tradable {
+			runner.algorithm.initialTrade(material, runner.orderAggregator, tradePair)
 		}
+	} else {
+		runner.algorithm.proceedTrade(material, runner.orderAggregator, openOrders, tradePair)
 	}
 
-	runner.done <- aggregator.reduce()
+	runner.done <- runner.orderAggregator.reduce()
 }
 
 type (
@@ -163,45 +166,36 @@ type (
 		ClosedOrders  []broker.ClosedOrder
 	}
 
-	// PartitionCombinedOrders is a definition for partition combined orders
-	PartitionCombinedOrders map[PartitionID]*combinedOrders
+	// PartitionCombinedOrder is a definition for partition combined order
+	PartitionCombinedOrder struct {
+		tradeConfiguration *model.TradeConfigurationDetail
+		*combinedOrders
+	}
+
+	// RecordMaterial is a definition for concrete record material
+	RecordMaterial struct {
+		TradeMaterial           flow.TradeMaterial
+		PartitionCombinedOrders []*PartitionCombinedOrder
+	}
 )
 
 type orderAggregator struct {
 	broker.Orderer
-	partitionID              PartitionID
+	tradeConfigurationKey    model.TradeConfigurationKey
 	orderPartitionAggregator *orderPartitionAggregator
 	createOrderDone          []<-chan *broker.CreateOrderResult
 	closeOrderDone           []<-chan *broker.CloseOrderResult
 }
 
-func newOrderAggregator(orderer broker.Orderer, partitionID PartitionID, orderPartitionAggregator *orderPartitionAggregator) *orderAggregator {
+func newOrderAggregator(orderer broker.Orderer, tradeConfigurationKey model.TradeConfigurationKey, orderPartitionAggregator *orderPartitionAggregator) *orderAggregator {
 	return &orderAggregator{
 		Orderer:                  orderer,
-		partitionID:              partitionID,
-		orderPartitionAggregator: orderPartitionAggregator,
-		createOrderDone:          []<-chan *broker.CreateOrderResult{},
-		closeOrderDone:           []<-chan *broker.CloseOrderResult{},
-	}
-}
-
-type orderAggregatorFactory struct {
-	orderer                  broker.Orderer
-	orderPartitionAggregator *orderPartitionAggregator
-}
-
-func newOrderAggregatorFactory(orderer broker.Orderer, orderPartitionAggregator *orderPartitionAggregator) *orderAggregatorFactory {
-	return &orderAggregatorFactory{
-		orderer:                  orderer,
+		tradeConfigurationKey:    tradeConfigurationKey,
 		orderPartitionAggregator: orderPartitionAggregator,
 	}
 }
 
-func (factory *orderAggregatorFactory) create(partitionID PartitionID) *orderAggregator {
-	return newOrderAggregator(factory.orderer, partitionID, factory.orderPartitionAggregator)
-}
-
-func (aggregator *orderAggregator) createOrder(tradePair broker.TradePair, units float64, isLong bool) {
+func (aggregator *orderAggregator) createOrder(tradePair model.TradePair, units float64, isLong bool) {
 	result := aggregator.CreateOrder(tradePair, units, isLong)
 	aggregator.createOrderDone = append(aggregator.createOrderDone, result)
 }
@@ -219,7 +213,7 @@ func (aggregator *orderAggregator) reduce() *combinedOrders {
 			log.Println(createdOrder.Err.Error())
 		} else {
 			createdOrders = append(createdOrders, createdOrder.CreatedOrder)
-			aggregator.orderPartitionAggregator.put(createdOrder.CreatedOrder.OrderID(), aggregator.partitionID)
+			aggregator.orderPartitionAggregator.put(createdOrder.CreatedOrder.OrderID(), aggregator.tradeConfigurationKey)
 		}
 	}
 
@@ -234,6 +228,9 @@ func (aggregator *orderAggregator) reduce() *combinedOrders {
 		}
 	}
 
+	aggregator.createOrderDone = nil
+	aggregator.closeOrderDone = nil
+
 	return &combinedOrders{
 		CreatedOrders: createdOrders,
 		ClosedOrders:  closedOrders,
@@ -241,28 +238,25 @@ func (aggregator *orderAggregator) reduce() *combinedOrders {
 }
 
 type (
-	// PartitionID is a definition for parition id
-	PartitionID int
-
-	partitionedOpenOrders map[PartitionID]map[broker.TradePair][]broker.OpenOrder
+	partitionedOpenOrders map[model.TradeConfigurationKey][]broker.OpenOrder
 
 	orderPartitionAggregator struct {
 		ch                chan interface{}
-		orderPartitionMap map[broker.OrderID]PartitionID
+		orderPartitionMap map[broker.OrderID]model.TradeConfigurationKey
 	}
 )
 
 func newOrderPartitionAggregator() *orderPartitionAggregator {
 	return &orderPartitionAggregator{
 		ch:                make(chan interface{}, config.OrderPartitionAggregatorChanCap),
-		orderPartitionMap: map[broker.OrderID]PartitionID{},
+		orderPartitionMap: map[broker.OrderID]model.TradeConfigurationKey{},
 	}
 }
 
 type (
 	putOrderPartitionRequest struct {
-		orderID     broker.OrderID
-		partitionID PartitionID
+		orderID               broker.OrderID
+		tradeConfigurationkey model.TradeConfigurationKey
 	}
 
 	deleteOrderPartitionRequest struct {
@@ -275,10 +269,10 @@ type (
 	}
 )
 
-func (aggregator *orderPartitionAggregator) put(orderID broker.OrderID, partitionID PartitionID) {
+func (aggregator *orderPartitionAggregator) put(orderID broker.OrderID, tradeConfigurationKey model.TradeConfigurationKey) {
 	aggregator.ch <- &putOrderPartitionRequest{
-		orderID:     orderID,
-		partitionID: partitionID,
+		orderID:               orderID,
+		tradeConfigurationkey: tradeConfigurationKey,
 	}
 }
 
@@ -314,7 +308,7 @@ func (aggregator *orderPartitionAggregator) work() {
 		if _, ok := aggregator.orderPartitionMap[req.orderID]; ok {
 			panic("duplicate order id detected")
 		}
-		aggregator.orderPartitionMap[req.orderID] = req.partitionID
+		aggregator.orderPartitionMap[req.orderID] = req.tradeConfigurationkey
 
 	case *deleteOrderPartitionRequest:
 		if _, ok := aggregator.orderPartitionMap[req.orderID]; !ok {
@@ -323,58 +317,21 @@ func (aggregator *orderPartitionAggregator) work() {
 		delete(aggregator.orderPartitionMap, req.orderID)
 
 	case *partitionedOpenOrdersRequest:
-		result := map[PartitionID]map[broker.TradePair][]broker.OpenOrder{}
+		result := map[model.TradeConfigurationKey][]broker.OpenOrder{}
 
 		for _, openOrder := range req.openOrders {
-			partitionID, ok := aggregator.orderPartitionMap[openOrder.OrderID()]
+			key, ok := aggregator.orderPartitionMap[openOrder.OrderID()]
 			if !ok {
 				panic("no order id detected")
 			}
 
-			if _, ok := result[partitionID]; !ok {
-				result[partitionID] = map[broker.TradePair][]broker.OpenOrder{}
-			}
-
-			if _, ok := result[partitionID][openOrder.TradePair()]; !ok {
-				result[partitionID][openOrder.TradePair()] = []broker.OpenOrder{}
-			}
-			openOrders := result[partitionID][openOrder.TradePair()]
-
-			result[partitionID][openOrder.TradePair()] = append(openOrders, openOrder)
+			openOrders := result[key]
+			result[key] = append(openOrders, openOrder)
 		}
 
 		req.done <- result
 	}
 }
-
-type (
-	// TradeParamLoader is an interface for trade param loader
-	TradeParamLoader interface {
-		ParamCsvHeader() []string
-		ParamCsvValue() []string
-	}
-
-	// TradableTimeZone is a struct for tradable time zone
-	TradableTimeZone struct {
-		Name string
-		OK   func(timeExtractor broker.TimeExtractor) bool
-	}
-
-	// TradableTimeZones is a definition for tradable time zones
-	TradableTimeZones map[PartitionID]*TradableTimeZone
-
-	// KeyPartitionIDTradePair is a struct for key partition ID trade pair
-	KeyPartitionIDTradePair struct {
-		PartitionID PartitionID
-		TradePair   broker.TradePair
-	}
-
-	// TradeSpecs is a struct for trade specs
-	TradeSpecs struct {
-		TimeZones    TradableTimeZones
-		ParamLoaders map[KeyPartitionIDTradePair]TradeParamLoader
-	}
-)
 
 // Factory is a factory for simple trader
 type Factory struct {
