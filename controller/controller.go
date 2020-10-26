@@ -2,15 +2,19 @@ package controller
 
 import (
 	"net/http"
-	"yukimaterrace/andaman/config"
 	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/util"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var apiKey string
+
 // CreateController is a factory method to create controller
 func CreateController() *echo.Echo {
+	apiKey = util.GetEnv("API_KEY")
+
 	e := echo.New()
 
 	e.HTTPErrorHandler = httpErrorHandler
@@ -26,7 +30,7 @@ func CreateController() *echo.Echo {
 var authMiddleware = middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 	KeyLookup: "header:api-key",
 	Validator: func(key string, c echo.Context) (bool, error) {
-		return key == config.APIKey, nil
+		return key == apiKey, nil
 	},
 })
 
