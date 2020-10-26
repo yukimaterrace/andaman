@@ -57,7 +57,7 @@ func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (f
 		PartitionCombinedOrders: partitionCombineOrders,
 	}
 
-	return recordMaterial, len(recordMaterial.PartitionCombinedOrders) > 0
+	return recordMaterial, true
 }
 
 type tradeRunnersExecutor struct {
@@ -168,7 +168,7 @@ type (
 
 	// PartitionCombinedOrder is a definition for partition combined order
 	PartitionCombinedOrder struct {
-		tradeConfiguration *model.TradeConfigurationDetail
+		TradeConfiguration *model.TradeConfigurationDetail
 		*combinedOrders
 	}
 

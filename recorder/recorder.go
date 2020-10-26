@@ -1,53 +1,61 @@
 package recorder
 
 import (
-	"sort"
-	"strconv"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/trader"
 	"yukimaterrace/andaman/util"
 )
 
-// Recorder is a struct for recorder
-type Recorder struct {
-	writer   writer
-	orderMap map[trader.PartitionID]map[broker.OrderID]*completableOrder
-}
+type (
+	// Recorder is a struct for recorder
+	Recorder struct {
+		orderMap       map[broker.OrderID]*completableOrder
+		priceExtractor broker.PriceExtractor
+	}
 
-func newRecorder(writer writer) *Recorder {
+	completableOrder struct {
+		tradeConfiguration *model.TradeConfigurationDetail
+		createdOrder       broker.CreatedOrder
+		closedOrder        broker.ClosedOrder
+	}
+)
+
+// NewRecorder is a constructor for recorder
+func NewRecorder() *Recorder {
 	return &Recorder{
-		writer:   writer,
-		orderMap: map[trader.PartitionID]map[broker.OrderID]*completableOrder{},
+		orderMap: map[broker.OrderID]*completableOrder{},
 	}
 }
 
 // Record is a method to record
 func (recorder *Recorder) Record(material flow.RecordMaterial) {
-	partitionCombinedOrders, ok := material.(trader.PartitionCombinedOrders)
+	recordMaterial, ok := material.(trader.RecordMaterial)
 	if !ok {
 		panic(util.ErrWrongType)
 	}
 
-	for partitionID, combinedOrders := range partitionCombinedOrders {
-		if _, ok := recorder.orderMap[partitionID]; !ok {
-			recorder.orderMap[partitionID] = map[broker.OrderID]*completableOrder{}
-		}
+	recorder.priceExtractor, ok = recordMaterial.TradeMaterial.(broker.PriceExtractor)
+	if !ok {
+		panic(util.ErrWrongType)
+	}
 
-		completableOrderMap := recorder.orderMap[partitionID]
-		for _, createdOrder := range combinedOrders.CreatedOrders {
-			if _, ok := completableOrderMap[createdOrder.OrderID()]; ok {
+	for _, partitionCombinedOrder := range recordMaterial.PartitionCombinedOrders {
+		for _, createdOrder := range partitionCombinedOrder.CreatedOrders {
+			if _, ok := recorder.orderMap[createdOrder.OrderID()]; ok {
 				panic("duplicate order id for created order detected")
 			}
 
-			completableOrderMap[createdOrder.OrderID()] = &completableOrder{
-				createdOrder: createdOrder,
-				closedOrder:  nil,
+			recorder.orderMap[createdOrder.OrderID()] = &completableOrder{
+				tradeConfiguration: partitionCombinedOrder.TradeConfiguration,
+				createdOrder:       createdOrder,
+				closedOrder:        nil,
 			}
 		}
 
-		for _, closedOrder := range combinedOrders.ClosedOrders {
-			completableOrder, ok := completableOrderMap[closedOrder.OrderID()]
+		for _, closedOrder := range partitionCombinedOrder.ClosedOrders {
+			completableOrder, ok := recorder.orderMap[closedOrder.OrderID()]
 			if !ok {
 				panic("no created order for the order id exist")
 			}
@@ -59,112 +67,34 @@ func (recorder *Recorder) Record(material flow.RecordMaterial) {
 
 // Write is a method to write
 func (recorder *Recorder) Write() {
-	identifiedCompletableOrders := recorder.flush(true)
-	recorder.writer.write(identifiedCompletableOrders)
+	completableOrders := recorder.flatOrders()
+	recorder.flush(completableOrders)
 }
 
 // Close is a method to close
 func (recorder *Recorder) Close() {
-	identifiedCompletableOrders := recorder.flush(false)
-
-	recorder.writer.write(identifiedCompletableOrders)
-	recorder.writer.close()
+	recorder.Write()
 }
 
-func (recorder *Recorder) flush(onlyCompleted bool) identifiedCompletableOrders {
-	orders := identifiedCompletableOrders{}
+func (recorder *Recorder) flatOrders() []*completableOrder {
+	var orders []*completableOrder
+	var closedOrderIDs []broker.OrderID
 
-	for partitionID, orderMap := range recorder.orderMap {
-		var closedOrderIDs []broker.OrderID
+	for _, order := range recorder.orderMap {
+		orders = append(orders, order)
 
-		for orderID, order := range orderMap {
-			if onlyCompleted && order.closedOrder == nil {
-				continue
-			}
-
-			orders = append(orders, &identifiedCompletableOrder{
-				partitionID: partitionID,
-				tradePair:   order.createdOrder.TradePair(),
-				order:       order,
-			})
-
-			if order.closedOrder != nil {
-				closedOrderIDs = append(closedOrderIDs, orderID)
-			}
-		}
-
-		for _, orderID := range closedOrderIDs {
-			delete(orderMap, orderID)
+		if order.closedOrder != nil {
+			closedOrderIDs = append(closedOrderIDs, order.createdOrder.OrderID())
 		}
 	}
 
-	sort.Sort(orders)
+	for _, orderID := range closedOrderIDs {
+		delete(recorder.orderMap, orderID)
+	}
+
 	return orders
 }
 
-type (
-	completableOrder struct {
-		createdOrder broker.CreatedOrder
-		closedOrder  broker.ClosedOrder
-	}
+func (recorder *Recorder) flush(completableOrders []*completableOrder) {
 
-	identifiedCompletableOrder struct {
-		partitionID trader.PartitionID
-		tradePair   broker.TradePair
-		order       *completableOrder
-	}
-)
-
-func (identifiedCompletableOrder *identifiedCompletableOrder) csvHeaders() []string {
-	return []string{
-		"orderID",
-		"tradePair",
-		"timeAtOpen",
-		"priceAtOpen",
-		"units",
-		"isLong",
-		"timeAtClose",
-		"priceAtClose",
-		"realizedPL",
-	}
-}
-
-func (identifiedCompletableOrder *identifiedCompletableOrder) csvValues() []string {
-	created := identifiedCompletableOrder.order.createdOrder
-	closed := identifiedCompletableOrder.order.closedOrder
-
-	csv := []string{
-		strconv.FormatInt(int64(created.OrderID()), 10),
-		string(created.TradePair()),
-		strconv.FormatInt(created.TimeAtOpen(), 10),
-		strconv.FormatFloat(created.PriceAtOpen(), 'f', 6, 64),
-		strconv.FormatFloat(created.Units(), 'f', 8, 64),
-		strconv.FormatBool(created.IsLong()),
-	}
-
-	if closed == nil {
-		return append(csv, "not closed", "not closed", "0")
-	}
-
-	return append(csv,
-		strconv.FormatInt(closed.TimeAtClose(), 10),
-		strconv.FormatFloat(closed.PriceAtClose(), 'f', 6, 64),
-		strconv.FormatFloat(closed.RealizedProfit(), 'f', 6, 64),
-	)
-}
-
-type identifiedCompletableOrders []*identifiedCompletableOrder
-
-func (orders identifiedCompletableOrders) Len() int {
-	return len(orders)
-}
-
-func (orders identifiedCompletableOrders) Less(i, j int) bool {
-	return orders[i].order.createdOrder.OrderID() < orders[j].order.createdOrder.OrderID()
-}
-
-func (orders identifiedCompletableOrders) Swap(i, j int) {
-	order := orders[i]
-	orders[i] = orders[j]
-	orders[j] = order
 }
