@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // GetTradeSets is a method to get trade sets
 func GetTradeSets(_type TradeSetType, count int, offset int) (*TradeSetsResponse, error) {
 	tradeSets, err := getTradeSetsByType(_type, count, offset)
@@ -36,4 +38,22 @@ func GetTradeSetDetail(name string, paramObjectCreator TradeParamObjectCreator) 
 	}
 
 	return tradeSetDetail, nil
+}
+
+// AddTradeRun is a method to add trade run
+func AddTradeRun(tradeSetName string) (*TradeRun, error) {
+	tradeSet, err := getTradeSetByName(tradeSetName)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := addTradeRun(tradeSet.TradeSetID, int(time.Now().Unix())); err != nil {
+		return nil, err
+	}
+
+	tradeRun, err := getLastTradeRun()
+	if err != nil {
+		return nil, err
+	}
+	return tradeRun, nil
 }

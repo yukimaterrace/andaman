@@ -86,6 +86,15 @@ func (builder *Builder) Build() *Trader {
 	return trader
 }
 
+// BuildTradeRun is a method to build trade run
+func (builder *Builder) BuildTradeRun() *model.TradeRun {
+	tradeSet, err := model.AddTradeRun(builder.tradeSetName)
+	if err != nil {
+		panic(err)
+	}
+	return tradeSet
+}
+
 func tradeParamObjectCreator(_type model.TradeAlgorithmType, param string) (interface{}, error) {
 	switch _type {
 	case model.Frame:
