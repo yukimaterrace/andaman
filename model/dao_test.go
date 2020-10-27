@@ -22,18 +22,13 @@ func TestTradeSet(t *testing.T) {
 		}
 	}
 
-	err = addTradeSet(name, Simulation, Stopped)
+	err = addTradeSet(name, Simulation)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	ts, err = getTradeSetByName(name)
 	log.Printf("%v", ts)
-
-	err = updateTradeSetByName(name, Running)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	tradeSets, err := getTradeSetsByType(Simulation, 20, 0)
 	if err != nil {

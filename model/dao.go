@@ -33,7 +33,7 @@ func init() {
 }
 
 func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]*TradeSet, error) {
-	q := "select * from trade_set where type = ? order by updated_at desc limit ? offset ?"
+	q := "select * from trade_set where type = ? order by created_at desc limit ? offset ?"
 
 	rows, err := db.Query(q, _type, count, offset)
 	if err != nil {
@@ -49,9 +49,7 @@ func getTradeSetsByType(_type TradeSetType, count int, offset int) ([]*TradeSet,
 			&ts.TradeSetID,
 			&ts.Name,
 			&ts.Type,
-			&ts.State,
 			&ts.CreatedAt,
-			&ts.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -73,9 +71,7 @@ func getTradeSetByName(name string) (*TradeSet, error) {
 		&ts.TradeSetID,
 		&ts.Name,
 		&ts.Type,
-		&ts.State,
 		&ts.CreatedAt,
-		&ts.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -84,21 +80,11 @@ func getTradeSetByName(name string) (*TradeSet, error) {
 	return &ts, nil
 }
 
-func addTradeSet(name string, _type TradeSetType, state TradeSetState) error {
-	q := "insert into trade_set (name, type, state, created_at, updated_at) values (?, ?, ?, ?, ?)"
+func addTradeSet(name string, _type TradeSetType) error {
+	q := "insert into trade_set (name, type, created_at) values (?, ?, ?)"
 
 	now := time.Now().Unix()
-	if _, err := db.Exec(q, name, _type, state, now, now); err != nil {
-		return err
-	}
-	return nil
-}
-
-func updateTradeSetByName(name string, state TradeSetState) error {
-	q := "update trade_set set state = ?, updated_at = ? where name = ?"
-
-	now := time.Now().Unix()
-	if _, err := db.Exec(q, state, now, name); err != nil {
+	if _, err := db.Exec(q, name, _type, now); err != nil {
 		return err
 	}
 	return nil
@@ -419,7 +405,9 @@ func getLastTradeRun() (*TradeRun, error) {
 	err := row.Scan(
 		&tradeRun.TradeRunID,
 		&tradeRun.TradeSetID,
+		&tradeRun.State,
 		&tradeRun.CreatedAt,
+		&tradeRun.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -428,10 +416,10 @@ func getLastTradeRun() (*TradeRun, error) {
 	return &tradeRun, nil
 }
 
-func addTradeRun(tradeSetID int, createdAt int) error {
-	q := "insert into trade_run (trade_set_id, created_at) values (?, ?)"
+func addTradeRun(tradeSetID int, state TradeRunState, createdAt int, updatedAt int) error {
+	q := "insert into trade_run (trade_set_id, state, created_at, updated_at) values (?, ?, ?, ?)"
 
-	if _, err := db.Exec(q, tradeSetID, createdAt); err != nil {
+	if _, err := db.Exec(q, tradeSetID, state, createdAt, updatedAt); err != nil {
 		return err
 	}
 	return nil

@@ -2,12 +2,10 @@ package model
 
 // TradeSet is a struct for trade set table
 type TradeSet struct {
-	TradeSetID int           `json:"-"`
-	Name       string        `json:"name"`
-	Type       TradeSetType  `json:"type"`
-	State      TradeSetState `json:"state"`
-	CreatedAt  int           `json:"-"`
-	UpdatedAt  int           `json:"updated_at"`
+	TradeSetID int          `json:"-"`
+	Name       string       `json:"name"`
+	Type       TradeSetType `json:"type"`
+	CreatedAt  int          `json:"-"`
 }
 
 // TradeAlgorithm is a struct for trade algorithm table
@@ -51,7 +49,9 @@ type Order struct {
 
 // TradeRun is a struct for trade run table
 type TradeRun struct {
-	TradeRunID int
-	TradeSetID int
-	CreatedAt  int
+	TradeRunID int           `json:"-"`
+	TradeSetID int           `json:"-"`
+	State      TradeRunState `json:"state"`
+	CreatedAt  int           `json:"created_at"`
+	UpdatedAt  int           `json:"updated_at"`
 }

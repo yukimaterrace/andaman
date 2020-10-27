@@ -53,7 +53,8 @@ func AddTradeRun(tradeSetName string) (*TradeRun, error) {
 		return nil, err
 	}
 
-	if err := addTradeRun(tradeSet.TradeSetID, int(time.Now().Unix())); err != nil {
+	now := int(time.Now().Unix())
+	if err := addTradeRun(tradeSet.TradeSetID, Running, now, now); err != nil {
 		return nil, err
 	}
 

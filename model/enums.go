@@ -31,12 +31,12 @@ func (_type TradeSetType) IsValid() error {
 	}
 }
 
-// TradeSetState is trade set state enums
-type TradeSetState int
+// TradeRunState is trade set state enums
+type TradeRunState int
 
 const (
 	// Running is a running state
-	Running TradeSetState = iota
+	Running TradeRunState = iota
 	// Stopped is a stopped state
 	Stopped
 )
