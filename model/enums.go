@@ -67,6 +67,26 @@ const (
 	EurGbp
 )
 
+// TradePairIterator is a struct for trade pair iterator
+type TradePairIterator struct {
+	current TradePair
+}
+
+// Next is a method to know if the next item exists
+func (iterator TradePairIterator) Next() bool {
+	if iterator.current <= EurGbp {
+		return true
+	}
+	return false
+}
+
+// Value is a method to get the value
+func (iterator TradePairIterator) Value() TradePair {
+	value := iterator.current
+	iterator.current++
+	return value
+}
+
 // OandaInstrument is a method to get OandaInstrument
 func (tradePair TradePair) OandaInstrument() OandaInstrument {
 	switch tradePair {
@@ -217,6 +237,26 @@ func (timezone Timezone) OK(unix int64) bool {
 	default:
 		return false
 	}
+}
+
+// TimezoneIterator is a struct for timezone iterator
+type TimezoneIterator struct {
+	current Timezone
+}
+
+// Next is a method to know if the next item exists
+func (iterator TimezoneIterator) Next() bool {
+	if iterator.current <= NewYorkPM {
+		return true
+	}
+	return false
+}
+
+// Value is a method to get the value
+func (iterator TimezoneIterator) Value() Timezone {
+	value := iterator.current
+	iterator.current++
+	return value
 }
 
 // TradeAlgorithmType is trade algorithm type enums

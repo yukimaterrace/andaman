@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"yukimaterrace/andaman/gridsearch"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/trader"
 )
@@ -73,22 +74,30 @@ func AddSimulationTradeSet() {
 		TradeDirection: model.Short,
 	}
 
+	timezoneIterator := model.TimezoneIterator{}
+	tradePairIterator := model.TradePairIterator{}
+	algorithmParams := []*model.TradeAlgorithmParam{
+		&frameTradeAlgorithmForLong,
+		&frameTradeAlgorithmForShort,
+	}
+
 	var configurationParams []*model.TradeConfigurationParam
-	for timezone := model.TokyoAM; timezone <= model.NewYorkPM; timezone++ {
-		for tradePair := model.GbpUsd; tradePair <= model.EurGbp; tradePair++ {
-			configurationForLong := model.TradeConfigurationParam{
-				TradePair:      tradePair,
-				Timezone:       timezone,
-				AlgorithmParam: &frameTradeAlgorithmForLong,
-			}
 
-			configurationForShort := model.TradeConfigurationParam{
-				TradePair:      tradePair,
-				Timezone:       timezone,
-				AlgorithmParam: &frameTradeAlgorithmForShort,
-			}
+	for timezoneIterator.Next() {
+		timezone := timezoneIterator.Value()
 
-			configurationParams = append(configurationParams, &configurationForLong, &configurationForShort)
+		for tradePairIterator.Next() {
+			tradePair := tradePairIterator.Value()
+
+			for _, algorithmParam := range algorithmParams {
+				configurationParam := model.TradeConfigurationParam{
+					TradePair:      tradePair,
+					Timezone:       timezone,
+					AlgorithmParam: algorithmParam,
+				}
+
+				configurationParams = append(configurationParams, &configurationParam)
+			}
 		}
 	}
 
@@ -103,6 +112,56 @@ func AddSimulationTradeSet() {
 	}
 }
 
+// AddGridSearchTradeSet is a method to add grid search trade set
 func AddGridSearchTradeSet() {
+	params := gridsearch.FrameTradeParamsForGridSearch()
 
+	var algorithmParams []*model.TradeAlgorithmParam
+	for _, param := range params {
+		var tradeDirection model.TradeDirection
+		if param.TradeDirectionLong {
+			tradeDirection = model.Long
+		} else {
+			tradeDirection = model.Short
+		}
+
+		algorithmParam := model.TradeAlgorithmParam{
+			Type:           model.Frame,
+			Param:          param,
+			TradeDirection: tradeDirection,
+		}
+		algorithmParams = append(algorithmParams, &algorithmParam)
+	}
+
+	timezoneIterator := model.TimezoneIterator{}
+	tradePairIterator := model.TradePairIterator{}
+	var configurationParams []*model.TradeConfigurationParam
+
+	for timezoneIterator.Next() {
+		timezone := timezoneIterator.Value()
+
+		for tradePairIterator.Next() {
+			tradePair := tradePairIterator.Value()
+
+			for _, algorithmParam := range algorithmParams {
+				configurationParam := model.TradeConfigurationParam{
+					TradePair:      tradePair,
+					Timezone:       timezone,
+					AlgorithmParam: algorithmParam,
+				}
+
+				configurationParams = append(configurationParams, &configurationParam)
+			}
+		}
+	}
+
+	tradeSetParam := model.TradeSetParam{
+		Name:                GridSearchTradeSetName,
+		Type:                model.GridSearch,
+		ConfigurationParams: configurationParams,
+	}
+
+	if err := model.AddTradeSet(&tradeSetParam); err != nil {
+		panic(err)
+	}
 }
