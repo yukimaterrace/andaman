@@ -82,7 +82,6 @@ func AddSimulationTradeSet() {
 	}
 
 	var configurationParams []*model.TradeConfigurationParam
-
 	for timezoneIterator.Next() {
 		timezone := timezoneIterator.Value()
 
@@ -135,8 +134,8 @@ func AddGridSearchTradeSet() {
 
 	timezoneIterator := model.TimezoneIterator{}
 	tradePairIterator := model.TradePairIterator{}
-	var configurationParams []*model.TradeConfigurationParam
 
+	var configurationParams []*model.TradeConfigurationParam
 	for timezoneIterator.Next() {
 		timezone := timezoneIterator.Value()
 
