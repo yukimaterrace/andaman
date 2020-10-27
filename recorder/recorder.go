@@ -1,6 +1,7 @@
 package recorder
 
 import (
+	"log"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/model"
@@ -11,9 +12,9 @@ import (
 type (
 	// Recorder is a struct for recorder
 	Recorder struct {
-		tradeRun       *model.TradeRun
-		orderMap       map[broker.OrderID]*completableOrder
-		priceExtractor broker.PriceExtractor
+		tradeRun   *model.TradeRun
+		orderMap   map[broker.OrderID]*completableOrder
+		openOrders []broker.OpenOrder
 	}
 
 	completableOrder struct {
@@ -32,15 +33,12 @@ func newRecorder(tradeRun *model.TradeRun) *Recorder {
 
 // Record is a method to record
 func (recorder *Recorder) Record(material flow.RecordMaterial) {
-	recordMaterial, ok := material.(trader.RecordMaterial)
+	recordMaterial, ok := material.(*trader.RecordMaterial)
 	if !ok {
 		panic(util.ErrWrongType)
 	}
 
-	recorder.priceExtractor, ok = recordMaterial.TradeMaterial.(broker.PriceExtractor)
-	if !ok {
-		panic(util.ErrWrongType)
-	}
+	recorder.openOrders = recordMaterial.OpenOrders
 
 	for _, partitionCombinedOrder := range recordMaterial.PartitionCombinedOrders {
 		for _, createdOrder := range partitionCombinedOrder.CreatedOrders {
@@ -97,5 +95,52 @@ func (recorder *Recorder) flatOrders() []*completableOrder {
 }
 
 func (recorder *Recorder) flush(completableOrders []*completableOrder) {
+	for _, order := range completableOrders {
+		if order.closedOrder == nil {
+			var tradeDirection model.TradeDirection
+			if order.createdOrder.IsLong() {
+				tradeDirection = model.Long
+			} else {
+				tradeDirection = model.Short
+			}
 
+			err := model.AddCreatedOrder(
+				recorder.tradeRun.TradeRunID,
+				int(order.createdOrder.OrderID()),
+				order.tradeConfiguration.TradeConfigurationID,
+				order.createdOrder.Units(),
+				tradeDirection,
+				int(order.createdOrder.TimeAtOpen()),
+				order.createdOrder.PriceAtOpen(),
+			)
+
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			err := model.UpdateOrderForClose(
+				recorder.tradeRun.TradeRunID,
+				int(order.closedOrder.OrderID()),
+				order.closedOrder.RealizedProfit(),
+				int(order.closedOrder.TimeAtClose()),
+				order.closedOrder.PriceAtClose(),
+			)
+
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+
+	for _, openOrder := range recorder.openOrders {
+		err := model.UpdateOrderForProfit(
+			recorder.tradeRun.TradeRunID,
+			int(openOrder.OrderID()),
+			openOrder.UnrealizedProfit(),
+		)
+
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }

@@ -52,8 +52,8 @@ func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (f
 		}
 	}
 
-	recordMaterial := RecordMaterial{
-		TradeMaterial:           material,
+	recordMaterial := &RecordMaterial{
+		OpenOrders:              openOrdersResult.OpenOrders,
 		PartitionCombinedOrders: partitionCombineOrders,
 	}
 
@@ -174,7 +174,7 @@ type (
 
 	// RecordMaterial is a definition for concrete record material
 	RecordMaterial struct {
-		TradeMaterial           flow.TradeMaterial
+		OpenOrders              []broker.OpenOrder
 		PartitionCombinedOrders []*PartitionCombinedOrder
 	}
 )

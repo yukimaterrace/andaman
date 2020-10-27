@@ -390,19 +390,21 @@ func updateOrderForProfit(orderID int, profit float64) error {
 	return nil
 }
 
-func updateOrderForClose(orderID int, state OrderState, timeAtClose int, priceAtClose int) error {
+func updateOrderForClose(tradeRunID int, brokerOrderID int, state OrderState, profit float64, timeAtClose int, priceAtClose float64) error {
 	q := `
 		update
 			order
 		set
 			state = ?,
+			profit = ?,
 			time_at_close = ?,
 			price_at_close = ?
 		where
-			order_id = ?
+			trade_run_id = ? and
+			broker_order_id = ?
 		`
 
-	if _, err := db.Exec(q, state, timeAtClose, priceAtClose, orderID); err != nil {
+	if _, err := db.Exec(q, state, profit, timeAtClose, priceAtClose, tradeRunID, brokerOrderID); err != nil {
 		return err
 	}
 	return nil
