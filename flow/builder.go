@@ -16,6 +16,7 @@ type Builder struct {
 	pricerFactory    PricerFactory
 	traderFactory    TraderFactory
 	recorderFactory  RecorderFactory
+	writeInterval    time.Duration
 }
 
 // NewFlowBuilder is a constructor for flow builder
@@ -65,6 +66,12 @@ func (builder *Builder) RecorderFactory(recorderFactory RecorderFactory) *Builde
 	return builder
 }
 
+// WriteInterval sets write interval in builder
+func (builder *Builder) WriteInterval(interval time.Duration) *Builder {
+	builder.writeInterval = interval
+	return builder
+}
+
 // Build builds flow
 func (builder *Builder) Build() *Flow {
 	pricer := builder.pricerFactory.Create(builder.broker, builder.pricerTradePairs)
@@ -74,7 +81,7 @@ func (builder *Builder) Build() *Flow {
 	recordWorker := &recordWorker{
 		Recorder: recorder,
 		ch:       make(chan interface{}, config.FlowChanCap),
-		ticker:   time.NewTicker(time.Minute), // write ever 1 minute
+		ticker:   time.NewTicker(builder.writeInterval),
 	}
 
 	tradeWorker := &tradeWorker{
