@@ -11,6 +11,7 @@ import (
 type (
 	// Recorder is a struct for recorder
 	Recorder struct {
+		tradeRun       *model.TradeRun
 		orderMap       map[broker.OrderID]*completableOrder
 		priceExtractor broker.PriceExtractor
 	}
@@ -22,9 +23,9 @@ type (
 	}
 )
 
-// NewRecorder is a constructor for recorder
-func NewRecorder() *Recorder {
+func newRecorder(tradeRun *model.TradeRun) *Recorder {
 	return &Recorder{
+		tradeRun: tradeRun,
 		orderMap: map[broker.OrderID]*completableOrder{},
 	}
 }
