@@ -305,6 +305,40 @@ func getOrderByTradeRunAndBrokerOrder(tradeRunID int, brokerOrderID int) (*Order
 	return &order, nil
 }
 
+func getOrdersByTradeRunAndState(tradeRunID int, state OrderState) ([]*Order, error) {
+	q := "select * from order where trade_run_id = ? and state = ?"
+
+	rows, err := db.Query(q, tradeRunID, state)
+	if err != nil {
+		return nil, err
+	}
+
+	var orders []*Order
+	for rows.Next() {
+		order := Order{}
+		err := rows.Scan(
+			&order.OrderID,
+			&order.TradeRunID,
+			&order.BrokerOrderID,
+			&order.TradeConfigurationID,
+			&order.Units,
+			&order.Profit,
+			&order.TimeAtOpen,
+			&order.PriceAtOpen,
+			&order.TimeAtClose,
+			&order.PriceAtClose,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, &order)
+	}
+
+	return orders, nil
+}
+
 func addOrder(
 	tradeRunID int, brokerOrderID int, tradeConfigurationID int, units float64, state OrderState, profit float64,
 	timeAtOpen int, priceAtOpen float64, timeAtClose int, priceAtClose float64) error {
@@ -344,16 +378,16 @@ func addOrder(
 	return nil
 }
 
-func updateOrderForProfit(tradeRunID int, brokerOrderID int, profit float64) error {
-	q := "update order set profit = ? where trade_run_id = ? and broker_order_id = ?"
+func updateOrderForProfit(orderID int, profit float64) error {
+	q := "update order set profit = ? order_id = ?"
 
-	if _, err := db.Exec(q, profit, tradeRunID, brokerOrderID); err != nil {
+	if _, err := db.Exec(q, profit, orderID); err != nil {
 		return err
 	}
 	return nil
 }
 
-func updateOrderForClose(tradeRunID int, brokerOrderID int, state OrderState, timeAtClose int, priceAtClose int) error {
+func updateOrderForClose(orderID int, state OrderState, timeAtClose int, priceAtClose int) error {
 	q := `
 		update
 			order
@@ -362,11 +396,10 @@ func updateOrderForClose(tradeRunID int, brokerOrderID int, state OrderState, ti
 			time_at_close = ?,
 			price_at_close = ?
 		where
-			trade_run_id = ? and
-			broker_order_id = ?
+			order_id = ?
 		`
 
-	if _, err := db.Exec(q, state, timeAtClose, priceAtClose, tradeRunID, brokerOrderID); err != nil {
+	if _, err := db.Exec(q, state, timeAtClose, priceAtClose, orderID); err != nil {
 		return err
 	}
 	return nil
