@@ -13,7 +13,7 @@ type (
 		TradeSets []*TradeSet `json:"trade_sets"`
 	}
 
-	// definitions for Service
+	// definitions for service
 
 	// TradeParamObjectCreator is a definition for param object creator
 	TradeParamObjectCreator func(_type TradeAlgorithmType, param string) (interface{}, error)
@@ -37,6 +37,29 @@ type (
 	TradeSetDetail struct {
 		*TradeSet
 		Configurations []*TradeConfigurationDetail
+	}
+
+	// definitions for parameters in service
+
+	// TradeAlgorithmParam is a param for trade algorithm
+	TradeAlgorithmParam struct {
+		Type           TradeAlgorithmType
+		Param          interface{}
+		TradeDirection TradeDirection
+	}
+
+	// TradeConfigurationParam is a param for trade configuration
+	TradeConfigurationParam struct {
+		TradePair TradePair
+		Timezone  Timezone
+		Algorithm *TradeAlgorithmParam
+	}
+
+	// TradeSetParam is a param for trade set
+	TradeSetParam struct {
+		Name                string
+		Type                TradeSetType
+		ConfigurationParams []*TradeConfigurationParam
 	}
 )
 
