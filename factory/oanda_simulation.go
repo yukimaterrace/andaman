@@ -11,7 +11,7 @@ import (
 )
 
 // CreateSimulationFlow is a factory method to create simulation app
-func CreateSimulationFlow() *flow.Flow {
+func CreateSimulationFlow(tradeSetName string) *flow.Flow {
 	pricerTradePairs := []model.TradePair{
 		model.GbpUsd,
 		model.EurUsd,
@@ -26,7 +26,7 @@ func CreateSimulationFlow() *flow.Flow {
 	}
 
 	tradeBuilder := trader.NewBuilder().
-		TradeSet(simulationTradeSetName).
+		TradeSet(tradeSetName).
 		Parallel(1)
 
 	start := time.Date(2020, time.July, 1, 0, 0, 0, 0, time.Local)

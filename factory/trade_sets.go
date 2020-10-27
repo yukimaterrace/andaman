@@ -5,10 +5,16 @@ import (
 	"yukimaterrace/andaman/trader"
 )
 
-const simulationTradeSetName = "Frame Simulation"
+const (
+	// SimulationTradeSetName is a name for simulation trade set
+	SimulationTradeSetName = "Frame Simulation"
 
-// CreateSimulationTradeSet is a factory method to create simulation trade set
-func CreateSimulationTradeSet() {
+	// GridSearchTradeSetName is a name for grid search trade set
+	GridSearchTradeSetName = "Grid Search"
+)
+
+// AddSimulationTradeSet is a method to add simulation trade set
+func AddSimulationTradeSet() {
 	paramSet0 := trader.FrameTradeParamSet0{
 		TradeDirectionLong: true,
 	}
@@ -87,7 +93,7 @@ func CreateSimulationTradeSet() {
 	}
 
 	tradeSetParam := model.TradeSetParam{
-		Name:                simulationTradeSetName,
+		Name:                SimulationTradeSetName,
 		Type:                model.Simulation,
 		ConfigurationParams: configurationParams,
 	}
@@ -95,4 +101,8 @@ func CreateSimulationTradeSet() {
 	if err := model.AddTradeSet(&tradeSetParam); err != nil {
 		panic(err)
 	}
+}
+
+func AddGridSearchTradeSet() {
+
 }
