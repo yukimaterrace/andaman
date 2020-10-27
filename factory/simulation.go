@@ -27,8 +27,6 @@ func CreateSimulationFlow() *flow.Flow {
 
 	tradeBuilder := trader.NewBuilder().
 		TradeSet(simulationTradeSetName).
-		Broker(broker.NewSimpleSimulationBroker()).
-		OrdererFactory(broker.NewSimpleSimulationOrdererFactory()).
 		Parallel(1)
 
 	start := time.Date(2020, time.July, 1, 0, 0, 0, 0, time.Local)
