@@ -35,17 +35,18 @@ type TradeSetConfigurationRel struct {
 
 // Order is a struct for order table
 type Order struct {
-	OrderID              int        `json:"-"`
-	TradeRunID           int        `json:"-"`
-	BrokerOrderID        int        `json:"order_id"`
-	TradeConfigurationID int        `json:"-"`
-	Units                float64    `json:"units"`
-	State                OrderState `json:"state"`
-	Profit               float64    `json:"profit"`
-	TimeAtOpen           int        `json:"time_at_open"`
-	PriceAtOpen          float64    `json:"price_at_open"`
-	TimeAtClose          int        `json:"time_at_close"`
-	PriceAtClose         float64    `json:"price_at_close"`
+	OrderID              int            `json:"-"`
+	TradeRunID           int            `json:"-"`
+	BrokerOrderID        int            `json:"order_id"`
+	TradeConfigurationID int            `json:"-"`
+	Units                float64        `json:"units"`
+	TradeDirection       TradeDirection `json:"trade_direction"`
+	State                OrderState     `json:"state"`
+	Profit               float64        `json:"profit"`
+	TimeAtOpen           int            `json:"time_at_open"`
+	PriceAtOpen          float64        `json:"price_at_open"`
+	TimeAtClose          int            `json:"time_at_close"`
+	PriceAtClose         float64        `json:"price_at_close"`
 }
 
 // TradeRun is a struct for trade run table

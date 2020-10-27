@@ -291,6 +291,7 @@ func getOrderByTradeRunAndBrokerOrder(tradeRunID int, brokerOrderID int) (*Order
 		&order.BrokerOrderID,
 		&order.TradeConfigurationID,
 		&order.Units,
+		&order.TradeDirection,
 		&order.State,
 		&order.Profit,
 		&order.TimeAtOpen,
@@ -322,6 +323,7 @@ func getOrdersByTradeRunAndState(tradeRunID int, state OrderState) ([]*Order, er
 			&order.BrokerOrderID,
 			&order.TradeConfigurationID,
 			&order.Units,
+			&order.TradeDirection,
 			&order.Profit,
 			&order.TimeAtOpen,
 			&order.PriceAtOpen,
@@ -339,14 +341,15 @@ func getOrdersByTradeRunAndState(tradeRunID int, state OrderState) ([]*Order, er
 }
 
 func addOrder(
-	tradeRunID int, brokerOrderID int, tradeConfigurationID int, units float64, state OrderState, profit float64,
-	timeAtOpen int, priceAtOpen float64, timeAtClose int, priceAtClose float64) error {
+	tradeRunID int, brokerOrderID int, tradeConfigurationID int, units float64, tradeDirection TradeDirection,
+	state OrderState, profit float64, timeAtOpen int, priceAtOpen float64, timeAtClose int, priceAtClose float64) error {
 	q := `
 		insert into order (
 			trade_run_id,
 			broker_order_id,
 			trade_configuration_id,
 			units,
+			trade_direction,
 			state,
 			profit,
 			time_at_open,
@@ -354,7 +357,7 @@ func addOrder(
 			time_at_close,
 			price_at_close
 		) values (
-			?, ?, ?, ?, ?, ?, ?, ? ,? ,?
+			?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?
 		)
 		`
 
@@ -363,6 +366,7 @@ func addOrder(
 		brokerOrderID,
 		tradeConfigurationID,
 		units,
+		tradeDirection,
 		state,
 		profit,
 		timeAtOpen,
