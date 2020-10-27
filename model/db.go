@@ -235,6 +235,7 @@ func deleteTradeSetConfigurationRelByTradeSetID(tradeSetID int) error {
 func getTradeConfigurationDetailsByTradeSetID(tradeSetID int) ([]*TradeConfigurationDetail, error) {
 	q := `
 		select
+			trade_configuration.trade_configuration_id,
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
 			trade_algorithm.trade_algorithm_id,
@@ -260,6 +261,7 @@ func getTradeConfigurationDetailsByTradeSetID(tradeSetID int) ([]*TradeConfigura
 	for rows.Next() {
 		d := TradeConfigurationDetail{}
 		err := rows.Scan(
+			&d.TradeConfigurationID,
 			&d.TradePair,
 			&d.Timezone,
 			&d.Algorithm.TradeAlgorithmID,
@@ -275,4 +277,124 @@ func getTradeConfigurationDetailsByTradeSetID(tradeSetID int) ([]*TradeConfigura
 	}
 
 	return details, nil
+}
+
+func getOrderByTradeRunAndBrokerOrder(tradeRunID int, brokerOrderID int) (*Order, error) {
+	q := "select * from order where trade_run_id = ? and broker_order_id = ?"
+
+	order := Order{}
+	row := db.QueryRow(q, tradeRunID, brokerOrderID)
+
+	err := row.Scan(
+		&order.OrderID,
+		&order.TradeRunID,
+		&order.BrokerOrderID,
+		&order.TradeConfigurationID,
+		&order.Units,
+		&order.State,
+		&order.Profit,
+		&order.TimeAtOpen,
+		&order.PriceAtOpen,
+		&order.TimeAtClose,
+		&order.PriceAtClose,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
+}
+
+func addOrder(
+	tradeRunID int, brokerOrderID int, tradeConfigurationID int, units float64, state OrderState, profit float64,
+	timeAtOpen int, priceAtOpen float64, timeAtClose int, priceAtClose float64) error {
+	q := `
+		insert into order (
+			trade_run_id,
+			broker_order_id,
+			trade_configuration_id,
+			units,
+			state,
+			profit,
+			time_at_open,
+			price_at_open,
+			time_at_close,
+			price_at_close
+		) values (
+			?, ?, ?, ?, ?, ?, ?, ? ,? ,?
+		)
+		`
+
+	_, err := db.Exec(
+		q,
+		brokerOrderID,
+		tradeConfigurationID,
+		units,
+		state,
+		profit,
+		timeAtOpen,
+		priceAtOpen,
+		timeAtClose,
+		priceAtClose,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateOrderForProfit(tradeRunID int, brokerOrderID int, profit float64) error {
+	q := "update order set profit = ? where trade_run_id = ? and broker_order_id = ?"
+
+	if _, err := db.Exec(q, profit, tradeRunID, brokerOrderID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateOrderForClose(tradeRunID int, brokerOrderID int, state OrderState, timeAtClose int, priceAtClose int) error {
+	q := `
+		update
+			order
+		set
+			state = ?,
+			time_at_close = ?,
+			price_at_close = ?
+		where
+			trade_run_id = ? and
+			broker_order_id = ?
+		`
+
+	if _, err := db.Exec(q, state, timeAtClose, priceAtClose, tradeRunID, brokerOrderID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getLastTradeRun() (*TradeRun, error) {
+	q := "select * from trade_run order by trade_run_id desc"
+
+	tradeRun := TradeRun{}
+	row := db.QueryRow(q)
+
+	err := row.Scan(
+		&tradeRun.TradeRunID,
+		&tradeRun.TradeSetID,
+		&tradeRun.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tradeRun, nil
+}
+
+func addTradeRun(tradeSetID int, createdAt int) error {
+	q := "insert into trade_run (trade_set_id, created_at) values (?, ?)"
+
+	if _, err := db.Exec(q, tradeSetID, createdAt); err != nil {
+		return err
+	}
+	return nil
 }
