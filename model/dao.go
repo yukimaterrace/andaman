@@ -424,3 +424,12 @@ func addTradeRun(tradeSetID int, state TradeRunState, createdAt int, updatedAt i
 	}
 	return nil
 }
+
+func updateTradeRun(tradeRunID int, state TradeRunState, updatedAt int) error {
+	q := "update trade_run set state = ?, updated_at = ? where trade_run_id = ?"
+
+	if _, err := db.Exec(q, state, updatedAt, tradeRunID); err != nil {
+		return err
+	}
+	return nil
+}
