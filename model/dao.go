@@ -328,7 +328,6 @@ func getOrdersByTradeRunAndState(tradeRunID int, state OrderState) ([]*Order, er
 			&order.TimeAtClose,
 			&order.PriceAtClose,
 		)
-
 		if err != nil {
 			return nil, err
 		}
