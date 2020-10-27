@@ -179,25 +179,17 @@ func deleteTradeConfiguration(tradeConfigurationID int) error {
 	return nil
 }
 
-func getTradeSetConfigurationRelsByTradeSetID(tradeSetID int) ([]*TradeSetConfigurationRel, error) {
-	q := "select * from trade_set_configuration_rel where trade_set_id = ?"
+func getTradeSetConfigurationRelByTradeSetIDAndTradeConfigurationID(tradeSetID int, tradeConfigurationID int) (*TradeSetConfigurationRel, error) {
+	q := "select * from trade_set_configuration_rel where trade_set_id = ?, trade_configuration_id"
 
-	rows, err := db.Query(q, tradeSetID)
-	if err != nil {
+	row := db.QueryRow(q, tradeSetID, tradeConfigurationID)
+
+	rel := TradeSetConfigurationRel{}
+	if err := row.Scan(&rel.TradeSetID, &rel.TradeConfigurationID); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var rels []*TradeSetConfigurationRel
-	for rows.Next() {
-		rel := TradeSetConfigurationRel{}
-		if err := rows.Scan(&rel.TradeSetID, &rel.TradeConfigurationID); err != nil {
-			return nil, err
-		}
-		rels = append(rels, &rel)
-	}
-
-	return rels, nil
+	return &rel, nil
 }
 
 func addTradeSetConfigurationRel(tradeSetID int, tradeConfigurationID int) error {

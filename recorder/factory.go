@@ -1,6 +1,9 @@
 package recorder
 
-import "yukimaterrace/andaman/trader"
+import (
+	"yukimaterrace/andaman/flow"
+	"yukimaterrace/andaman/trader"
+)
 
 // Factory is a struct for recorder factory
 type Factory struct {
@@ -8,7 +11,7 @@ type Factory struct {
 }
 
 // Create is a factory method to create recorder
-func (factory *Factory) Create() *Recorder {
+func (factory *Factory) Create() flow.Recorder {
 	return newRecorder(factory.traderBuilder.BuildTradeRun())
 }
 

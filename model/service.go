@@ -1,12 +1,10 @@
 package model
 
 import (
-	"errors"
+	"database/sql"
+	"encoding/json"
 	"time"
 )
-
-// ErrOrderState is an error for order state
-var ErrOrderState = errors.New("order state error")
 
 // GetTradeSets is a method to get trade sets
 func GetTradeSets(_type TradeSetType, count int, offset int) (*TradeSetsResponse, error) {
@@ -96,11 +94,84 @@ func UpdateOrderForProfit(tradeRunID int, brokerOrderID int, profit float64) err
 	}
 
 	if order.State != Open {
-		return ErrOrderState
+		return nil
 	}
 
 	if err := updateOrderForProfit(order.OrderID, profit); err != nil {
 		return err
 	}
+	return nil
+}
+
+// AddTradeSet is a method to add trade set
+func AddTradeSet(tradeSetParam *TradeSetParam) error {
+	tradeSet, err := getTradeSetByName(tradeSetParam.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			if err := addTradeSet(tradeSetParam.Name, tradeSetParam.Type); err != nil {
+				return err
+			}
+
+			tradeSet, err = getTradeSetByName(tradeSetParam.Name)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	for _, configurationParam := range tradeSetParam.ConfigurationParams {
+		algorithmParam := configurationParam.AlgorithmParam
+		_param, err := json.Marshal(algorithmParam.Param)
+		if err != nil {
+			return err
+		}
+
+		param := string(_param)
+		tradeAlgorithm, err := getTradeAlgorithmByTypeAndParam(algorithmParam.Type, param)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				if err := addTradeAlgorithm(algorithmParam.Type, param, algorithmParam.TradeDirection); err != nil {
+					return err
+				}
+
+				tradeAlgorithm, err = getTradeAlgorithmByTypeAndParam(algorithmParam.Type, param)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+
+		tradeConfiguration, err := getTradeConfigurationByFields(configurationParam.TradePair, configurationParam.Timezone, tradeAlgorithm.TradeAlgorithmID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				if err := addTradeConfiguration(configurationParam.TradePair, configurationParam.Timezone, tradeAlgorithm.TradeAlgorithmID); err != nil {
+					return err
+				}
+
+				tradeConfiguration, err = getTradeConfigurationByFields(configurationParam.TradePair, configurationParam.Timezone, tradeAlgorithm.TradeAlgorithmID)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+
+		_, err = getTradeSetConfigurationRelByTradeSetIDAndTradeConfigurationID(tradeSet.TradeSetID, tradeConfiguration.TradeConfigurationID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				if err := addTradeSetConfigurationRel(tradeSet.TradeSetID, tradeConfiguration.TradeConfigurationID); err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

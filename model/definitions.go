@@ -50,9 +50,9 @@ type (
 
 	// TradeConfigurationParam is a param for trade configuration
 	TradeConfigurationParam struct {
-		TradePair TradePair
-		Timezone  Timezone
-		Algorithm *TradeAlgorithmParam
+		TradePair      TradePair
+		Timezone       Timezone
+		AlgorithmParam *TradeAlgorithmParam
 	}
 
 	// TradeSetParam is a param for trade set
