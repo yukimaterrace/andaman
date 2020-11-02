@@ -7,6 +7,11 @@ import (
 	"yukimaterrace/andaman/model"
 )
 
+// GetTradeSetByName is a method to get trade set by name
+func GetTradeSetByName(name string) (*model.TradeSet, error) {
+	return db.GetTradeSetByName(name)
+}
+
 // GetTradeSets is a method to get trade sets
 func GetTradeSets(_type model.TradeSetType, count int, offset int) (*model.TradeSetsResponse, error) {
 	tradeSets, err := db.GetTradeSetsByType(_type, count, offset)

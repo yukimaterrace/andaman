@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"yukimaterrace/andaman/model"
@@ -13,7 +14,17 @@ func paramError(err error) error {
 	}
 }
 
+var errParamRequired = errors.New("param required")
+
 type param string
+
+func (p param) string(required bool) (string, error) {
+	if required && p == "" {
+		return "", paramError(errParamRequired)
+	}
+
+	return string(p), nil
+}
 
 func (p param) int(required bool, _default int) (int, error) {
 	if !required && p == "" {

@@ -34,7 +34,10 @@ func getTradeSets(c echo.Context) error {
 }
 
 func addTradeSetByPreset(c echo.Context) error {
-	name := c.FormValue("name")
+	name, err := param(c.FormValue("name")).string(true)
+	if err != nil {
+		return err
+	}
 
 	switch name {
 	case factory.SimulationTradeSetName:

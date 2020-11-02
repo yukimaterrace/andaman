@@ -96,7 +96,7 @@ func (builder *Builder) Build() *Trader {
 
 // BuildTradeRun is a method to build trade run
 func (builder *Builder) BuildTradeRun() *model.TradeRun {
-	tradeSet, err := service.AddTradeRun(builder.tradeSetName)
+	tradeSet, err := service.AddTradeRun(builder.tradeSetName, builder.tradeRunType)
 	if err != nil {
 		panic(err)
 	}
