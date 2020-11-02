@@ -14,7 +14,13 @@ func GetTradeSets(_type model.TradeSetType, count int, offset int) (*model.Trade
 		return nil, model.HandleError(err)
 	}
 
-	return &model.TradeSetsResponse{TradeSets: tradeSets}, nil
+	all, err := db.CountTradeSet(_type)
+	if err != nil {
+		return nil, err
+	}
+
+	paging := model.OffsetPaging{All: all, Count: len(tradeSets), Offset: offset}
+	return &model.TradeSetsResponse{TradeSets: tradeSets, Paging: &paging}, nil
 }
 
 // GetTradeSetDetail is a method to get trade set detail

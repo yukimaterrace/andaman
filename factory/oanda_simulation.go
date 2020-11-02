@@ -27,6 +27,7 @@ func CreateSimulationFlow(tradeSetName string, writeInterval time.Duration) *flo
 
 	tradeBuilder := trader.NewBuilder().
 		TradeSet(tradeSetName).
+		TradeRunType(model.OandaSimulation).
 		Parallel(1)
 
 	start := time.Date(2020, time.July, 1, 0, 0, 0, 0, time.Local)

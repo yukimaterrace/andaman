@@ -15,10 +15,24 @@ type (
 
 	// TradeSetsResponse is a response for trade sets
 	TradeSetsResponse struct {
-		TradeSets []*TradeSet `json:"trade_sets"`
+		TradeSets []*TradeSet   `json:"trade_sets"`
+		Paging    *OffsetPaging `json:"paging"`
+	}
+
+	// TradeRunDetailsResponse is a response for trade run details
+	TradeRunDetailsResponse struct {
+		TradeRuns []*TradeRunDetail `json:"trade_runs"`
+		Paging    *OffsetPaging     `json:"paging"`
 	}
 
 	// definitions for service
+
+	// OffsetPaging is a struct for offset paging
+	OffsetPaging struct {
+		All    int `json:"all"`
+		Count  int `json:"count"`
+		Offset int `json:"offset"`
+	}
 
 	// TradeParamObjectCreator is a definition for param object creator
 	TradeParamObjectCreator func(_type TradeAlgorithmType, param string) (interface{}, error)
@@ -42,6 +56,12 @@ type (
 	TradeSetDetail struct {
 		*TradeSet
 		Configurations []*TradeConfigurationDetail
+	}
+
+	// TradeRunDetail is a struct for trade run detail
+	TradeRunDetail struct {
+		TradeRun
+		TradeSet TradeSet `json:"trade_set"`
 	}
 
 	// definitions for parameters in service

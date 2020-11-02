@@ -51,7 +51,9 @@ type Order struct {
 type TradeRun struct {
 	TradeRunID int           `json:"-"`
 	TradeSetID int           `json:"-"`
+	Type       TradeRunType  `json:"type"`
 	State      TradeRunState `json:"state"`
 	CreatedAt  int           `json:"created_at"`
-	UpdatedAt  int           `json:"updated_at"`
+	StartAt    int           `json:"start_at"`
+	FinishAt   int           `json:"finish_at"`
 }

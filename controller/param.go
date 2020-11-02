@@ -40,3 +40,17 @@ func (p param) tradeSetType() (model.TradeSetType, error) {
 
 	return _type, nil
 }
+
+func (p param) tradeRunType() (model.TradeRunType, error) {
+	i, err := strconv.ParseInt(string(p), 10, 64)
+	if err != nil {
+		return 0, paramError(err)
+	}
+
+	_type := model.TradeRunType(i)
+	if err := _type.IsValid(); err != nil {
+		return 0, paramError(err)
+	}
+
+	return _type, nil
+}

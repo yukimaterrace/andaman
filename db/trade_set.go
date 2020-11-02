@@ -55,6 +55,18 @@ func GetTradeSetByName(name string) (*model.TradeSet, error) {
 	return &ts, nil
 }
 
+// CountTradeSet is a method to get trade count
+func CountTradeSet(_type model.TradeSetType) (int, error) {
+	q := "select count(1) from trade_set where type = ?"
+	row := db.QueryRow(q, _type)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, nil
+	}
+	return count, nil
+}
+
 // AddTradeSet is a method to add trade set
 func AddTradeSet(name string, _type model.TradeSetType) error {
 	q := "insert into trade_set (name, type, created_at) values (?, ?, ?)"

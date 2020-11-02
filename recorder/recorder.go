@@ -39,6 +39,14 @@ func (recorder *Recorder) Record(material flow.RecordMaterial) {
 		panic(util.ErrWrongType)
 	}
 
+	if recorder.tradeRun.State == model.Pending {
+		tradeRun, err := service.UpdateTradeRunForStart(recorder.tradeRun)
+		if err != nil {
+			panic(err)
+		}
+		recorder.tradeRun = tradeRun
+	}
+
 	recorder.openOrders = recordMaterial.OpenOrders
 
 	for _, partitionCombinedOrder := range recordMaterial.PartitionCombinedOrders {
@@ -74,6 +82,10 @@ func (recorder *Recorder) Write() {
 // Close is a method to close
 func (recorder *Recorder) Close() {
 	recorder.Write()
+
+	if err := service.UpdateTradeRunForFinish(recorder.tradeRun); err != nil {
+		log.Println(err)
+	}
 }
 
 func (recorder *Recorder) flatOrders() []*completableOrder {

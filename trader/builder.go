@@ -11,6 +11,7 @@ import (
 // Builder is a builder for trader
 type Builder struct {
 	tradeSetName   string
+	tradeRunType   model.TradeRunType
 	broker         broker.Broker
 	ordererFactory broker.OrdererFactory
 	parallel       int
@@ -24,6 +25,12 @@ func NewBuilder() *Builder {
 // TradeSet sets trade set in builder
 func (builder *Builder) TradeSet(name string) *Builder {
 	builder.tradeSetName = name
+	return builder
+}
+
+// TradeRunType sets trade run type in builder
+func (builder *Builder) TradeRunType(_type model.TradeRunType) *Builder {
+	builder.tradeRunType = _type
 	return builder
 }
 

@@ -31,14 +31,36 @@ func (_type TradeSetType) IsValid() error {
 	}
 }
 
+// TradeRunType is trade run type enums
+type TradeRunType int
+
+const (
+	// OandaSimulation is oanda simulation type
+	OandaSimulation TradeRunType = iota
+	// OandaTrade is oanda trade type
+	OandaTrade
+)
+
+// IsValid is a method to validate
+func (_type TradeRunType) IsValid() error {
+	switch _type {
+	case OandaSimulation, OandaTrade:
+		return nil
+	default:
+		return ErrNumber
+	}
+}
+
 // TradeRunState is trade set state enums
 type TradeRunState int
 
 const (
+	// Pending is a pending state
+	Pending TradeRunState = iota
 	// Running is a running state
-	Running TradeRunState = iota
-	// Stopped is a stopped state
-	Stopped
+	Running
+	// Finished is a finished state
+	Finished
 )
 
 // TradePair is trade pair enums
