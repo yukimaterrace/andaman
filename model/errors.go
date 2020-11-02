@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 )
 
@@ -26,3 +27,6 @@ func HandleError(err error) *Error {
 		Message: err.Error(),
 	}
 }
+
+// ErrNotFound is an error for not founc
+var ErrNotFound = errors.New("not found")

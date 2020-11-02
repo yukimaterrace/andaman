@@ -9,10 +9,10 @@ import (
 
 const (
 	// SimulationTradeSetName is a name for simulation trade set
-	SimulationTradeSetName = "Frame Simulation"
+	SimulationTradeSetName = "frame_simulation"
 
 	// GridSearchTradeSetName is a name for grid search trade set
-	GridSearchTradeSetName = "Grid Search"
+	GridSearchTradeSetName = "grid_search"
 )
 
 // AddSimulationTradeSet is a method to add simulation trade set

@@ -8,6 +8,11 @@ import (
 type (
 	// definitions for API
 
+	// SuccessResponse is a response for success
+	SuccessResponse struct {
+		Message string `json:"message"`
+	}
+
 	// TradeSetsResponse is a response for trade sets
 	TradeSetsResponse struct {
 		TradeSets []*TradeSet `json:"trade_sets"`
@@ -43,23 +48,23 @@ type (
 
 	// TradeAlgorithmParam is a param for trade algorithm
 	TradeAlgorithmParam struct {
-		Type           TradeAlgorithmType
-		Param          interface{}
-		TradeDirection TradeDirection
+		Type           TradeAlgorithmType `json:"type"`
+		Param          interface{}        `json:"param"`
+		TradeDirection TradeDirection     `json:"trade_direction"`
 	}
 
 	// TradeConfigurationParam is a param for trade configuration
 	TradeConfigurationParam struct {
-		TradePair      TradePair
-		Timezone       Timezone
-		AlgorithmParam *TradeAlgorithmParam
+		TradePair      TradePair            `json:"trade_pair"`
+		Timezone       Timezone             `json:"timezone"`
+		AlgorithmParam *TradeAlgorithmParam `json:"algorithm_param"`
 	}
 
 	// TradeSetParam is a param for trade set
 	TradeSetParam struct {
-		Name                string
-		Type                TradeSetType
-		ConfigurationParams []*TradeConfigurationParam
+		Name                string                     `json:"name"`
+		Type                TradeSetType               `json:"type"`
+		ConfigurationParams []*TradeConfigurationParam `json:"configuration_params"`
 	}
 )
 

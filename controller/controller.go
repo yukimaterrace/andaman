@@ -23,6 +23,8 @@ func CreateController() *echo.Echo {
 	e.Use(middleware.Logger())
 
 	e.GET("/api/trade_sets", getTradeSets)
+	e.POST("/api/add_trade_set_by_preset", addTradeSetByPreset)
+	e.POST("/api/add_trade_set_by_param", addTradeSetByParam)
 
 	return e
 }
@@ -72,3 +74,5 @@ func httpErrorHandler(err error, c echo.Context) {
 
 	c.JSON(apiErr.Code, apiErr)
 }
+
+var success = &model.SuccessResponse{Message: "success"}
