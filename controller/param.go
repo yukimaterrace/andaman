@@ -41,7 +41,7 @@ func (p param) int(required bool, _default int) (int, error) {
 
 func (p param) tradeSetType(required bool) (model.TradeSetType, error) {
 	if required && p == "" {
-		return 0, errParamRequired
+		return 0, paramError(errParamRequired)
 	}
 
 	i, err := strconv.ParseInt(string(p), 10, 64)
@@ -59,7 +59,7 @@ func (p param) tradeSetType(required bool) (model.TradeSetType, error) {
 
 func (p param) tradeRunType(required bool) (model.TradeRunType, error) {
 	if required && p == "" {
-		return 0, errParamRequired
+		return 0, paramError(errParamRequired)
 	}
 
 	i, err := strconv.ParseInt(string(p), 10, 64)
@@ -77,7 +77,7 @@ func (p param) tradeRunType(required bool) (model.TradeRunType, error) {
 
 func (p param) tradeMode(required bool) (flow.TradeMode, error) {
 	if required && p == "" {
-		return 0, errParamRequired
+		return 0, paramError(errParamRequired)
 	}
 
 	i, err := strconv.ParseInt(string(p), 10, 64)
