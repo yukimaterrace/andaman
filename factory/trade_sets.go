@@ -3,6 +3,7 @@ package factory
 import (
 	"yukimaterrace/andaman/gridsearch"
 	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/service"
 	"yukimaterrace/andaman/trader"
 )
 
@@ -106,7 +107,7 @@ func AddSimulationTradeSet() {
 		ConfigurationParams: configurationParams,
 	}
 
-	if err := model.AddTradeSet(&tradeSetParam); err != nil {
+	if err := service.AddTradeSet(&tradeSetParam); err != nil {
 		panic(err)
 	}
 }
@@ -160,7 +161,7 @@ func AddGridSearchTradeSet() {
 		ConfigurationParams: configurationParams,
 	}
 
-	if err := model.AddTradeSet(&tradeSetParam); err != nil {
+	if err := service.AddTradeSet(&tradeSetParam); err != nil {
 		panic(err)
 	}
 }

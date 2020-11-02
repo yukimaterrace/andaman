@@ -15,7 +15,8 @@ func (err Error) Error() string {
 	return err.Message
 }
 
-func handleError(err error) *Error {
+// HandleError is a method to handle error
+func HandleError(err error) *Error {
 	code := http.StatusInternalServerError
 	if err == sql.ErrNoRows {
 		code = http.StatusNotFound

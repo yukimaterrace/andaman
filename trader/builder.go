@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/service"
 	"yukimaterrace/andaman/util"
 )
 
@@ -46,7 +47,7 @@ func (builder *Builder) Parallel(paralle int) *Builder {
 
 // Build builds simple trader
 func (builder *Builder) Build() *Trader {
-	tradeSet, err := model.GetTradeSetDetail(builder.tradeSetName, tradeParamObjectCreator)
+	tradeSet, err := service.GetTradeSetDetail(builder.tradeSetName, tradeParamObjectCreator)
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +89,7 @@ func (builder *Builder) Build() *Trader {
 
 // BuildTradeRun is a method to build trade run
 func (builder *Builder) BuildTradeRun() *model.TradeRun {
-	tradeSet, err := model.AddTradeRun(builder.tradeSetName)
+	tradeSet, err := service.AddTradeRun(builder.tradeSetName)
 	if err != nil {
 		panic(err)
 	}

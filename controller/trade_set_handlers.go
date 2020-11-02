@@ -2,7 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/service"
 
 	"github.com/labstack/echo/v4"
 )
@@ -23,7 +23,7 @@ func getTradeSets(c echo.Context) error {
 		return err
 	}
 
-	resp, err := model.GetTradeSets(_type, count, offset)
+	resp, err := service.GetTradeSets(_type, count, offset)
 	if err != nil {
 		return err
 	}

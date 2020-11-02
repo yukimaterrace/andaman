@@ -5,6 +5,7 @@ import (
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/service"
 	"yukimaterrace/andaman/trader"
 	"yukimaterrace/andaman/util"
 )
@@ -104,7 +105,7 @@ func (recorder *Recorder) flush(completableOrders []*completableOrder) {
 				tradeDirection = model.Short
 			}
 
-			err := model.AddCreatedOrder(
+			err := service.AddCreatedOrder(
 				recorder.tradeRun.TradeRunID,
 				int(order.createdOrder.OrderID()),
 				order.tradeConfiguration.TradeConfigurationID,
@@ -118,7 +119,7 @@ func (recorder *Recorder) flush(completableOrders []*completableOrder) {
 				log.Println(err)
 			}
 		} else {
-			err := model.UpdateOrderForClose(
+			err := service.UpdateOrderForClose(
 				recorder.tradeRun.TradeRunID,
 				int(order.closedOrder.OrderID()),
 				order.closedOrder.RealizedProfit(),
@@ -133,7 +134,7 @@ func (recorder *Recorder) flush(completableOrders []*completableOrder) {
 	}
 
 	for _, openOrder := range recorder.openOrders {
-		err := model.UpdateOrderForProfit(
+		err := service.UpdateOrderForProfit(
 			recorder.tradeRun.TradeRunID,
 			int(openOrder.OrderID()),
 			openOrder.UnrealizedProfit(),
