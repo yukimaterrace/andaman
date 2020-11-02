@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"errors"
 	"yukimaterrace/andaman/broker"
 )
 
@@ -80,3 +81,13 @@ const (
 	// Terminate is terminate mode
 	Terminate
 )
+
+// IsValid is a method to validate trade mode
+func (mode TradeMode) IsValid() error {
+	switch mode {
+	case Watch, Trade, Terminate:
+		return nil
+	default:
+		return errors.New("invalid trade mode")
+	}
+}

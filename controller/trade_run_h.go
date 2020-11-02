@@ -15,7 +15,7 @@ import (
 )
 
 func getTradeRuns(c echo.Context) error {
-	_type, err := param(c.QueryParam("type")).tradeRunType()
+	_type, err := param(c.QueryParam("type")).tradeRunType(true)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func createTrade(c echo.Context) error {
 		return err
 	}
 
-	_type, err := param(c.QueryParam("type")).tradeRunType()
+	_type, err := param(c.QueryParam("type")).tradeRunType(true)
 	if err != nil {
 		return err
 	}
@@ -66,28 +66,38 @@ func createTrade(c echo.Context) error {
 	return c.JSON(http.StatusOK, success)
 }
 
-var _tradeStatus = struct {
+func changeTradeMode(c echo.Context) error {
+	tradeMode, err := param(c.FormValue("trade_mode")).tradeMode(true)
+	if err != nil {
+		return err
+	}
+
+	_changeTradeMode(tradeMode)
+	return c.JSON(http.StatusOK, success)
+}
+
+var currentFlow = struct {
 	sync.Mutex
-	isRunning bool
+	flow *flow.Flow
 }{}
 
-func _checkAndMarkTradeRunning() error {
-	_tradeStatus.Lock()
-	defer _tradeStatus.Unlock()
+func _checkAndSetFlow(flow *flow.Flow) error {
+	currentFlow.Lock()
+	defer currentFlow.Unlock()
 
-	if _tradeStatus.isRunning {
+	if currentFlow.flow != nil {
 		return errors.New("another trade is runnning")
 	}
 
-	_tradeStatus.isRunning = true
+	currentFlow.flow = flow
 	return nil
 }
 
-func _markTradeNotRunning() {
-	_tradeStatus.Lock()
-	defer _tradeStatus.Unlock()
+func _unsetFlow() {
+	currentFlow.Lock()
+	defer currentFlow.Unlock()
 
-	_tradeStatus.isRunning = false
+	currentFlow.flow = nil
 }
 
 func _createTrade(tradeSetName string, tradeRunType model.TradeRunType, start int, end int) error {
@@ -103,7 +113,7 @@ func _createTrade(tradeSetName string, tradeRunType model.TradeRunType, start in
 		panic("unknown type")
 	}
 
-	if err := _checkAndMarkTradeRunning(); err != nil {
+	if err := _checkAndSetFlow(_flow); err != nil {
 		return err
 	}
 
@@ -113,8 +123,15 @@ func _createTrade(tradeSetName string, tradeRunType model.TradeRunType, start in
 		_flow.Start()
 		_flow.WaitForCompletion()
 
-		_markTradeNotRunning()
+		_unsetFlow()
 	}(_flow)
 
 	return nil
+}
+
+func _changeTradeMode(mode flow.TradeMode) {
+	currentFlow.Lock()
+	defer currentFlow.Unlock()
+
+	currentFlow.flow.ChangeTradeMode(mode)
 }

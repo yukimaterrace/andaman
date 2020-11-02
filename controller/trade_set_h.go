@@ -10,7 +10,7 @@ import (
 )
 
 func getTradeSets(c echo.Context) error {
-	_type, err := param(c.QueryParam("type")).tradeSetType()
+	_type, err := param(c.QueryParam("type")).tradeSetType(true)
 	if err != nil {
 		return err
 	}

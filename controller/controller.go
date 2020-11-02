@@ -28,6 +28,7 @@ func CreateController() *echo.Echo {
 
 	e.GET("/api/trade_runs", getTradeRuns)
 	e.POST("/api/create_trade", createTrade)
+	e.POST("/api/change_trade_mode", changeTradeMode)
 
 	return e
 }
