@@ -129,6 +129,16 @@ func (tradePair TradePair) PricePerPip() float64 {
 	}
 }
 
+// IsValid is a method to validate trade pair
+func (tradePair TradePair) IsValid() error {
+	switch tradePair {
+	case GbpUsd, EurUsd, AudUsd, GbpAud, EurAud, EurGbp, AudJpy, UsdJpy, GbpJpy, EurJpy:
+		return nil
+	default:
+		return ErrNumber
+	}
+}
+
 // TradePairIterator is a struct for trade pair iterator
 type TradePairIterator struct {
 	current TradePair
@@ -261,6 +271,16 @@ func (timezone Timezone) OK(unix int64) bool {
 	}
 }
 
+// IsValid is a method to validate timezone
+func (timezone Timezone) IsValid() error {
+	switch timezone {
+	case TokyoAM, TokyoPM, LondonAM, LondonPM, NewYorkAM, NewYorkPM:
+		return nil
+	default:
+		return ErrNumber
+	}
+}
+
 // TimezoneIterator is a struct for timezone iterator
 type TimezoneIterator struct {
 	current Timezone
@@ -289,6 +309,16 @@ const (
 	Frame TradeAlgorithmType = iota
 )
 
+// IsValid is a method to validate trade algorithm type
+func (_type TradeAlgorithmType) IsValid() error {
+	switch _type {
+	case Frame:
+		return nil
+	default:
+		return ErrNumber
+	}
+}
+
 // TradeDirection is trade direction enums
 type TradeDirection int
 
@@ -298,6 +328,16 @@ const (
 	// Short is short trade direction
 	Short
 )
+
+// IsValid is a method to validate trade direction
+func (direction TradeDirection) IsValid() error {
+	switch direction {
+	case Long, Short:
+		return nil
+	default:
+		return ErrNumber
+	}
+}
 
 // OrderState is order state enums
 type OrderState int
