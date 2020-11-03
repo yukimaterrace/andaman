@@ -30,6 +30,9 @@ func CreateController() *echo.Echo {
 	e.POST("/api/create_trade", createTrade)
 	e.POST("/api/change_trade_mode", changeTradeMode)
 
+	e.GET("/api/open_orders", getOpenOrders)
+	e.GET("/api/closed_orders", getClosedOrders)
+
 	return e
 }
 

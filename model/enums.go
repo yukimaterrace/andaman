@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+// IotaValidator is an interface for iota validator
+type IotaValidator interface {
+	IsValid() error
+}
+
 // ErrNumber is an error for number
 var ErrNumber = errors.New("invalid number")
 

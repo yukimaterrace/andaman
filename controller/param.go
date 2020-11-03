@@ -39,7 +39,7 @@ func (p param) int(required bool, _default int) (int, error) {
 	return int(i), nil
 }
 
-func (p param) tradeSetType(required bool) (model.TradeSetType, error) {
+func (p param) validateIota(required bool, converter func(int64) model.IotaValidator) (int, error) {
 	if required && p == "" {
 		return 0, paramError(errParamRequired)
 	}
@@ -49,46 +49,100 @@ func (p param) tradeSetType(required bool) (model.TradeSetType, error) {
 		return 0, paramError(err)
 	}
 
-	_type := model.TradeSetType(i)
-	if err := _type.IsValid(); err != nil {
+	if err := converter(i).IsValid(); err != nil {
 		return 0, paramError(err)
 	}
 
-	return _type, nil
+	return int(i), nil
+}
+
+func (p param) tradeSetType(required bool) (model.TradeSetType, error) {
+	converter := func(i int64) model.IotaValidator {
+		return model.TradeSetType(i)
+	}
+
+	i, err := p.validateIota(required, converter)
+	if err != nil {
+		return 0, err
+	}
+
+	return model.TradeSetType(i), nil
 }
 
 func (p param) tradeRunType(required bool) (model.TradeRunType, error) {
-	if required && p == "" {
-		return 0, paramError(errParamRequired)
+	converter := func(i int64) model.IotaValidator {
+		return model.TradeRunType(i)
 	}
 
-	i, err := strconv.ParseInt(string(p), 10, 64)
+	i, err := p.validateIota(required, converter)
 	if err != nil {
-		return 0, paramError(err)
+		return 0, err
 	}
 
-	_type := model.TradeRunType(i)
-	if err := _type.IsValid(); err != nil {
-		return 0, paramError(err)
-	}
-
-	return _type, nil
+	return model.TradeRunType(i), nil
 }
 
 func (p param) tradeMode(required bool) (flow.TradeMode, error) {
-	if required && p == "" {
-		return 0, paramError(errParamRequired)
+	converter := func(i int64) model.IotaValidator {
+		return flow.TradeMode(i)
 	}
 
-	i, err := strconv.ParseInt(string(p), 10, 64)
+	i, err := p.validateIota(required, converter)
 	if err != nil {
-		return 0, paramError(err)
+		return 0, err
 	}
 
-	_type := flow.TradeMode(i)
-	if err := _type.IsValid(); err != nil {
-		return 0, paramError(err)
+	return flow.TradeMode(i), nil
+}
+
+func (p param) tradePair(required bool) (model.TradePair, error) {
+	converter := func(i int64) model.IotaValidator {
+		return model.TradePair(i)
 	}
 
-	return _type, nil
+	i, err := p.validateIota(required, converter)
+	if err != nil {
+		return 0, err
+	}
+
+	return model.TradePair(i), nil
+}
+
+func (p param) timezone(required bool) (model.Timezone, error) {
+	converter := func(i int64) model.IotaValidator {
+		return model.Timezone(i)
+	}
+
+	i, err := p.validateIota(required, converter)
+	if err != nil {
+		return 0, err
+	}
+
+	return model.Timezone(i), nil
+}
+
+func (p param) tradeDirection(required bool) (model.TradeDirection, error) {
+	converter := func(i int64) model.IotaValidator {
+		return model.TradeDirection(i)
+	}
+
+	i, err := p.validateIota(required, converter)
+	if err != nil {
+		return 0, err
+	}
+
+	return model.TradeDirection(i), nil
+}
+
+func (p param) tradeAlgorithmType(required bool) (model.TradeAlgorithmType, error) {
+	converter := func(i int64) model.IotaValidator {
+		return model.TradeAlgorithmType(i)
+	}
+
+	i, err := p.validateIota(required, converter)
+	if err != nil {
+		return 0, err
+	}
+
+	return model.TradeAlgorithmType(i), nil
 }
