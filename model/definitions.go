@@ -25,6 +25,13 @@ type (
 		Paging    *OffsetPaging     `json:"paging"`
 	}
 
+	// OrdersResponse is a response for orders
+	OrdersResponse struct {
+		Orders      []*Order
+		TotalProfit float64
+		Paging      OffsetPaging
+	}
+
 	// definitions for service
 
 	// OffsetPaging is a struct for offset paging
