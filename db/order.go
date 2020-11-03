@@ -68,7 +68,8 @@ func GetOrdersByTradeRunAndState(tradeRunID int, state model.OrderState) ([]*mod
 	return orders, nil
 }
 
-func getOrders(
+// GetOrders is a method to get orders
+func GetOrders(
 	tradeRunID int, state model.OrderState,
 	tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
 	count int, offset int) ([]*model.Order, error) {
@@ -131,7 +132,8 @@ func getOrders(
 	return orders, nil
 }
 
-func getTotalProfitForOrders(
+// GetTotalProfitForOrders is a method to get total progit for orders
+func GetTotalProfitForOrders(
 	tradeRunID int, state model.OrderState,
 	tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (float64, error) {
 	q := `
@@ -165,7 +167,8 @@ func getTotalProfitForOrders(
 	return totalProfit, nil
 }
 
-func getCountForOrders(
+// GetCountForOrders is a method to get count for orders
+func GetCountForOrders(
 	tradeRunID int, state model.OrderState,
 	tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
 	q := `
@@ -194,50 +197,6 @@ func getCountForOrders(
 	}
 
 	return count, nil
-}
-
-// GetOpenOrders is a method to get open orders
-func GetOpenOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
-	count int, offset int) ([]*model.Order, error) {
-
-	return getOrders(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType, count, offset)
-}
-
-// GetTotalProfitForOpenOrders is a method to get total profit for open orders
-func GetTotalProfitForOpenOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (float64, error) {
-
-	return getTotalProfitForOrders(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType)
-}
-
-// GetCountForOpenOrders is a method to get count for open orders
-func GetCountForOpenOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
-
-	return getCountForOrders(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType)
-}
-
-// GetClosedOrders is a method to get closed orders
-func GetClosedOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
-	count int, offset int) ([]*model.Order, error) {
-
-	return getOrders(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType, count, offset)
-}
-
-// GetTotalProfitForClosedOrders is a method to get total profit for closed orders
-func GetTotalProfitForClosedOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (float64, error) {
-
-	return getTotalProfitForOrders(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType)
-}
-
-// GetCountForClosedOrders is a method to get count for closed orders
-func GetCountForClosedOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
-
-	return getCountForOrders(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType)
 }
 
 // AddOrder is a method to add order

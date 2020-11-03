@@ -5,46 +5,22 @@ import (
 	"yukimaterrace/andaman/model"
 )
 
-// GetOpenOrders is a method to get open orders
-func GetOpenOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone,
+// GetOrders is a method to get orders
+func GetOrders(
+	tradeRunID int, state model.OrderState, tradePair model.TradePair, timezone model.Timezone,
 	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, count int, offset int) (*model.OrdersResponse, error) {
 
-	orders, err := db.GetOpenOrders(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, count, offset)
+	orders, err := db.GetOrders(tradeRunID, state, tradePair, timezone, tradeDirection, algorithmType, count, offset)
 	if err != nil {
 		return nil, err
 	}
 
-	totalProfit, err := db.GetTotalProfitForOpenOrders(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
+	totalProfit, err := db.GetTotalProfitForOrders(tradeRunID, state, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
 
-	all, err := db.GetCountForOpenOrders(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
-	if err != nil {
-		return nil, err
-	}
-
-	paging := &model.OffsetPaging{All: all, Count: len(orders), Offset: offset}
-	return &model.OrdersResponse{Orders: orders, TotalProfit: totalProfit, Paging: paging}, nil
-}
-
-// GetClosedOrders is a method to get closed orders
-func GetClosedOrders(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone,
-	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, count int, offset int) (*model.OrdersResponse, error) {
-
-	orders, err := db.GetClosedOrders(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, count, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	totalProfit, err := db.GetTotalProfitForClosedOrders(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
-	if err != nil {
-		return nil, err
-	}
-
-	all, err := db.GetCountForClosedOrders(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
+	all, err := db.GetCountForOrders(tradeRunID, state, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
