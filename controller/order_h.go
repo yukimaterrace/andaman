@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type ordersParam struct {
+type ordersQueryParam struct {
 	tradeRunID     int
 	tradePair      model.TradePair
 	timezone       model.Timezone
@@ -18,7 +18,7 @@ type ordersParam struct {
 	offset         int
 }
 
-func _getOrdersParam(c echo.Context) (*ordersParam, error) {
+func _getOrdersQueryParam(c echo.Context) (*ordersQueryParam, error) {
 	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func _getOrdersParam(c echo.Context) (*ordersParam, error) {
 		return nil, err
 	}
 
-	return &ordersParam{
+	return &ordersQueryParam{
 		tradeRunID:     tradeRunID,
 		tradePair:      tradePair,
 		timezone:       timezone,
@@ -66,7 +66,7 @@ func _getOrdersParam(c echo.Context) (*ordersParam, error) {
 }
 
 func _getOrders(c echo.Context, orderState model.OrderState) error {
-	p, err := _getOrdersParam(c)
+	p, err := _getOrdersQueryParam(c)
 	if err != nil {
 		return err
 	}
