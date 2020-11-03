@@ -29,7 +29,7 @@ type (
 	OrdersResponse struct {
 		Orders      []*Order
 		TotalProfit float64
-		Paging      OffsetPaging
+		Paging      *OffsetPaging
 	}
 
 	// definitions for service
