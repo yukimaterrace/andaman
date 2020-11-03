@@ -326,7 +326,7 @@ func GetTotalProfitByFilter1(tradeRunID int, state model.OrderState, start int, 
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
-			order_.time_at_close < ?
+			order_.time_at_open < ?
 	`
 
 	row := db.QueryRow(q, tradeRunID, state, start, end)
