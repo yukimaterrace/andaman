@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"time"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
 
@@ -24,11 +25,6 @@ type tradeGrainQueryParam struct {
 type countOffsetQueryParam struct {
 	count  int
 	offset int
-}
-
-type periodQueryParam struct {
-	start int
-	end   int
 }
 
 func _getTradeGrainQueryParam(c echo.Context) (*tradeGrainQueryParam, error) {
@@ -97,20 +93,6 @@ func _getOrdersQueryParam(c echo.Context) (*ordersQueryParam, error) {
 	return &ordersQueryParam{tradeGrainQueryParam, countOffsetQueryParam}, nil
 }
 
-func _getPeriodQueryParam(c echo.Context) (*periodQueryParam, error) {
-	start, err := param(c.QueryParam("start")).int(true, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	end, err := param(c.QueryParam("end")).int(true, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	return &periodQueryParam{start, end}, nil
-}
-
 func _getOrders(c echo.Context, orderState model.OrderState) error {
 	p, err := _getOrdersQueryParam(c)
 	if err != nil {
@@ -139,12 +121,12 @@ func getTradeSummariesA(c echo.Context) error {
 		return err
 	}
 
-	period, err := _getPeriodQueryParam(c)
+	start, err := param(c.QueryParam("start")).int(true, 0)
 	if err != nil {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesA(tradeRunID, period.start, period.end)
+	resp, err := service.GetTradeSummariesA(tradeRunID, start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
@@ -168,12 +150,12 @@ func getFilteredTradeSummariesA(c echo.Context) error {
 		return err
 	}
 
-	period, err := _getPeriodQueryParam(c)
+	start, err := param(c.QueryParam("start")).int(true, 0)
 	if err != nil {
 		return err
 	}
 
-	resp, err := service.GetFilteredTradeSummariesA(tradeRunID, tradePair, timezone, period.start, period.end)
+	resp, err := service.GetFilteredTradeSummariesA(tradeRunID, tradePair, timezone, start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
