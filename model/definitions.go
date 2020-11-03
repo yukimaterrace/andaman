@@ -32,6 +32,19 @@ type (
 		Paging      *OffsetPaging
 	}
 
+	// TradeSummariesResponseA is a A response for trade summaries
+	TradeSummariesResponseA struct {
+		UnrealizedProfit float64                  `json:"unrealized_profit"`
+		RealizedProfit   float64                  `json:"realized_profit"`
+		TradeSummaries   []*TradePairTradeSummary `json:"trade_summaries"`
+	}
+
+	// TradeSummariesResponseB is a B response for trade summaries
+	TradeSummariesResponseB struct {
+		PositiveProfitProportion float64                           `json:"positive_profit_proportion"`
+		TradeSummaries           []*TradeConfigurationTradeSummary `json:"trade_summaries"`
+	}
+
 	// definitions for service
 
 	// OffsetPaging is a struct for offset paging
@@ -47,7 +60,7 @@ type (
 	// TradeAlgorithmDetail is a struct for trade algorithm detail
 	TradeAlgorithmDetail struct {
 		TradeAlgorithm
-		ParamObject interface{}
+		ParamObject interface{} `json:"param"`
 	}
 
 	// TradeConfigurationDetail is a struct for trade configurtation detail
@@ -69,6 +82,30 @@ type (
 	TradeRunDetail struct {
 		TradeRun
 		TradeSet TradeSet `json:"trade_set"`
+	}
+
+	// TradeCountProfit is a struct for trade count profit
+	TradeCountProfit struct {
+		Count  int     `json:"count"`
+		Profit float64 `json:"profit"`
+	}
+
+	// TradeSummary is a struct for trade summary
+	TradeSummary struct {
+		Open   TradeCountProfit `json:"open"`
+		Closed TradeCountProfit `json:"closed"`
+	}
+
+	// TradePairTradeSummary is a struct for trade pair trade summary
+	TradePairTradeSummary struct {
+		TradePair TradePair
+		TradeSummary
+	}
+
+	// TradeConfigurationTradeSummary is a struct for trade algorithm trade summary
+	TradeConfigurationTradeSummary struct {
+		TradeConfiguration TradeConfigurationDetail `json:"trade_configuration"`
+		TradeSummary
 	}
 
 	// definitions for parameters in service

@@ -40,8 +40,11 @@ func (p param) int(required bool, _default int) (int, error) {
 }
 
 func (p param) validateIota(required bool, converter func(int64) model.IotaValidator) (int, error) {
-	if required && p == "" {
-		return 0, paramError(errParamRequired)
+	if p == "" {
+		if required {
+			return 0, paramError(errParamRequired)
+		}
+		return -1, nil
 	}
 
 	i, err := strconv.ParseInt(string(p), 10, 64)

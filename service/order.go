@@ -68,3 +68,59 @@ func UpdateOrderForProfit(tradeRunID int, brokerOrderID int, profit float64) err
 	}
 	return nil
 }
+
+// GetTradeSummariesA is a method to get trade summaries A
+func GetTradeSummariesA(tradeRunID int, start int, end int) (*model.TradeSummariesResponseA, error) {
+	unrealizedProfit, err := db.GetTotalProfitByFilter1(tradeRunID, model.Open, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	realizedProfit, err := db.GetTotalProfitByFilter1(tradeRunID, model.Closed, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	open, err := db.GetTradeCountProfitByFilter1(tradeRunID, model.Open, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	closed, err := db.GetTradeCountProfitByFilter1(tradeRunID, model.Closed, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	tradeSummaries := []*model.TradePairTradeSummary{}
+	iterator := model.TradePairIterator{}
+	for iterator.Next() {
+		tradePair := iterator.Value()
+
+		openCountProfit, ok1 := open[tradePair]
+		closedCountProfit, ok2 := closed[tradePair]
+
+		if ok1 || ok2 {
+			ts := model.TradePairTradeSummary{
+				TradePair: tradePair,
+			}
+
+			if ok1 {
+				ts.TradeSummary.Open = *openCountProfit
+			}
+
+			if ok2 {
+				ts.TradeSummary.Closed = *closedCountProfit
+			}
+
+			tradeSummaries = append(tradeSummaries, &ts)
+		}
+	}
+
+	resp := &model.TradeSummariesResponseA{
+		UnrealizedProfit: unrealizedProfit,
+		RealizedProfit:   realizedProfit,
+		TradeSummaries:   tradeSummaries,
+	}
+
+	return resp, nil
+}

@@ -13,7 +13,7 @@ type TradeAlgorithm struct {
 	TradeAlgorithmID int                `json:"-"`
 	Type             TradeAlgorithmType `json:"type"`
 	ParamHash        string             `json:"-"`
-	Param            string             `json:"param"`
+	Param            string             `json:"-"`
 	TradeDirection   TradeDirection     `json:"trade_direction"`
 }
 

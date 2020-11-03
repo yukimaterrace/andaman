@@ -271,3 +271,72 @@ func UpdateOrderForClose(tradeRunID int, brokerOrderID int, state model.OrderSta
 	}
 	return nil
 }
+
+// GetTradeCountProfitByFilter1 is a method to get trade count profit A
+func GetTradeCountProfitByFilter1(tradeRunID int, state model.OrderState, start int, end int) (map[model.TradePair]*model.TradeCountProfit, error) {
+	q := `
+		select
+			trade_configuration.trade_pair,
+			count(order_.order_id),
+			sum(order_.profit)
+		from
+			order_,
+			trade_configuration
+		where
+			order_.trade_run_id = ? and
+			order_.state = ? and
+			order_.time_at_open > ? and
+			order_.time_at_open < ? and
+			order_.trade_configuration_id = trade_configuration.trade_configuration_id
+		group by
+			trade_configuration.trade_pair
+	`
+
+	rows, err := db.Query(q, tradeRunID, state, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[model.TradePair]*model.TradeCountProfit
+	for rows.Next() {
+		var tradePair model.TradePair
+		cp := model.TradeCountProfit{}
+		err := rows.Scan(
+			&tradePair,
+			&cp.Count,
+			&cp.Profit,
+		)
+		if err != nil {
+			return nil, err
+		}
+		m[tradePair] = &cp
+	}
+
+	return m, nil
+}
+
+// GetTotalProfitByFilter1 is a method to get total profit 1
+func GetTotalProfitByFilter1(tradeRunID int, state model.OrderState, start int, end int) (float64, error) {
+	q := `
+		select
+			sum(order_.profit)
+		from
+			order_
+		where
+			order_.trade_run_id = ? and
+			order_.state = ? and
+			order_.time_at_open > ? and
+			order_.time_at_close < ?
+	`
+
+	row := db.QueryRow(q, tradeRunID, state, start, end)
+
+	var profit float64
+	if err := row.Scan(&profit); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return profit, nil
+}
