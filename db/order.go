@@ -394,6 +394,8 @@ func GetTradeCountProfitByFilter2(
 		select
 			trade_algorithm.type,
 			trade_algorithm.trade_direction,
+			trade_algorithm.param_hash,
+			trade_algorithm.param,
 			count(order_.order_id),
 			sum(order_.profit)
 		from
@@ -411,7 +413,8 @@ func GetTradeCountProfitByFilter2(
 			trade_configuration.timezone = ?
 		group by
 			trade_algorithm.type,
-			trade_algorithm.trade_direction
+			trade_algorithm.trade_direction,
+			trade_algorithm.param_hash
 	`
 
 	rows, err := db.Query(q, tradeRunID, state, start, end, tradePair, timezone)
@@ -427,6 +430,8 @@ func GetTradeCountProfitByFilter2(
 		err := rows.Scan(
 			&key.Algorithm.Type,
 			&key.Algorithm.TradeDirection,
+			&key.Algorithm.ParamHash,
+			&key.Algorithm.Param,
 			&cp.Count,
 			&cp.Profit,
 		)
@@ -453,6 +458,8 @@ func GetTradeCountProfitByFilter3(
 			trade_configuration.timezone,
 			trade_algorithm.type,
 			trade_algorithm.trade_direction,
+			trade_algorithm.param_hash,
+			trade_algorithm.param,
 			count(order_.order_id),
 			sum(order_.profit)
 		from
@@ -474,7 +481,8 @@ func GetTradeCountProfitByFilter3(
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
 			trade_algorithm.type,
-			trade_algorithm.trade_direction
+			trade_algorithm.trade_direction,
+			trade_algorithm.param_hash
 	`
 
 	rows, err := db.Query(q, tradeRunID, state, start, end, tradePair, timezone, algorithmType, tradeDirection)
@@ -492,6 +500,8 @@ func GetTradeCountProfitByFilter3(
 			&key.Timezone,
 			&key.Algorithm.Type,
 			&key.Algorithm.TradeDirection,
+			&key.Algorithm.ParamHash,
+			&key.Algorithm.Param,
 			&cp.Count,
 			&cp.Profit,
 		)
