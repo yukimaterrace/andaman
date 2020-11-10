@@ -91,32 +91,102 @@ func GetTradeSummariesA(tradeRunID int, start int, end int) (*model.TradeSummari
 		return nil, err
 	}
 
-	tradeSummaries := []*model.TradePairTradeSummary{}
-	iterator := model.TradePairIterator{}
-	for iterator.Next() {
-		tradePair := iterator.Value()
+	var oc map[model.TradePair][2]*model.TradeCountProfit
 
-		openCountProfit, ok1 := open[tradePair]
-		closedCountProfit, ok2 := closed[tradePair]
+	for key, cp := range open {
+		oc[key] = [2]*model.TradeCountProfit{cp, nil}
+	}
 
-		if ok1 || ok2 {
-			ts := model.TradePairTradeSummary{
-				TradePair: tradePair,
-			}
-
-			if ok1 {
-				ts.TradeSummary.Open = *openCountProfit
-			}
-
-			if ok2 {
-				ts.TradeSummary.Closed = *closedCountProfit
-			}
-
-			tradeSummaries = append(tradeSummaries, &ts)
+	for key, cp := range closed {
+		if cps, ok := oc[key]; ok {
+			oc[key] = [2]*model.TradeCountProfit{cps[0], cp}
+		} else {
+			oc[key] = [2]*model.TradeCountProfit{nil, cp}
 		}
 	}
 
+	tradeSummaries := []*model.TradePairTradeSummary{}
+	for key, cps := range oc {
+		var ts model.TradeSummary
+		if cps[0] != nil {
+			ts.Open = *cps[0]
+		}
+		if cps[1] != nil {
+			ts.Closed = *cps[1]
+		}
+
+		tpts := model.TradePairTradeSummary{
+			TradePair:    key,
+			TradeSummary: ts,
+		}
+
+		tradeSummaries = append(tradeSummaries, &tpts)
+	}
+
 	resp := &model.TradeSummariesResponseA{
+		UnrealizedProfit: unrealizedProfit,
+		RealizedProfit:   realizedProfit,
+		TradeSummaries:   tradeSummaries,
+	}
+
+	return resp, nil
+}
+
+// GetTradeSummariesB is a method to get trade summaries B
+func GetTradeSummariesB(tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int) (*model.TradeSummariesResponseB, error) {
+	unrealizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	realizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Closed, tradePair, timezone, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	open, err := db.GetTradeCountProfitByFilter2(tradeRunID, model.Open, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	closed, err := db.GetTradeCountProfitByFilter2(tradeRunID, model.Closed, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	var oc map[model.TradeConfigurationSimpleDetail][2]*model.TradeCountProfit
+
+	for key, cp := range open {
+		oc[key] = [2]*model.TradeCountProfit{cp, nil}
+	}
+
+	for key, cp := range closed {
+		if cps, ok := oc[key]; ok {
+			oc[key] = [2]*model.TradeCountProfit{cps[0], cp}
+		} else {
+			oc[key] = [2]*model.TradeCountProfit{nil, cp}
+		}
+	}
+
+	tradeSummaries := []*model.TradeConfigurationSimpleDetailTradeSummary{}
+	for key, cps := range oc {
+		var ts model.TradeSummary
+		if cps[0] != nil {
+			ts.Open = *cps[0]
+		}
+		if cps[1] != nil {
+			ts.Closed = *cps[1]
+		}
+
+		tcts := model.TradeConfigurationSimpleDetailTradeSummary{
+			TradeConfiguration: key,
+			TradeSummary:       ts,
+		}
+
+		tradeSummaries = append(tradeSummaries, &tcts)
+	}
+
+	resp := &model.TradeSummariesResponseB{
 		UnrealizedProfit: unrealizedProfit,
 		RealizedProfit:   realizedProfit,
 		TradeSummaries:   tradeSummaries,

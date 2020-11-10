@@ -41,8 +41,15 @@ type (
 
 	// TradeSummariesResponseB is a B response for trade summaries
 	TradeSummariesResponseB struct {
-		PositiveProfitProportion float64                           `json:"positive_profit_proportion"`
-		TradeSummaries           []*TradeConfigurationTradeSummary `json:"trade_summaries"`
+		UnrealizedProfit float64                                       `json:"unrealized_profit"`
+		RealizedProfit   float64                                       `json:"realized_profit"`
+		TradeSummaries   []*TradeConfigurationSimpleDetailTradeSummary `json:"trade_summaries"`
+	}
+
+	// TradeSummariesResponseC is a C response for trade summaries
+	TradeSummariesResponseC struct {
+		PositiveProfitProportion float64                                 `json:"positive_profit_proportion"`
+		TradeSummaries           []*TradeConfigurationDetailTradeSummary `json:"trade_summaries"`
 	}
 
 	// definitions for service
@@ -67,6 +74,12 @@ type (
 	TradeConfigurationDetail struct {
 		TradeConfiguration
 		Algorithm TradeAlgorithmDetail
+	}
+
+	// TradeConfigurationSimpleDetail is a struct for trade configuration simple detail
+	TradeConfigurationSimpleDetail struct {
+		TradeConfiguration
+		Algorithm TradeAlgorithm
 	}
 
 	// TradeConfigurationKey is a key for trade configuration
@@ -102,8 +115,14 @@ type (
 		TradeSummary
 	}
 
-	// TradeConfigurationTradeSummary is a struct for trade algorithm trade summary
-	TradeConfigurationTradeSummary struct {
+	// TradeConfigurationSimpleDetailTradeSummary is a struct for trade configuration simple detail trade summary
+	TradeConfigurationSimpleDetailTradeSummary struct {
+		TradeConfiguration TradeConfigurationSimpleDetail `json:"trade_configuration"`
+		TradeSummary
+	}
+
+	// TradeConfigurationDetailTradeSummary is a struct for trade configuration detail trade summary
+	TradeConfigurationDetailTradeSummary struct {
 		TradeConfiguration TradeConfigurationDetail `json:"trade_configuration"`
 		TradeSummary
 	}

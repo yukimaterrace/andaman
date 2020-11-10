@@ -134,7 +134,7 @@ func getTradeSummariesA(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func getFilteredTradeSummariesA(c echo.Context) error {
+func getTradeSummariesB(c echo.Context) error {
 	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func getFilteredTradeSummariesA(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetFilteredTradeSummariesA(tradeRunID, tradePair, timezone, start, int(time.Now().Unix()))
+	resp, err := service.GetTradeSummariesB(tradeRunID, tradePair, timezone, start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
