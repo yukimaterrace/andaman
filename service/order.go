@@ -299,7 +299,7 @@ func GetTradeCountProfits(
 		return nil, err
 	}
 
-	cps, err := db.GetTradeCountProfitByFilter4(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, end, count, 0)
+	cps, err := db.GetTradeConfigurationTradeCountProfits(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, end, count, 0)
 	if err != nil {
 		return nil, err
 	}
