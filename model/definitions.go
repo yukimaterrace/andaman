@@ -46,11 +46,17 @@ type (
 		TradeSummaries   []*TradeConfigurationTradeSummary `json:"trade_summaries"`
 	}
 
-	// TradeSummariesResponseC is a C response for trade summaries
-	TradeSummariesResponseC struct {
-		UnrealizedTradeCount TradeCount                        `json:"unrealized_trade_count"`
-		RealizedTradeCount   TradeCount                        `json:"realized_trade_count"`
-		TradeSummaries       []*TradeConfigurationTradeSummary `json:"trade_summaries"`
+	// TradeCountProfitsResponse is a response for trade count profits
+	TradeCountProfitsResponse struct {
+		UnrealizedTradeCount TradeCount                            `json:"unrealized_trade_count"`
+		RealizedTradeCount   TradeCount                            `json:"realized_trade_count"`
+		TradeCountProfit     []*TradeConfigurationTradeCountProfit `json:"trade_count_profits"`
+	}
+
+	// TradeConfigurationGroupSummariesResponse is a struct for trade configuration grouup summaries response
+	TradeConfigurationGroupSummariesResponse struct {
+		TradeConfigurationGroupSummaries []*TradeConfigurationGroupSummary `json:"group_summaries"`
+		Paging                           *OffsetPaging                     `json:"paging"`
 	}
 
 	// definitions for service
@@ -79,6 +85,14 @@ type (
 
 	// TradeConfigurationKey is a key for trade configuration
 	TradeConfigurationKey string
+
+	// TradeConfigurationGroup is a struct for trade configuration group
+	TradeConfigurationGroup struct {
+		TradePair          TradePair
+		Timezone           Timezone
+		TradeDirection     TradeDirection
+		TradeAlgorithmType TradeAlgorithmType
+	}
 
 	// TradeSetDetail is a struct for trade set detail
 	TradeSetDetail struct {
@@ -120,6 +134,19 @@ type (
 	TradeConfigurationTradeSummary struct {
 		TradeConfiguration TradeConfigurationDetail `json:"trade_configuration"`
 		TradeSummary
+	}
+
+	// TradeConfigurationTradeCountProfit is a struct for trade configuration trade count profit
+	TradeConfigurationTradeCountProfit struct {
+		TradeConfiguration TradeConfigurationDetail `json:"trade_configuration"`
+		TradeCountProfit
+	}
+
+	// TradeConfigurationGroupSummary is a struct for trade configuration group
+	TradeConfigurationGroupSummary struct {
+		TradeConfigurationGroup            *TradeConfigurationGroup            `json:"trade_configuration_group"`
+		TradeCount                         *TradeCount                         `json:"trade_count"`
+		TradeConfigurationTradeCountProfit *TradeConfigurationTradeCountProfit `json:"first_trade_configuration"`
 	}
 
 	// definitions for parameters in service

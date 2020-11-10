@@ -35,7 +35,8 @@ func CreateController() *echo.Echo {
 
 	e.GET("/api/trade_summaries_a", getTradeSummariesA)
 	e.GET("/api/trade_summaries_b", getTradeSummariesB)
-	e.GET("/api/trade_summaries_c", getTradeSummariesC)
+
+	e.GET("/api/trade_count_profits", getTradeCountProfits)
 
 	return e
 }

@@ -194,10 +194,30 @@ func GetTradeSummariesA(tradeRunID int, start int, end int) (*model.TradeSummari
 	return resp, nil
 }
 
-func getTradeConfigurationTradeSummaries(
-	open map[model.TradeConfigurationDetail]*model.TradeCountProfit,
-	closed map[model.TradeConfigurationDetail]*model.TradeCountProfit,
-	paramObjectCreator model.TradeParamObjectCreator) ([]*model.TradeConfigurationTradeSummary, error) {
+// GetTradeSummariesB is a method to get trade summaries B
+func GetTradeSummariesB(
+	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int,
+	paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSummariesResponseB, error) {
+
+	unrealizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	realizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Closed, tradePair, timezone, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	open, err := db.GetTradeCountProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	closed, err := db.GetTradeCountProfitByFilter2(tradeRunID, model.Closed, tradePair, timezone, start, end)
+	if err != nil {
+		return nil, err
+	}
 
 	var oc map[model.TradeConfigurationDetail][2]*model.TradeCountProfit
 
@@ -237,36 +257,6 @@ func getTradeConfigurationTradeSummaries(
 		tradeSummaries = append(tradeSummaries, &tcts)
 	}
 
-	return tradeSummaries, nil
-}
-
-// GetTradeSummariesB is a method to get trade summaries B
-func GetTradeSummariesB(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int,
-	paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSummariesResponseB, error) {
-
-	unrealizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	realizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Closed, tradePair, timezone, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	open, err := db.GetTradeCountProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	closed, err := db.GetTradeCountProfitByFilter2(tradeRunID, model.Closed, tradePair, timezone, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	tradeSummaries, err := getTradeConfigurationTradeSummaries(open, closed, paramObjectCreator)
-
 	sort.Sort(tradeConfigurationTradeSummariesOrderedByKey(tradeSummaries))
 	resp := &model.TradeSummariesResponseB{
 		UnrealizedProfit: unrealizedProfit,
@@ -284,10 +274,10 @@ func getTradeCount(totalCount int, positiveCount int) model.TradeCount {
 	}
 }
 
-// GetTradeSummariesC is a method to get trade summaries C
-func GetTradeSummariesC(
+// GetTradeCountProfits is a method to get trade count profits
+func GetTradeCountProfits(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
-	start int, end int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSummariesResponseC, error) {
+	start int, end int, count int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeCountProfitsResponse, error) {
 
 	unrealizedCount, err := db.GetCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType, start, end)
 	if err != nil {
@@ -309,27 +299,21 @@ func GetTradeSummariesC(
 		return nil, err
 	}
 
-	open, err := db.GetTradeCountProfitByFilter3(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType, start, end)
+	cps, err := db.GetTradeCountProfitByFilter4(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, end, count, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	closed, err := db.GetTradeCountProfitByFilter3(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	tradeSummaries, err := getTradeConfigurationTradeSummaries(open, closed, paramObjectCreator)
-	if err != nil {
-		return nil, err
-	}
-
-	sort.Sort(tradeConfigurationTradeSummariesOrderedByProfit(tradeSummaries))
-	resp := &model.TradeSummariesResponseC{
+	resp := &model.TradeCountProfitsResponse{
 		UnrealizedTradeCount: getTradeCount(unrealizedCount, unrealizedPositiveCount),
 		RealizedTradeCount:   getTradeCount(realizedCount, realizedPositiveCount),
-		TradeSummaries:       tradeSummaries,
+		TradeCountProfit:     cps,
 	}
 
 	return resp, nil
+}
+
+// GetTradeConfigurationGroupSummaries is a method to get trade configuration group summaries
+func GetTradeConfigurationGroupSummaries(tradeRunID int, count int, offset int) (*model.TradeConfigurationGroupSummariesResponse, error) {
+	return nil, nil
 }

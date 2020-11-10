@@ -164,7 +164,7 @@ func getTradeSummariesB(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func getTradeSummariesC(c echo.Context) error {
+func getTradeCountProfits(c echo.Context) error {
 	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
 	if err != nil {
 		return err
@@ -195,7 +195,9 @@ func getTradeSummariesC(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesC(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, int(time.Now().Unix()), trader.TradeParamObjectCreator)
+	resp, err := service.GetTradeCountProfits(
+		tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, int(time.Now().Unix()), 100, trader.TradeParamObjectCreator,
+	)
 	if err != nil {
 		return err
 	}
