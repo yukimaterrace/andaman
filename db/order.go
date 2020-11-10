@@ -514,8 +514,8 @@ func GetTradeCountProfitByFilter3(
 	return m, nil
 }
 
-// GetTradeCountProfitByFilter4 is a method to get trade count profit by filter 4
-func GetTradeCountProfitByFilter4(
+// GetTradeConfigurationTradeCountProfits is a method to get trade count profit by filter 4
+func GetTradeConfigurationTradeCountProfits(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
 	start int, end int, count int, offset int) ([]*model.TradeConfigurationTradeCountProfit, error) {
 
@@ -587,8 +587,8 @@ func GetTradeCountProfitByFilter4(
 	return cps, nil
 }
 
-// GetTradeCountProfitByFilter5 is a method to get trade count profit by filter 5
-func GetTradeCountProfitByFilter5(
+// GetFirstTradeConfigurationTradeCountProfit is a method to get trade count profit by filter 5
+func GetFirstTradeConfigurationTradeCountProfit(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone,
 	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, start int, end int) (*model.TradeConfigurationTradeCountProfit, error) {
 
