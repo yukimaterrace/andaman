@@ -268,14 +268,6 @@ func GetPositiveProfitCountByPeriod(
 	return count, nil
 }
 
-func GetTradeConfigurationGroupCount(tradeRunID int) (int, error) {
-
-}
-
-func GetTradeConfigurationGroups(tradeRunID int, count int, offset int) ([]*model.TradeConfigurationGroup, error) {
-
-}
-
 // AddOrder is a method to add order
 func AddOrder(
 	tradeRunID int, brokerOrderID int, tradeConfigurationID int, units float64, tradeDirection model.TradeDirection,
@@ -559,6 +551,7 @@ func GetTradeCountProfitByFilter4(
 			trade_algorithm.param_hash
 		order by
 			profit
+			desc
 		limit
 			?
 		offset
@@ -631,6 +624,7 @@ func GetTradeCountProfitByFilter5(
 			trade_algorithm.param_hash
 		order by
 			profit
+			desc
 		limit
 			1
 	`
@@ -713,4 +707,14 @@ func GetTotalProfitByFilter2(tradeRunID int, state model.OrderState, tradePair m
 		return 0, err
 	}
 	return profit, nil
+}
+
+// GetTradeConfigurationGroupCountForOrder is a method to get trade configuration group count
+func GetTradeConfigurationGroupCountForOrder(tradeRunID int) (int, error) {
+	return 0, nil
+}
+
+// GetTradeConfigurationGroupsForOrder is a method to get trade configuration groups
+func GetTradeConfigurationGroupsForOrder(tradeRunID int, count int, offset int) ([]*model.TradeConfigurationGroup, error) {
+	return nil, nil
 }
