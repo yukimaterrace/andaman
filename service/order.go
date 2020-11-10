@@ -84,23 +84,6 @@ func (s tradePairTradeSummaries) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-type tradeConfigurationTradeSumarriesOrderedByProfit []*model.TradeConfigurationTradeSummary
-
-func (s tradeConfigurationTradeSumarriesOrderedByProfit) Len() int {
-	return len(s)
-}
-
-func (s tradeConfigurationTradeSumarriesOrderedByProfit) Less(i, j int) bool {
-	if s[i].Closed.Profit != s[j].Closed.Profit {
-		return s[i].Closed.Profit < s[j].Closed.Profit
-	}
-	return s[i].Open.Profit < s[j].Open.Profit
-}
-
-func (s tradeConfigurationTradeSumarriesOrderedByProfit) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
 type tradeConfigurationTradeSummariesOrderedByKey []*model.TradeConfigurationTradeSummary
 
 func (s tradeConfigurationTradeSummariesOrderedByKey) Len() int {
@@ -127,6 +110,23 @@ func (s tradeConfigurationTradeSummariesOrderedByKey) Less(i, j int) bool {
 }
 
 func (s tradeConfigurationTradeSummariesOrderedByKey) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+type tradeConfigurationTradeSummariesOrderedByProfit []*model.TradeConfigurationTradeSummary
+
+func (s tradeConfigurationTradeSummariesOrderedByProfit) Len() int {
+	return len(s)
+}
+
+func (s tradeConfigurationTradeSummariesOrderedByProfit) Less(i, j int) bool {
+	if s[i].Closed.Profit != s[j].Closed.Profit {
+		return s[i].Closed.Profit < s[j].Closed.Profit
+	}
+	return s[i].Open.Profit < s[j].Open.Profit
+}
+
+func (s tradeConfigurationTradeSummariesOrderedByProfit) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
@@ -324,6 +324,7 @@ func GetTradeSummariesC(
 		return nil, err
 	}
 
+	sort.Sort(tradeConfigurationTradeSummariesOrderedByProfit(tradeSummaries))
 	resp := &model.TradeSummariesResponseC{
 		UnrealizedTradeCount: getTradeCount(unrealizedCount, unrealizedPositiveCount),
 		RealizedTradeCount:   getTradeCount(realizedCount, realizedPositiveCount),
