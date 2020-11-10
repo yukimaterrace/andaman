@@ -163,3 +163,42 @@ func getTradeSummariesB(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
+
+func getTradeSummariesC(c echo.Context) error {
+	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
+	if err != nil {
+		return err
+	}
+
+	tradePair, err := param(c.QueryParam("trade_pair")).tradePair(true)
+	if err != nil {
+		return err
+	}
+
+	timezone, err := param(c.QueryParam("timezone")).timezone(true)
+	if err != nil {
+		return err
+	}
+
+	tradeDirection, err := param(c.QueryParam("trade_direction")).tradeDirection(true)
+	if err != nil {
+		return err
+	}
+
+	algorithmType, err := param(c.QueryParam("trade_algorithm_type")).tradeAlgorithmType(true)
+	if err != nil {
+		return err
+	}
+
+	start, err := param(c.QueryParam("start")).int(true, 0)
+	if err != nil {
+		return err
+	}
+
+	resp, err := service.GetTradeSummariesC(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, int(time.Now().Unix()), trader.TradeParamObjectCreator)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}

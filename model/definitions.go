@@ -41,15 +41,16 @@ type (
 
 	// TradeSummariesResponseB is a B response for trade summaries
 	TradeSummariesResponseB struct {
-		UnrealizedProfit float64                                 `json:"unrealized_profit"`
-		RealizedProfit   float64                                 `json:"realized_profit"`
-		TradeSummaries   []*TradeConfigurationDetailTradeSummary `json:"trade_summaries"`
+		UnrealizedProfit float64                           `json:"unrealized_profit"`
+		RealizedProfit   float64                           `json:"realized_profit"`
+		TradeSummaries   []*TradeConfigurationTradeSummary `json:"trade_summaries"`
 	}
 
 	// TradeSummariesResponseC is a C response for trade summaries
 	TradeSummariesResponseC struct {
-		PositiveProfitProportion float64                                 `json:"positive_profit_proportion"`
-		TradeSummaries           []*TradeConfigurationDetailTradeSummary `json:"trade_summaries"`
+		UnrealizedTradeCount TradeCount                        `json:"unrealized_trade_count"`
+		RealizedTradeCount   TradeCount                        `json:"realized_trade_count"`
+		TradeSummaries       []*TradeConfigurationTradeSummary `json:"trade_summaries"`
 	}
 
 	// definitions for service
@@ -97,6 +98,12 @@ type (
 		Profit float64 `json:"profit"`
 	}
 
+	// TradeCount is a struct for trade count
+	TradeCount struct {
+		PositiveProfitCount int `json:"positive_profit_count"`
+		NegativeProfitCount int `json:"negative_profit_count"`
+	}
+
 	// TradeSummary is a struct for trade summary
 	TradeSummary struct {
 		Open   TradeCountProfit `json:"open"`
@@ -109,8 +116,8 @@ type (
 		TradeSummary
 	}
 
-	// TradeConfigurationDetailTradeSummary is a struct for trade configuration detail trade summary
-	TradeConfigurationDetailTradeSummary struct {
+	// TradeConfigurationTradeSummary is a struct for trade configuration detail trade summary
+	TradeConfigurationTradeSummary struct {
 		TradeConfiguration TradeConfigurationDetail `json:"trade_configuration"`
 		TradeSummary
 	}

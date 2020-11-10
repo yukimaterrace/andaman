@@ -33,6 +33,10 @@ func CreateController() *echo.Echo {
 	e.GET("/api/open_orders", getOpenOrders)
 	e.GET("/api/closed_orders", getClosedOrders)
 
+	e.GET("/api/trade_summaries_a", getTradeSummariesA)
+	e.GET("/api/trade_summaries_b", getTradeSummariesB)
+	e.GET("/api/trade_summaries_c", getTradeSummariesC)
+
 	return e
 }
 
