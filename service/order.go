@@ -133,7 +133,10 @@ func GetTradeSummariesA(tradeRunID int, start int, end int) (*model.TradeSummari
 }
 
 // GetTradeSummariesB is a method to get trade summaries B
-func GetTradeSummariesB(tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int) (*model.TradeSummariesResponseB, error) {
+func GetTradeSummariesB(
+	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int,
+	paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSummariesResponseB, error) {
+
 	unrealizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
 	if err != nil {
 		return nil, err
@@ -154,7 +157,7 @@ func GetTradeSummariesB(tradeRunID int, tradePair model.TradePair, timezone mode
 		return nil, err
 	}
 
-	var oc map[model.TradeConfigurationSimpleDetail][2]*model.TradeCountProfit
+	var oc map[model.TradeConfigurationDetail][2]*model.TradeCountProfit
 
 	for key, cp := range open {
 		oc[key] = [2]*model.TradeCountProfit{cp, nil}
@@ -168,7 +171,7 @@ func GetTradeSummariesB(tradeRunID int, tradePair model.TradePair, timezone mode
 		}
 	}
 
-	tradeSummaries := []*model.TradeConfigurationSimpleDetailTradeSummary{}
+	tradeSummaries := []*model.TradeConfigurationDetailTradeSummary{}
 	for key, cps := range oc {
 		var ts model.TradeSummary
 		if cps[0] != nil {
@@ -178,7 +181,12 @@ func GetTradeSummariesB(tradeRunID int, tradePair model.TradePair, timezone mode
 			ts.Closed = *cps[1]
 		}
 
-		tcts := model.TradeConfigurationSimpleDetailTradeSummary{
+		key.Algorithm.ParamObject, err = paramObjectCreator(key.Algorithm.Type, key.Algorithm.Param)
+		if err != nil {
+			return nil, err
+		}
+
+		tcts := model.TradeConfigurationDetailTradeSummary{
 			TradeConfiguration: key,
 			TradeSummary:       ts,
 		}

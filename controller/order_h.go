@@ -5,6 +5,7 @@ import (
 	"time"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
+	"yukimaterrace/andaman/trader"
 
 	"github.com/labstack/echo/v4"
 )
@@ -155,7 +156,7 @@ func getTradeSummariesB(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesB(tradeRunID, tradePair, timezone, start, int(time.Now().Unix()))
+	resp, err := service.GetTradeSummariesB(tradeRunID, tradePair, timezone, start, int(time.Now().Unix()), trader.TradeParamObjectCreator)
 	if err != nil {
 		return err
 	}

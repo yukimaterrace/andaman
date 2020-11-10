@@ -317,7 +317,7 @@ func GetTradeCountProfitByFilter1(tradeRunID int, state model.OrderState, start 
 }
 
 // GetTradeCountProfitByFilter2 is a method to get trade count profit by filter 2
-func GetTradeCountProfitByFilter2(tradeRunID int, state model.OrderState, start int, end int) (map[model.TradeConfigurationSimpleDetail]*model.TradeCountProfit, error) {
+func GetTradeCountProfitByFilter2(tradeRunID int, state model.OrderState, start int, end int) (map[model.TradeConfigurationDetail]*model.TradeCountProfit, error) {
 	q := `
 		select
 			trade_configuration.trade_pair,
@@ -349,9 +349,9 @@ func GetTradeCountProfitByFilter2(tradeRunID int, state model.OrderState, start 
 		return nil, err
 	}
 
-	var m map[model.TradeConfigurationSimpleDetail]*model.TradeCountProfit
+	var m map[model.TradeConfigurationDetail]*model.TradeCountProfit
 	for rows.Next() {
-		var key model.TradeConfigurationSimpleDetail
+		var key model.TradeConfigurationDetail
 		var cp model.TradeCountProfit
 
 		err := rows.Scan(
