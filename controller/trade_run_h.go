@@ -14,23 +14,38 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type (
+	getTradeRunsParams struct {
+		_type  tradeRunTypeParam `query:"type" validate:"required"`
+		count  intParam          `query:"count" validate:"gte=0,lte=100"`
+		offset intParam          `query:"offset" validate:"gte=0"`
+	}
+
+	createTradeParams struct {
+		tradeSetName string            `query:"trade_set_name" validate:"required"`
+		_type        tradeRunTypeParam `query:"type" validate:"required"`
+		start        intParam          `query:"start" validate:"gte=0"`
+		end          intParam          `query:"end" validate:"gte=0"`
+	}
+
+	changeTradeModeParams struct {
+		tradeMode tradeModeParam `query:"trade_mode" validate:"required"`
+	}
+)
+
 func getTradeRuns(c echo.Context) error {
-	_type, err := param(c.QueryParam("type")).tradeRunType(true)
-	if err != nil {
+	p := getTradeRunsParams{
+		count:  20,
+		offset: 0,
+	}
+	if err := c.Bind(&p); err != nil {
+		return err
+	}
+	if err := c.Validate(&p); err != nil {
 		return err
 	}
 
-	count, err := param(c.QueryParam("count")).int(false, 20)
-	if err != nil {
-		return err
-	}
-
-	offset, err := param(c.QueryParam("offset")).int(false, 0)
-	if err != nil {
-		return err
-	}
-
-	resp, err := service.GetTradeRunDetails(_type, count, offset)
+	resp, err := service.GetTradeRunDetails(model.TradeRunType(p._type), int(p.count), int(p.offset))
 	if err != nil {
 		return err
 	}
@@ -39,27 +54,15 @@ func getTradeRuns(c echo.Context) error {
 }
 
 func createTrade(c echo.Context) error {
-	tradeSetName, err := param(c.FormValue("trade_set_name")).string(true)
-	if err != nil {
+	p := createTradeParams{}
+	if err := c.Bind(&p); err != nil {
+		return err
+	}
+	if err := c.Validate(&p); err != nil {
 		return err
 	}
 
-	_type, err := param(c.QueryParam("type")).tradeRunType(true)
-	if err != nil {
-		return err
-	}
-
-	start, err := param(c.QueryParam("start")).int(false, 0)
-	if err != nil {
-		return err
-	}
-
-	end, err := param(c.QueryParam(("end"))).int(false, 0)
-	if err != nil {
-		return err
-	}
-
-	if err := _createTrade(tradeSetName, _type, start, end); err != nil {
+	if err := _createTrade(p.tradeSetName, model.TradeRunType(p._type), int(p.start), int(p.end)); err != nil {
 		return err
 	}
 
@@ -67,12 +70,15 @@ func createTrade(c echo.Context) error {
 }
 
 func changeTradeMode(c echo.Context) error {
-	tradeMode, err := param(c.FormValue("trade_mode")).tradeMode(true)
-	if err != nil {
+	p := changeTradeModeParams{}
+	if err := c.Bind(&p); err != nil {
+		return err
+	}
+	if err := c.Validate(&p); err != nil {
 		return err
 	}
 
-	_changeTradeMode(tradeMode)
+	_changeTradeMode(flow.TradeMode(p.tradeMode))
 	return c.JSON(http.StatusOK, success)
 }
 

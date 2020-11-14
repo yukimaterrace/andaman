@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/model"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func paramError(err error) error {
@@ -15,39 +16,27 @@ func paramError(err error) error {
 	}
 }
 
-var errParamRequired = errors.New("param required")
-
-type param string
-
-func (p param) string(required bool) (string, error) {
-	if required && p == "" {
-		return "", paramError(errParamRequired)
-	}
-
-	return string(p), nil
+type customValidator struct {
+	validate *validator.Validate
 }
 
-func (p param) int(required bool, _default int) (int, error) {
-	if !required && p == "" {
-		return _default, nil
-	}
-
-	i, err := strconv.ParseInt(string(p), 10, 64)
-	if err != nil {
-		return 0, paramError(err)
-	}
-	return int(i), nil
+func (v *customValidator) Validate(i interface{}) error {
+	return v.validate.Struct(i)
 }
 
-func (p param) validateIota(required bool, converter func(int64) model.IotaValidator) (int, error) {
-	if p == "" {
-		if required {
-			return 0, paramError(errParamRequired)
-		}
-		return -1, nil
-	}
+type (
+	intParam                int
+	tradeSetTypeParam       model.TradeSetType
+	tradeRunTypeParam       model.TradeRunType
+	tradeModeParam          flow.TradeMode
+	tradePairParam          model.TradePair
+	timezoneParam           model.Timezone
+	tradeDirectionParam     model.TradeDirection
+	tradeAlgorithmTypeParam model.TradeAlgorithmType
+)
 
-	i, err := strconv.ParseInt(string(p), 10, 64)
+func validateIota(param string, converter func(int64) model.IotaValidator) (int, error) {
+	i, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
 		return 0, paramError(err)
 	}
@@ -59,93 +48,110 @@ func (p param) validateIota(required bool, converter func(int64) model.IotaValid
 	return int(i), nil
 }
 
-func (p param) tradeSetType(required bool) (model.TradeSetType, error) {
+func (p *intParam) UnmarshalParam(param string) error {
+	i, err := strconv.ParseInt(param, 10, 64)
+	if err != nil {
+		return paramError(err)
+	}
+
+	*p = intParam(i)
+	return nil
+}
+
+func (p *tradeSetTypeParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return model.TradeSetType(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return model.TradeSetType(i), nil
+	*p = tradeSetTypeParam(i)
+	return nil
 }
 
-func (p param) tradeRunType(required bool) (model.TradeRunType, error) {
+func (p *tradeRunTypeParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return model.TradeRunType(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return model.TradeRunType(i), nil
+	*p = tradeRunTypeParam(i)
+	return nil
 }
 
-func (p param) tradeMode(required bool) (flow.TradeMode, error) {
+func (p *tradeModeParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return flow.TradeMode(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return flow.TradeMode(i), nil
+	*p = tradeModeParam(i)
+	return nil
 }
 
-func (p param) tradePair(required bool) (model.TradePair, error) {
+func (p *tradePairParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return model.TradePair(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return model.TradePair(i), nil
+	*p = tradePairParam(i)
+	return nil
 }
 
-func (p param) timezone(required bool) (model.Timezone, error) {
+func (p *timezoneParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return model.Timezone(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return model.Timezone(i), nil
+	*p = timezoneParam(i)
+	return nil
 }
 
-func (p param) tradeDirection(required bool) (model.TradeDirection, error) {
+func (p *tradeDirectionParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return model.TradeDirection(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return model.TradeDirection(i), nil
+	*p = tradeDirectionParam(i)
+	return nil
 }
 
-func (p param) tradeAlgorithmType(required bool) (model.TradeAlgorithmType, error) {
+func (p *tradeAlgorithmTypeParam) UnmarshalParam(param string) error {
 	converter := func(i int64) model.IotaValidator {
 		return model.TradeAlgorithmType(i)
 	}
 
-	i, err := p.validateIota(required, converter)
+	i, err := validateIota(param, converter)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return model.TradeAlgorithmType(i), nil
+	*p = tradeAlgorithmTypeParam(i)
+	return nil
 }

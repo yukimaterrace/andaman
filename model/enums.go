@@ -19,7 +19,7 @@ type TradeSetType int
 
 const (
 	// Trade is a trade type
-	Trade TradeSetType = iota
+	Trade TradeSetType = iota + 1
 	// Simulation is simulation type
 	Simulation
 	// GridSearch is a grid search type
@@ -41,7 +41,7 @@ type TradeRunType int
 
 const (
 	// OandaSimulation is oanda simulation type
-	OandaSimulation TradeRunType = iota
+	OandaSimulation TradeRunType = iota + 1
 	// OandaTrade is oanda trade type
 	OandaTrade
 )
@@ -61,7 +61,7 @@ type TradeRunState int
 
 const (
 	// Pending is a pending state
-	Pending TradeRunState = iota
+	Pending TradeRunState = iota + 1
 	// Running is a running state
 	Running
 	// Finished is a finished state
@@ -73,7 +73,7 @@ type TradePair int
 
 const (
 	// GbpUsd is a currency pair for GBP and USD
-	GbpUsd TradePair = iota
+	GbpUsd TradePair = iota + 1
 	// EurUsd is a currency pair for EUR and USD
 	EurUsd
 	// AudUsd is a currency pair for AUD and USD
@@ -223,7 +223,7 @@ type Timezone int
 
 const (
 	// TokyoAM is Tokyo AM timezone
-	TokyoAM Timezone = iota
+	TokyoAM Timezone = iota + 1
 	// TokyoPM is Tokyo PM timezone
 	TokyoPM
 	// LondonAM is London AM timezone
@@ -311,7 +311,7 @@ type TradeAlgorithmType int
 
 const (
 	// Frame is frame trade algorithm type
-	Frame TradeAlgorithmType = iota
+	Frame TradeAlgorithmType = iota + 1
 )
 
 // IsValid is a method to validate trade algorithm type
@@ -329,7 +329,7 @@ type TradeDirection int
 
 const (
 	// Long is long trade direction
-	Long TradeDirection = iota
+	Long TradeDirection = iota + 1
 	// Short is short trade direction
 	Short
 )
@@ -349,7 +349,7 @@ type OrderState int
 
 const (
 	// Open is open state
-	Open OrderState = iota
+	Open OrderState = iota + 1
 	// Closed is closed state
 	Closed
 )

@@ -5,6 +5,7 @@ import (
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -18,6 +19,7 @@ func CreateController() *echo.Echo {
 	e := echo.New()
 
 	e.HTTPErrorHandler = httpErrorHandler
+	e.Validator = &customValidator{validator.New()}
 
 	e.Use(authMiddleware)
 	e.Use(middleware.Logger())
