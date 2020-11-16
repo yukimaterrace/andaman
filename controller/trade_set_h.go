@@ -52,7 +52,7 @@ func addTradeSetByPreset(c echo.Context) error {
 		factory.AddGridSearchTradeSet()
 
 	default:
-		return paramError(model.ErrNotFound)
+		return paramError("not found trade set")
 	}
 
 	return c.JSON(http.StatusOK, success)

@@ -86,23 +86,27 @@ func GetOrders(
 			order_.time_at_close,
 			order_.price_at_close
 		from
-			order_,
-			trade_configuration,
-			trade_algorithm
-		where
-			order_.trade_run_id = ? and
-			order_.state = ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
 			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
+			trade_configuration.timezone = ?
+		inner join
+			trade_algorithm
+		on
+			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
 			trade_algorithm.type = ? and
 			trade_algorithm.trade_direction = ?
+		where
+			order_.trade_run_id = ? and
+			order_.state = ?
 		limit ?
 		offset ?
 	`
 
-	rows, err := db.Query(q, tradeRunID, state, tradePair, timezone, algorithmType, tradeDirection, count, offset)
+	rows, err := db.Query(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state, count, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -140,21 +144,25 @@ func GetTotalProfitForOrders(
 		select
 			sum(order_.profit)
 		from
-			order_,
-			trade_configuration,
-			trade_algorithm
-		where
-			order_.trade_run_id = ? and
-			order_.state = ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
 			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
+			trade_configuration.timezone = ?
+		inner join
+			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
 			trade_algorithm.type = ? and
 			trade_algorithm.trade_direction = ?
-		`
+		where
+			order_.trade_run_id = ? and
+			order_.state = ?
+	`
 
-	row := db.QueryRow(q, tradeRunID, state, tradePair, timezone, algorithmType, tradeDirection)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
 
 	var totalProfit float64
 	if err := row.Scan(&totalProfit); err != nil {
@@ -175,21 +183,25 @@ func GetCountForOrders(
 		select
 			count(1)
 		from
-			order_,
-			trade_configuration,
-			trade_algorithm
-		where
-			order_.trade_run_id = ? and
-			order_.state = ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
 			trade_configuration.trade_pair = ? and
 			trade_configuration.timezone = ? and
+		inner join
+			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
 			trade_algorithm.type = ? and
 			trade_algorithm.trade_direction = ?
-		`
+		where
+			order_.trade_run_id = ? and
+			order_.state = ?
+	`
 
-	row := db.QueryRow(q, tradeRunID, state, tradePair, timezone, algorithmType, tradeDirection)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -207,23 +219,27 @@ func GetCountByPeriod(
 		select
 			count(1)
 		from
-			order_,
-			trade_configuration,
+			order_
+		inner join
+			trade_configuration
+		on
+			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
+		inner join
 			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
+			trade_algorithm.type = ? and
+			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
-			order_.time_at_close < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
-			trade_algorithm.type = ? and
-			trade_algorithm.trade_direction = ?
-		`
+			order_.time_at_close < ?
+	`
 
-	row := db.QueryRow(q, tradeRunID, state, start, end, tradePair, timezone, algorithmType, tradeDirection)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state, start, end)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -241,24 +257,28 @@ func GetPositiveProfitCountByPeriod(
 		select
 			count(1)
 		from
-			order_,
-			trade_configuration,
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
+		inner join
 			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
+			trade_algorithm.type = ? and
+			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
 			order_.time_at_close < ? and
-			order_.profit >=0 and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
-			trade_algorithm.type = ? and
-			trade_algorithm.trade_direction = ?
-		`
+			order_.profit >= 0
+	`
 
-	row := db.QueryRow(q, tradeRunID, state, start, end, tradePair, timezone, algorithmType, tradeDirection)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state, start, end)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -288,7 +308,7 @@ func AddOrder(
 		) values (
 			?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?
 		)
-		`
+	`
 
 	_, err := db.Exec(
 		q,
@@ -333,7 +353,7 @@ func UpdateOrderForClose(tradeRunID int, brokerOrderID int, state model.OrderSta
 		where
 			trade_run_id = ? and
 			broker_order_id = ?
-		`
+	`
 
 	if _, err := db.Exec(q, state, profit, timeAtClose, priceAtClose, tradeRunID, brokerOrderID); err != nil {
 		return err
@@ -349,14 +369,16 @@ func GetTradeCountProfitByFilter1(tradeRunID int, state model.OrderState, start 
 			count(order_.order_id),
 			sum(order_.profit)
 		from
-			order_,
+			order_
+		inner join
 			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
-			order_.time_at_open < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id
+			order_.time_at_open < ?
 		group by
 			trade_configuration.trade_pair
 	`
@@ -399,25 +421,29 @@ func GetTradeCountProfitByFilter2(
 			count(order_.order_id),
 			sum(order_.profit)
 		from
-			order_,
-			trade_configuration,
+			order_
+		inner join
+			trade_configuration
+		on
+			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
+		inner join
 			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
-			order_.time_at_open < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ?
+			order_.time_at_open < ?
 		group by
 			trade_algorithm.type,
 			trade_algorithm.trade_direction,
 			trade_algorithm.param_hash
 	`
 
-	rows, err := db.Query(q, tradeRunID, state, start, end, tradePair, timezone)
+	rows, err := db.Query(q, tradePair, timezone, tradeRunID, state, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -463,20 +489,24 @@ func GetTradeCountProfitByFilter3(
 			count(order_.order_id),
 			sum(order_.profit)
 		from
-			order_,
-			trade_configuration,
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
+		inner join
 			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
+			trade_algorithm.type = ? and
+			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
-			order_.time_at_open < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
-			trade_algorithm.type = ? and
-			trade_algorithm.trade_direction = ?
+			order_.time_at_open < ?
 		group by
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
@@ -485,7 +515,7 @@ func GetTradeCountProfitByFilter3(
 			trade_algorithm.param_hash
 	`
 
-	rows, err := db.Query(q, tradeRunID, state, start, end, tradePair, timezone, algorithmType, tradeDirection)
+	rows, err := db.Query(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -530,19 +560,23 @@ func GetTradeConfigurationTradeCountProfits(
 			count(order_.order_id),
 			sum(order_.profit) as profit
 		from
-			order_,
-			trade_configuration,
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
+		inner join
 			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
+			trade_algorithm.type = ? and
+			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
 			order_.time_at_open > ? and
-			order_.time_at_open < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
-			trade_algorithm.type = ? and
-			trade_algorithm.trade_direction = ?
+			order_.time_at_open < ?
 		group by
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
@@ -558,7 +592,7 @@ func GetTradeConfigurationTradeCountProfits(
 			?
 	`
 
-	rows, err := db.Query(q, tradeRunID, start, end, tradePair, timezone, algorithmType, tradeDirection, count, offset)
+	rows, err := db.Query(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, start, end, count, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -603,19 +637,23 @@ func GetFirstTradeConfigurationTradeCountProfit(
 			count(order_.order_id),
 			sum(order_.profit) as profit
 		from
-			order_,
-			trade_configuration,
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
+		inner join
 			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id and
+			trade_algorithm.type = ? and
+			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
 			order_.time_at_open > ? and
-			order_.time_at_open < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_algorithm_id = trade_algorithm.trade_algorithm_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
-			trade_algorithm.type = ? and
-			trade_algorithm.trade_direction = ?
+			order_.time_at_open < ?
 		group by
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
@@ -629,7 +667,7 @@ func GetFirstTradeConfigurationTradeCountProfit(
 			1
 	`
 
-	row := db.QueryRow(q, tradeRunID, start, end, tradePair, timezone, algorithmType, tradeDirection)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, start, end)
 
 	var tctp model.TradeConfigurationTradeCountProfit
 
@@ -644,9 +682,6 @@ func GetFirstTradeConfigurationTradeCountProfit(
 		&tctp.TradeCountProfit.Profit,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -685,19 +720,21 @@ func GetTotalProfitByFilter2(tradeRunID int, state model.OrderState, tradePair m
 		select
 			sum(order_.profit)
 		from
-			order_,
+			order_
+		inner join
 			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
+			trade_configuration.trade_pair = ? and
+			trade_configuration.timezone = ?
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
 			order_.time_at_open > ? and
-			order_.time_at_open < ? and
-			order_.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ?
+			order_.time_at_open < ?
 	`
 
-	row := db.QueryRow(q, tradeRunID, state, start, end, tradePair, timezone)
+	row := db.QueryRow(q, tradePair, timezone, tradeRunID, state, start, end)
 
 	var profit float64
 	if err := row.Scan(&profit); err != nil {
@@ -709,12 +746,62 @@ func GetTotalProfitByFilter2(tradeRunID int, state model.OrderState, tradePair m
 	return profit, nil
 }
 
-// GetTradeConfigurationGroupCountForOrder is a method to get trade configuration group count
-func GetTradeConfigurationGroupCountForOrder(tradeRunID int) (int, error) {
-	return 0, nil
-}
-
 // GetTradeConfigurationGroupsForOrder is a method to get trade configuration groups
-func GetTradeConfigurationGroupsForOrder(tradeRunID int, count int, offset int) ([]*model.TradeConfigurationGroup, error) {
-	return nil, nil
+func GetTradeConfigurationGroupsForOrder(tradeRunID int, start int, end int, count int, offset int) ([]*model.TradeConfigurationGroup, error) {
+	q := `
+		select
+			trade_configuration.trade_pair,
+			trade_configuration.timezone,
+			trade_algorithm.trade_direction,
+			trade_algorithm.type
+		from
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id
+		inner join
+			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
+		where
+			order_.trade_run_id = ? and
+			order_.time_at_open > ? and
+			order_.time_at_open < ?
+		group by
+			trade_configuration.trade_pair,
+			trade_configuration.timezone,
+			trade_algorithm.trade_direction,
+			trade_algorithm.type
+		order by
+			trade_configuration.trade_pair,
+			trade_configuration.timezone,
+			trade_algorithm.trade_direction,
+			trade_algorithm.type
+		limit ?
+		offset ?
+	`
+
+	rows, err := db.Query(q, tradeRunID, start, end, count, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := []*model.TradeConfigurationGroup{}
+	for rows.Next() {
+		var g model.TradeConfigurationGroup
+		err := rows.Scan(
+			&g.TradePair,
+			&g.Timezone,
+			&g.TradeDirection,
+			&g.TradeAlgorithmType,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		groups = append(groups, &g)
+	}
+
+	return groups, nil
 }

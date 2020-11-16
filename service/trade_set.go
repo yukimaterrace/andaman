@@ -16,7 +16,7 @@ func GetTradeSetByName(name string) (*model.TradeSet, error) {
 func GetTradeSets(_type model.TradeSetType, count int, offset int) (*model.TradeSetsResponse, error) {
 	tradeSets, err := db.GetTradeSetsByType(_type, count, offset)
 	if err != nil {
-		return nil, model.HandleError(err)
+		return nil, err
 	}
 
 	all, err := db.CountTradeSet(_type)

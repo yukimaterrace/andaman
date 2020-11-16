@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"net/http"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
@@ -71,16 +72,19 @@ func httpErrorHandler(err error, c echo.Context) {
 			Message: _err.Error(),
 		}
 
-	case *model.Error:
-		apiErr = &APIError{
-			Code:    _err.Code,
-			Message: _err.Message,
-		}
-
 	default:
-		apiErr = &APIError{
-			Code:    http.StatusInternalServerError,
-			Message: _err.Error(),
+		switch _err {
+		case sql.ErrNoRows:
+			apiErr = &APIError{
+				Code:    http.StatusNotFound,
+				Message: _err.Error(),
+			}
+
+		default:
+			apiErr = &APIError{
+				Code:    http.StatusInternalServerError,
+				Message: _err.Error(),
+			}
 		}
 	}
 

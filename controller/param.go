@@ -26,9 +26,9 @@ func (b *customBinder) Bind(i interface{}, c echo.Context) error {
 	return b.validate.Struct(i)
 }
 
-func paramError(err error) *APIError {
+func paramError(message string) *APIError {
 	return &APIError{
 		Code:    http.StatusBadRequest,
-		Message: err.Error(),
+		Message: message,
 	}
 }
