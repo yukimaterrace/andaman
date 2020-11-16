@@ -164,15 +164,15 @@ func GetTotalProfitForOrders(
 
 	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
 
-	var totalProfit float64
+	var totalProfit sql.NullFloat64
 	if err := row.Scan(&totalProfit); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, nil
-		}
 		return 0, err
 	}
 
-	return totalProfit, nil
+	if !totalProfit.Valid {
+		return 0, nil
+	}
+	return totalProfit.Float64, nil
 }
 
 // GetCountForOrders is a method to get count for orders
@@ -189,7 +189,7 @@ func GetCountForOrders(
 		on
 			trade_configuration.trade_configuration_id = order_.trade_configuration_id and
 			trade_configuration.trade_pair = ? and
-			trade_configuration.timezone = ? and
+			trade_configuration.timezone = ?
 		inner join
 			trade_algorithm
 		on
@@ -694,14 +694,15 @@ func GetTotalProfitByFilter1(tradeRunID int, state model.OrderState, start int, 
 
 	row := db.QueryRow(q, tradeRunID, state, start, end)
 
-	var profit float64
+	var profit sql.NullFloat64
 	if err := row.Scan(&profit); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, nil
-		}
 		return 0, err
 	}
-	return profit, nil
+
+	if !profit.Valid {
+		return 0, nil
+	}
+	return profit.Float64, nil
 }
 
 // GetTotalProfitByFilter2 is a method to get total profit 2
@@ -726,14 +727,15 @@ func GetTotalProfitByFilter2(tradeRunID int, state model.OrderState, tradePair m
 
 	row := db.QueryRow(q, tradePair, timezone, tradeRunID, state, start, end)
 
-	var profit float64
+	var profit sql.NullFloat64
 	if err := row.Scan(&profit); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, nil
-		}
 		return 0, err
 	}
-	return profit, nil
+
+	if !profit.Valid {
+		return 0, nil
+	}
+	return profit.Float64, nil
 }
 
 // GetTradeConfigurationGroupCountForOrder is a method to get trade configuration group count
