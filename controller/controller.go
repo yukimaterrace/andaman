@@ -77,7 +77,7 @@ func httpErrorHandler(err error, c echo.Context) {
 		case sql.ErrNoRows:
 			apiErr = &APIError{
 				Code:    http.StatusNotFound,
-				Message: _err.Error(),
+				Message: "Not Found",
 			}
 
 		default:
