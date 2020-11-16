@@ -6,13 +6,18 @@ import (
 	"time"
 )
 
-// IotaValidator is an interface for iota validator
-type IotaValidator interface {
-	IsValid() error
-}
+// ErrUnknownType is an error for unknown type
+var ErrUnknownType = errors.New("unknown type")
 
-// ErrNumber is an error for number
-var ErrNumber = errors.New("invalid number")
+const unknownString = "unknown"
+
+func marshalJSON(t fmt.Stringer) ([]byte, error) {
+	s := t.String()
+	if s == unknownString {
+		return nil, ErrUnknownType
+	}
+	return []byte(s), nil
+}
 
 // TradeSetType is trade set type enums
 type TradeSetType int
@@ -26,14 +31,48 @@ const (
 	GridSearch
 )
 
-// IsValid is a method to validate
-func (_type TradeSetType) IsValid() error {
-	switch _type {
-	case Trade, Simulation, GridSearch:
-		return nil
+const (
+	tradeString      = "trade"
+	simulationString = "simulation"
+	gridSearchString = "grid_search"
+)
+
+func (t *TradeSetType) String() string {
+	switch *t {
+	case Trade:
+		return tradeString
+	case Simulation:
+		return simulationString
+	case GridSearch:
+		return gridSearchString
 	default:
-		return ErrNumber
+		return unknownString
 	}
+}
+
+// UnmarshalParam is a method to unmarshal param for trade set type
+func (t *TradeSetType) UnmarshalParam(param string) error {
+	switch param {
+	case tradeString:
+		*t = Trade
+	case simulationString:
+		*t = Simulation
+	case gridSearchString:
+		*t = GridSearch
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marshal JSON for trade set type
+func (t *TradeSetType) MarshalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade set type
+func (t *TradeSetType) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
 }
 
 // TradeRunType is trade run type enums
@@ -46,14 +85,43 @@ const (
 	OandaTrade
 )
 
-// IsValid is a method to validate
-func (_type TradeRunType) IsValid() error {
-	switch _type {
-	case OandaSimulation, OandaTrade:
-		return nil
+const (
+	oandaSimulationString = "oanda_simulation"
+	oandaTradeString      = "oanda_trade"
+)
+
+func (t *TradeRunType) String() string {
+	switch *t {
+	case OandaSimulation:
+		return oandaSimulationString
+	case OandaTrade:
+		return oandaTradeString
 	default:
-		return ErrNumber
+		return unknownString
 	}
+}
+
+// UnmarshalParam is a method to unmarshal param
+func (t *TradeRunType) UnmarshalParam(param string) error {
+	switch param {
+	case oandaSimulationString:
+		*t = OandaSimulation
+	case oandaTradeString:
+		*t = OandaTrade
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarhsalJSON is a method to marshal JSON for trade run type
+func (t *TradeRunType) MarhsalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade run type
+func (t *TradeRunType) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
 }
 
 // TradeRunState is trade set state enums
@@ -67,6 +135,50 @@ const (
 	// Finished is a finished state
 	Finished
 )
+
+const (
+	pendingString  = "pending"
+	runningString  = "running"
+	finishedString = "finished"
+)
+
+func (t *TradeRunState) String() string {
+	switch *t {
+	case Pending:
+		return pendingString
+	case Running:
+		return runningString
+	case Finished:
+		return finishedString
+	default:
+		return unknownString
+	}
+}
+
+// UnmarshalParam is a method to unmarshal param for trade run state
+func (t *TradeRunState) UnmarshalParam(param string) error {
+	switch param {
+	case pendingString:
+		*t = Pending
+	case runningString:
+		*t = Running
+	case finishedString:
+		*t = Finished
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarhsalJSON is a method to marshal JSON for trade run state
+func (t *TradeRunState) MarhsalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade run state
+func (t *TradeRunState) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
+}
 
 // TradePair is trade pair enums
 type TradePair int
@@ -94,9 +206,88 @@ const (
 	EurGbp
 )
 
+const (
+	gbpUsdString = "GBP/USD"
+	eurUsdString = "EUR/USD"
+	audUsdString = "AUD/USD"
+	audJpyString = "AUD/JPY"
+	gbpAudString = "GBP/AUD"
+	eurAudString = "EUR/AUD"
+	usdJpyString = "USD/JPY"
+	gbpJpyString = "GBP/JPY"
+	eurJpyString = "EUR/JPY"
+	eurGbpString = "EUR/GBP"
+)
+
+func (t *TradePair) String() string {
+	switch *t {
+	case GbpUsd:
+		return gbpUsdString
+	case EurUsd:
+		return eurUsdString
+	case AudUsd:
+		return audUsdString
+	case AudJpy:
+		return audJpyString
+	case GbpAud:
+		return gbpAudString
+	case EurAud:
+		return eurAudString
+	case UsdJpy:
+		return usdJpyString
+	case GbpJpy:
+		return gbpJpyString
+	case EurJpy:
+		return eurJpyString
+	case EurGbp:
+		return eurGbpString
+	default:
+		return unknownString
+	}
+}
+
+// UnmarshalParam is a method to unmarshal param for trade pair
+func (t *TradePair) UnmarshalParam(param string) error {
+	switch param {
+	case gbpUsdString:
+		*t = GbpUsd
+	case eurUsdString:
+		*t = EurUsd
+	case audUsdString:
+		*t = AudUsd
+	case audJpyString:
+		*t = AudJpy
+	case gbpAudString:
+		*t = GbpAud
+	case eurAudString:
+		*t = EurAud
+	case usdJpyString:
+		*t = UsdJpy
+	case gbpJpyString:
+		*t = GbpJpy
+	case eurJpyString:
+		*t = EurJpy
+	case eurGbpString:
+		*t = EurGbp
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marshal JSON for trade pair
+func (t *TradePair) MarshalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade pair
+func (t *TradePair) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
+}
+
 // OandaInstrument is a method to get OandaInstrument
-func (tradePair TradePair) OandaInstrument() OandaInstrument {
-	switch tradePair {
+func (t TradePair) OandaInstrument() OandaInstrument {
+	switch t {
 	case GbpUsd:
 		return OandaGbpUsd
 	case EurUsd:
@@ -118,29 +309,19 @@ func (tradePair TradePair) OandaInstrument() OandaInstrument {
 	case EurGbp:
 		return OandaEurGbp
 	default:
-		return "unknown"
+		return unknownString
 	}
 }
 
 // PricePerPip returns price per pips
-func (tradePair TradePair) PricePerPip() float64 {
-	switch tradePair {
+func (t TradePair) PricePerPip() float64 {
+	switch t {
 	case GbpUsd, EurUsd, AudUsd, GbpAud, EurAud, EurGbp:
 		return 0.0001
 	case AudJpy, UsdJpy, GbpJpy, EurJpy:
 		return 0.01
 	default:
-		panic(fmt.Sprintf("unknown tradepair: %d", tradePair))
-	}
-}
-
-// IsValid is a method to validate trade pair
-func (tradePair TradePair) IsValid() error {
-	switch tradePair {
-	case GbpUsd, EurUsd, AudUsd, GbpAud, EurAud, EurGbp, AudJpy, UsdJpy, GbpJpy, EurJpy:
-		return nil
-	default:
-		return ErrNumber
+		panic(fmt.Sprintf("unknown tradepair: %d", t))
 	}
 }
 
@@ -236,53 +417,102 @@ const (
 	NewYorkPM
 )
 
-// OK is a method to valudate unix time for the timezone
-func (timezone Timezone) OK(unix int64) bool {
-	t := time.Unix(unix, 0)
+const (
+	tokyoAMString   = "tokyo_am"
+	tokyoPMString   = "tokyo_pm"
+	londonAMString  = "london_am"
+	londonPMString  = "london_pm"
+	newyorkAMString = "newyork_am"
+	newyorkPMString = "newyork_pm"
+)
 
-	switch timezone {
+func (t *Timezone) String() string {
+	switch *t {
 	case TokyoAM:
-		cond1 := 7 <= t.Hour() && t.Hour() < 12
-		cond2 := time.Monday <= t.Weekday() && t.Weekday() <= time.Friday
+		return tokyoAMString
+	case TokyoPM:
+		return tokyoPMString
+	case LondonAM:
+		return londonAMString
+	case LondonPM:
+		return londonPMString
+	case NewYorkAM:
+		return newyorkAMString
+	case NewYorkPM:
+		return newyorkPMString
+	default:
+		return unknownString
+	}
+}
+
+// UnmarshalParam is a method to unmarshal param for timezone
+func (t *Timezone) UnmarshalParam(param string) error {
+	switch param {
+	case tokyoAMString:
+		*t = TokyoAM
+	case tokyoPMString:
+		*t = TokyoPM
+	case londonAMString:
+		*t = LondonAM
+	case londonPMString:
+		*t = LondonPM
+	case newyorkAMString:
+		*t = NewYorkAM
+	case newyorkPMString:
+		*t = NewYorkPM
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marhsal JSON for timezone
+func (t *Timezone) MarshalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for timezone
+func (t *Timezone) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
+}
+
+// OK is a method to valudate unix time for the timezone
+func (t Timezone) OK(unix int64) bool {
+	tm := time.Unix(unix, 0)
+
+	switch t {
+	case TokyoAM:
+		cond1 := 7 <= tm.Hour() && tm.Hour() < 12
+		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
 		return cond1 && cond2
 
 	case TokyoPM:
-		cond1 := 12 <= t.Hour() && t.Hour() < 15
-		cond2 := time.Monday <= t.Weekday() && t.Weekday() <= time.Friday
+		cond1 := 12 <= tm.Hour() && tm.Hour() < 15
+		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
 		return cond1 && cond2
 
 	case LondonAM:
-		cond1 := 15 <= t.Hour() && t.Hour() < 20
-		cond2 := time.Monday <= t.Weekday() && t.Weekday() <= time.Friday
+		cond1 := 15 <= tm.Hour() && tm.Hour() < 20
+		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
 		return cond1 && cond2
 
 	case LondonPM:
-		cond1 := 20 <= t.Hour() && t.Hour() < 22
-		cond2 := time.Monday <= t.Weekday() && t.Weekday() <= time.Friday
+		cond1 := 20 <= tm.Hour() && tm.Hour() < 22
+		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
 		return cond1 && cond2
 
 	case NewYorkAM:
-		cond1 := (t.Weekday() != time.Saturday && 22 <= t.Hour()) || (t.Weekday() != time.Monday && t.Hour() < 3)
-		cond2 := time.Monday <= t.Weekday() && t.Weekday() <= time.Saturday
+		cond1 := (tm.Weekday() != time.Saturday && 22 <= tm.Hour()) || (tm.Weekday() != time.Monday && tm.Hour() < 3)
+		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Saturday
 		return cond1 && cond2
 
 	case NewYorkPM:
-		cond1 := 3 <= t.Hour() && t.Hour() < 7
-		cond2 := time.Tuesday <= t.Weekday() && t.Weekday() <= time.Saturday
+		cond1 := 3 <= tm.Hour() && tm.Hour() < 7
+		cond2 := time.Tuesday <= tm.Weekday() && tm.Weekday() <= time.Saturday
 		return cond1 && cond2
 
 	default:
 		return false
-	}
-}
-
-// IsValid is a method to validate timezone
-func (timezone Timezone) IsValid() error {
-	switch timezone {
-	case TokyoAM, TokyoPM, LondonAM, LondonPM, NewYorkAM, NewYorkPM:
-		return nil
-	default:
-		return ErrNumber
 	}
 }
 
@@ -314,14 +544,38 @@ const (
 	Frame TradeAlgorithmType = iota + 1
 )
 
-// IsValid is a method to validate trade algorithm type
-func (_type TradeAlgorithmType) IsValid() error {
-	switch _type {
+const (
+	frameString = "frame"
+)
+
+func (t *TradeAlgorithmType) String() string {
+	switch *t {
 	case Frame:
-		return nil
+		return frameString
 	default:
-		return ErrNumber
+		return unknownString
 	}
+}
+
+// UnmarshalParam is a method to unmarshal param for trade algorithm type
+func (t *TradeAlgorithmType) UnmarshalParam(param string) error {
+	switch param {
+	case frameString:
+		*t = Frame
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marhsal JSON for trade algorithm type
+func (t *TradeAlgorithmType) MarshalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade algorithm type
+func (t *TradeAlgorithmType) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
 }
 
 // TradeDirection is trade direction enums
@@ -334,14 +588,43 @@ const (
 	Short
 )
 
-// IsValid is a method to validate trade direction
-func (direction TradeDirection) IsValid() error {
-	switch direction {
-	case Long, Short:
-		return nil
+const (
+	longString  = "long"
+	shortString = "short"
+)
+
+func (t *TradeDirection) String() string {
+	switch *t {
+	case Long:
+		return longString
+	case Short:
+		return shortString
 	default:
-		return ErrNumber
+		return unknownString
 	}
+}
+
+// UnmarshalParam is a method to unmarshal param for trade direction
+func (t *TradeDirection) UnmarshalParam(param string) error {
+	switch param {
+	case longString:
+		*t = Long
+	case shortString:
+		*t = Short
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marshal JSON for trade direction
+func (t *TradeDirection) MarshalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade direction
+func (t *TradeDirection) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
 }
 
 // OrderState is order state enums
@@ -353,3 +636,42 @@ const (
 	// Closed is closed state
 	Closed
 )
+
+const (
+	openString   = "open"
+	closedString = "closed"
+)
+
+func (t *OrderState) String() string {
+	switch *t {
+	case Open:
+		return openString
+	case Closed:
+		return closedString
+	default:
+		return unknownString
+	}
+}
+
+// UnmarshalParam is a method to unmarshal param for order state
+func (t *OrderState) UnmarshalParam(param string) error {
+	switch param {
+	case openString:
+		*t = Open
+	case closedString:
+		*t = Closed
+	default:
+		return ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marshal JSON for order state
+func (t *OrderState) MarshalJSON() ([]byte, error) {
+	return marshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for order state
+func (t *OrderState) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
+}
