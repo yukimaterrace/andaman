@@ -17,15 +17,15 @@ import (
 type (
 	getTradeRunsParams struct {
 		Type   model.TradeRunType `query:"type" validate:"required"`
-		Count  int                `query:"count" validate:"gte=0,lte=100"`
-		Offset int                `query:"offset" validate:"gte=0"`
+		Count  int                `query:"count" validate:"min=0,max=100"`
+		Offset int                `query:"offset" validate:"min=0"`
 	}
 
 	createTradeParams struct {
 		TradeSetName string             `query:"trade_set_name" validate:"required"`
 		Type         model.TradeRunType `query:"type" validate:"required"`
-		Start        int                `query:"start" validate:"gte=0"`
-		End          int                `query:"end" validate:"gte=0"`
+		Start        int                `query:"start" validate:"min=0"`
+		End          int                `query:"end" validate:"min=0"`
 	}
 
 	changeTradeModeParams struct {
