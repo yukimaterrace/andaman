@@ -42,7 +42,7 @@ type (
 		AlgorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
 	}
 
-	getFirstTradeCountProfitsParams struct {
+	getTradeConfigurationGroupSummariesParams struct {
 		TradeRunID int `query:"trade_run_id" validate:"required"`
 		Count      int `query:"count" validate:"min=0,max=100"`
 		Offset     int `query:"offset" validate:"min=0"`
@@ -113,7 +113,7 @@ func getTradeCountProfits(c echo.Context) error {
 }
 
 func getTradeConfigurationGroupSummaries(c echo.Context) error {
-	p := getFirstTradeCountProfitsParams{}
+	p := getTradeConfigurationGroupSummariesParams{}
 	if err := c.Bind(&p); err != nil {
 		return err
 	}
