@@ -743,23 +743,30 @@ func GetTradeConfigurationGroupCountForOrder(tradeRunID int) (int, error) {
 	q := `
 		select
 			count(1)
-		from
-			order_
-		inner join
-			trade_configuration
-		on
-			trade_configuration.trade_configuration_id = order_.trade_configuration_id
-		inner join
-			trade_algorithm
-		on
-			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
-		where
-			order_.trade_run_id = ?
-		group by
-			trade_configuration.trade_pair,
-			trade_configuration.timezone,
-			trade_algorithm.trade_direction,
-			trade_algorithm.type
+		from (
+			select
+				trade_configuration.trade_pair,
+				trade_configuration.timezone,
+				trade_algorithm.trade_direction,
+				trade_algorithm.type
+			from
+				order_
+			inner join
+				trade_configuration
+			on
+				trade_configuration.trade_configuration_id = order_.trade_configuration_id
+			inner join
+				trade_algorithm
+			on
+				trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
+			where
+				order_.trade_run_id = ?
+			group by
+				trade_configuration.trade_pair,
+				trade_configuration.timezone,
+				trade_algorithm.trade_direction,
+				trade_algorithm.type
+		) as t
 	`
 
 	row := db.QueryRow(q, tradeRunID)
