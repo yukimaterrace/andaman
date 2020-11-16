@@ -267,8 +267,8 @@ func GetTradeSummariesB(
 	return resp, nil
 }
 
-func getTradeCount(totalCount int, positiveCount int) model.TradeCount {
-	return model.TradeCount{
+func getTradeCount(totalCount int, positiveCount int) *model.TradeCount {
+	return &model.TradeCount{
 		PositiveProfitCount: positiveCount,
 		NegativeProfitCount: totalCount - positiveCount,
 	}
@@ -279,22 +279,12 @@ func GetTradeCountProfits(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
 	count int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeCountProfitsResponse, error) {
 
-	unrealizedCount, err := db.GetCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType)
+	_count, err := db.GetCountByPeriod(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
 
-	unrealizedPositiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType)
-	if err != nil {
-		return nil, err
-	}
-
-	realizedCount, err := db.GetCountByPeriod(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType)
-	if err != nil {
-		return nil, err
-	}
-
-	realizedPositiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType)
+	positiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
@@ -305,9 +295,8 @@ func GetTradeCountProfits(
 	}
 
 	resp := &model.TradeCountProfitsResponse{
-		UnrealizedTradeCount: getTradeCount(unrealizedCount, unrealizedPositiveCount),
-		RealizedTradeCount:   getTradeCount(realizedCount, realizedPositiveCount),
-		TradeCountProfit:     cps,
+		TradeCount:       getTradeCount(_count, positiveCount),
+		TradeCountProfit: cps,
 	}
 
 	return resp, nil
@@ -315,5 +304,50 @@ func GetTradeCountProfits(
 
 // GetTradeConfigurationGroupSummaries is a method to get trade configuration group summaries
 func GetTradeConfigurationGroupSummaries(tradeRunID int, count int, offset int) (*model.TradeConfigurationGroupSummariesResponse, error) {
-	return nil, nil
+	all, err := db.GetTradeConfigurationGroupCountForOrder(tradeRunID)
+	if err != nil {
+		return nil, err
+	}
+
+	groups, err := db.GetTradeConfigurationGroupsForOrder(tradeRunID, count, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	summaries := []*model.TradeConfigurationGroupSummary{}
+	for _, g := range groups {
+		_count, err := db.GetCountByPeriod(tradeRunID, g.TradePair, g.Timezone, g.TradeDirection, g.TradeAlgorithmType)
+		if err != nil {
+			return nil, err
+		}
+
+		positiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, g.TradePair, g.Timezone, g.TradeDirection, g.TradeAlgorithmType)
+		if err != nil {
+			return nil, err
+		}
+
+		cp, err := db.GetFirstTradeConfigurationTradeCountProfit(tradeRunID, g.TradePair, g.Timezone, g.TradeDirection, g.TradeAlgorithmType)
+		if err != nil {
+			return nil, err
+		}
+
+		s := &model.TradeConfigurationGroupSummary{
+			TradeConfigurationGroup:            g,
+			TradeCount:                         getTradeCount(_count, positiveCount),
+			TradeConfigurationTradeCountProfit: cp,
+		}
+
+		summaries = append(summaries, s)
+	}
+
+	resp := &model.TradeConfigurationGroupSummariesResponse{
+		TradeConfigurationGroupSummaries: summaries,
+		Paging: &model.OffsetPaging{
+			All:    all,
+			Count:  len(groups),
+			Offset: offset,
+		},
+	}
+
+	return resp, nil
 }

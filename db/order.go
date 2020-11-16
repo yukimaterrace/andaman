@@ -213,7 +213,7 @@ func GetCountForOrders(
 
 // GetCountByPeriod is a method to get count by period
 func GetCountByPeriod(
-	tradeRunID int, state model.OrderState, tradePair model.TradePair, timezone model.Timezone,
+	tradeRunID int, tradePair model.TradePair, timezone model.Timezone,
 	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
 	q := `
 		select
@@ -233,11 +233,10 @@ func GetCountByPeriod(
 			trade_algorithm.type = ? and
 			trade_algorithm.trade_direction = ?
 		where
-			order_.trade_run_id = ? and
-			order_.state = ?
+			order_.trade_run_id = ?
 	`
 
-	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -249,7 +248,7 @@ func GetCountByPeriod(
 
 // GetPositiveProfitCountByPeriod is a method to get positive profit count by period
 func GetPositiveProfitCountByPeriod(
-	tradeRunID int, state model.OrderState, tradePair model.TradePair, timezone model.Timezone,
+	tradeRunID int, tradePair model.TradePair, timezone model.Timezone,
 	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
 	q := `
 		select
@@ -270,11 +269,10 @@ func GetPositiveProfitCountByPeriod(
 			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
-			order_.state = ? and
 			order_.profit >= 0
 	`
 
-	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -736,6 +734,41 @@ func GetTotalProfitByFilter2(tradeRunID int, state model.OrderState, tradePair m
 		return 0, err
 	}
 	return profit, nil
+}
+
+// GetTradeConfigurationGroupCountForOrder is a method to get trade configuration group count
+func GetTradeConfigurationGroupCountForOrder(tradeRunID int) (int, error) {
+	q := `
+		select
+			count(1)
+		from
+			order_
+		inner join
+			trade_configuration
+		on
+			trade_configuration.trade_configuration_id = order_.trade_configuration_id
+		inner join
+			trade_algorithm
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
+		where
+			order_.trade_run_id = ?
+		group by
+			trade_configuration.trade_pair,
+			trade_configuration.timezone,
+			trade_algorithm.trade_direction,
+			trade_algorithm.type
+	`
+
+	row := db.QueryRow(q, tradeRunID)
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 // GetTradeConfigurationGroupsForOrder is a method to get trade configuration groups

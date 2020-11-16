@@ -48,9 +48,8 @@ type (
 
 	// TradeCountProfitsResponse is a response for trade count profits
 	TradeCountProfitsResponse struct {
-		UnrealizedTradeCount TradeCount                            `json:"unrealized_trade_count"`
-		RealizedTradeCount   TradeCount                            `json:"realized_trade_count"`
-		TradeCountProfit     []*TradeConfigurationTradeCountProfit `json:"trade_count_profits"`
+		TradeCount       *TradeCount                           `json:"trade_count"`
+		TradeCountProfit []*TradeConfigurationTradeCountProfit `json:"trade_count_profits"`
 	}
 
 	// TradeConfigurationGroupSummariesResponse is a struct for trade configuration grouup summaries response
