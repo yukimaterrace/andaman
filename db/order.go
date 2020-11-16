@@ -214,7 +214,7 @@ func GetCountForOrders(
 // GetCountByPeriod is a method to get count by period
 func GetCountByPeriod(
 	tradeRunID int, state model.OrderState, tradePair model.TradePair, timezone model.Timezone,
-	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, start int, end int) (int, error) {
+	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
 	q := `
 		select
 			count(1)
@@ -234,12 +234,10 @@ func GetCountByPeriod(
 			trade_algorithm.trade_direction = ?
 		where
 			order_.trade_run_id = ? and
-			order_.state = ? and
-			order_.time_at_open > ? and
-			order_.time_at_close < ?
+			order_.state = ?
 	`
 
-	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state, start, end)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -252,7 +250,7 @@ func GetCountByPeriod(
 // GetPositiveProfitCountByPeriod is a method to get positive profit count by period
 func GetPositiveProfitCountByPeriod(
 	tradeRunID int, state model.OrderState, tradePair model.TradePair, timezone model.Timezone,
-	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, start int, end int) (int, error) {
+	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (int, error) {
 	q := `
 		select
 			count(1)
@@ -273,12 +271,10 @@ func GetPositiveProfitCountByPeriod(
 		where
 			order_.trade_run_id = ? and
 			order_.state = ? and
-			order_.time_at_open > ? and
-			order_.time_at_close < ? and
 			order_.profit >= 0
 	`
 
-	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state, start, end)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, state)
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -547,7 +543,7 @@ func GetTradeCountProfitByFilter3(
 // GetTradeConfigurationTradeCountProfits is a method to get trade count profit by filter 4
 func GetTradeConfigurationTradeCountProfits(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
-	start int, end int, count int, offset int) ([]*model.TradeConfigurationTradeCountProfit, error) {
+	count int, offset int) ([]*model.TradeConfigurationTradeCountProfit, error) {
 
 	q := `
 		select
@@ -574,9 +570,7 @@ func GetTradeConfigurationTradeCountProfits(
 			trade_algorithm.type = ? and
 			trade_algorithm.trade_direction = ?
 		where
-			order_.trade_run_id = ? and
-			order_.time_at_open > ? and
-			order_.time_at_open < ?
+			order_.trade_run_id = ?
 		group by
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
@@ -592,7 +586,7 @@ func GetTradeConfigurationTradeCountProfits(
 			?
 	`
 
-	rows, err := db.Query(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, start, end, count, offset)
+	rows, err := db.Query(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, count, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -624,7 +618,7 @@ func GetTradeConfigurationTradeCountProfits(
 // GetFirstTradeConfigurationTradeCountProfit is a method to get trade count profit by filter 5
 func GetFirstTradeConfigurationTradeCountProfit(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone,
-	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, start int, end int) (*model.TradeConfigurationTradeCountProfit, error) {
+	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType) (*model.TradeConfigurationTradeCountProfit, error) {
 
 	q := `
 		select
@@ -651,9 +645,7 @@ func GetFirstTradeConfigurationTradeCountProfit(
 			trade_algorithm.type = ? and
 			trade_algorithm.trade_direction = ?
 		where
-			order_.trade_run_id = ? and
-			order_.time_at_open > ? and
-			order_.time_at_open < ?
+			order_.trade_run_id = ?
 		group by
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
@@ -667,7 +659,7 @@ func GetFirstTradeConfigurationTradeCountProfit(
 			1
 	`
 
-	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID, start, end)
+	row := db.QueryRow(q, tradePair, timezone, algorithmType, tradeDirection, tradeRunID)
 
 	var tctp model.TradeConfigurationTradeCountProfit
 
@@ -747,7 +739,7 @@ func GetTotalProfitByFilter2(tradeRunID int, state model.OrderState, tradePair m
 }
 
 // GetTradeConfigurationGroupsForOrder is a method to get trade configuration groups
-func GetTradeConfigurationGroupsForOrder(tradeRunID int, start int, end int, count int, offset int) ([]*model.TradeConfigurationGroup, error) {
+func GetTradeConfigurationGroupsForOrder(tradeRunID int, count int, offset int) ([]*model.TradeConfigurationGroup, error) {
 	q := `
 		select
 			trade_configuration.trade_pair,
@@ -765,9 +757,7 @@ func GetTradeConfigurationGroupsForOrder(tradeRunID int, start int, end int, cou
 		on
 			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
 		where
-			order_.trade_run_id = ? and
-			order_.time_at_open > ? and
-			order_.time_at_open < ?
+			order_.trade_run_id = ?
 		group by
 			trade_configuration.trade_pair,
 			trade_configuration.timezone,
@@ -782,7 +772,7 @@ func GetTradeConfigurationGroupsForOrder(tradeRunID int, start int, end int, cou
 		offset ?
 	`
 
-	rows, err := db.Query(q, tradeRunID, start, end, count, offset)
+	rows, err := db.Query(q, tradeRunID, count, offset)
 	if err != nil {
 		return nil, err
 	}

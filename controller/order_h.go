@@ -40,7 +40,12 @@ type (
 		timezone       model.Timezone           `query:"timezone" validate:"required"`
 		tradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
 		algorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
-		start          int                      `query:"start" validate:"required"`
+	}
+
+	getFirstTradeCountProfitsParams struct {
+		tradeRunID int `query:"trade_run_id" validate:"required"`
+		count      int `query:"count" validate:"min=0,max=100"`
+		offset     int `query:"offset" validate:"min=0"`
 	}
 )
 
@@ -98,9 +103,22 @@ func getTradeCountProfits(c echo.Context) error {
 	}
 
 	resp, err := service.GetTradeCountProfits(
-		p.tradeRunID, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, p.start,
-		int(time.Now().Unix()), 100, trader.TradeParamObjectCreator,
+		p.tradeRunID, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, 100, trader.TradeParamObjectCreator,
 	)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func getTradeConfigurationGroupSummaries(c echo.Context) error {
+	p := getFirstTradeCountProfitsParams{}
+	if err := c.Bind(&p); err != nil {
+		return err
+	}
+
+	resp, err := service.GetTradeConfigurationGroupSummaries(p.tradeRunID, p.count, p.offset)
 	if err != nil {
 		return err
 	}

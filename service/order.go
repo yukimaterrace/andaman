@@ -277,29 +277,29 @@ func getTradeCount(totalCount int, positiveCount int) model.TradeCount {
 // GetTradeCountProfits is a method to get trade count profits
 func GetTradeCountProfits(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
-	start int, end int, count int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeCountProfitsResponse, error) {
+	count int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeCountProfitsResponse, error) {
 
-	unrealizedCount, err := db.GetCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType, start, end)
+	unrealizedCount, err := db.GetCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
 
-	unrealizedPositiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType, start, end)
+	unrealizedPositiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, model.Open, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
 
-	realizedCount, err := db.GetCountByPeriod(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType, start, end)
+	realizedCount, err := db.GetCountByPeriod(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
 
-	realizedPositiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType, start, end)
+	realizedPositiveCount, err := db.GetPositiveProfitCountByPeriod(tradeRunID, model.Closed, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {
 		return nil, err
 	}
 
-	cps, err := db.GetTradeConfigurationTradeCountProfits(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, end, count, 0)
+	cps, err := db.GetTradeConfigurationTradeCountProfits(tradeRunID, tradePair, timezone, tradeDirection, algorithmType, count, 0)
 	if err != nil {
 		return nil, err
 	}

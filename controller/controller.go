@@ -38,6 +38,7 @@ func CreateController() *echo.Echo {
 	e.GET("/api/trade_summaries_b", getTradeSummariesB)
 
 	e.GET("/api/trade_count_profits", getTradeCountProfits)
+	e.GET("/api/trade_configuration_group_summaries", getTradeConfigurationGroupSummaries)
 
 	return e
 }
