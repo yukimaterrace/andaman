@@ -11,26 +11,26 @@ import (
 
 type (
 	getTradeSetsParams struct {
-		_type  model.TradeSetType `query:"type" validate:"required"`
-		count  int                `query:"count" validate:"min=0,max=100"`
-		offset int                `query:"offset" validate:"min=0"`
+		Type   model.TradeSetType `query:"type" validate:"required"`
+		Count  int                `query:"count" validate:"min=0,max=100"`
+		Offset int                `query:"offset" validate:"min=0"`
 	}
 
 	addTradeSetByPresetParams struct {
-		name string `form:"name" validate:"required"`
+		Name string `form:"name" validate:"required"`
 	}
 )
 
 func getTradeSets(c echo.Context) error {
 	p := getTradeSetsParams{
-		count:  20,
-		offset: 0,
+		Count:  20,
+		Offset: 0,
 	}
 	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	resp, err := service.GetTradeSets(model.TradeSetType(p._type), int(p.count), int(p.offset))
+	resp, err := service.GetTradeSets(p.Type, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func addTradeSetByPreset(c echo.Context) error {
 		return err
 	}
 
-	switch p.name {
+	switch p.Name {
 	case factory.SimulationTradeSetName:
 		factory.AddSimulationTradeSet()
 

@@ -6,6 +6,7 @@ import (
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -70,6 +71,12 @@ func httpErrorHandler(err error, c echo.Context) {
 	case *echo.HTTPError:
 		apiErr = &APIError{
 			Code:    _err.Code,
+			Message: _err.Error(),
+		}
+
+	case validator.ValidationErrors:
+		apiErr = &APIError{
+			Code:    http.StatusBadRequest,
 			Message: _err.Error(),
 		}
 

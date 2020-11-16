@@ -16,33 +16,33 @@ import (
 
 type (
 	getTradeRunsParams struct {
-		_type  model.TradeRunType `query:"type" validate:"required"`
-		count  int                `query:"count" validate:"gte=0,lte=100"`
-		offset int                `query:"offset" validate:"gte=0"`
+		Type   model.TradeRunType `query:"type" validate:"required"`
+		Count  int                `query:"count" validate:"gte=0,lte=100"`
+		Offset int                `query:"offset" validate:"gte=0"`
 	}
 
 	createTradeParams struct {
-		tradeSetName string             `query:"trade_set_name" validate:"required"`
-		_type        model.TradeRunType `query:"type" validate:"required"`
-		start        int                `query:"start" validate:"gte=0"`
-		end          int                `query:"end" validate:"gte=0"`
+		TradeSetName string             `query:"trade_set_name" validate:"required"`
+		Type         model.TradeRunType `query:"type" validate:"required"`
+		Start        int                `query:"start" validate:"gte=0"`
+		End          int                `query:"end" validate:"gte=0"`
 	}
 
 	changeTradeModeParams struct {
-		tradeMode flow.TradeMode `query:"trade_mode" validate:"required"`
+		TradeMode flow.TradeMode `query:"trade_mode" validate:"required"`
 	}
 )
 
 func getTradeRuns(c echo.Context) error {
 	p := getTradeRunsParams{
-		count:  20,
-		offset: 0,
+		Count:  20,
+		Offset: 0,
 	}
 	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	resp, err := service.GetTradeRunDetails(model.TradeRunType(p._type), int(p.count), int(p.offset))
+	resp, err := service.GetTradeRunDetails(p.Type, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func createTrade(c echo.Context) error {
 		return err
 	}
 
-	if err := _createTrade(p.tradeSetName, model.TradeRunType(p._type), int(p.start), int(p.end)); err != nil {
+	if err := _createTrade(p.TradeSetName, p.Type, p.Start, p.End); err != nil {
 		return err
 	}
 
@@ -69,7 +69,7 @@ func changeTradeMode(c echo.Context) error {
 		return err
 	}
 
-	_changeTradeMode(flow.TradeMode(p.tradeMode))
+	_changeTradeMode(flow.TradeMode(p.TradeMode))
 	return c.JSON(http.StatusOK, success)
 }
 

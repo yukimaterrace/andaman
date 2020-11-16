@@ -12,53 +12,53 @@ import (
 
 type (
 	getOrdersQueryParams struct {
-		tradeRunID     int                      `query:"trade_run_id" validate:"required"`
-		orderState     model.OrderState         `query:"order_state" validate:"required"`
-		tradePair      model.TradePair          `query:"trade_pair" validate:"required"`
-		timezone       model.Timezone           `query:"timezone" validate:"required"`
-		tradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
-		algorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
-		count          int                      `query:"count" validate:"min=0,max=100"`
-		offset         int                      `query:"offset" validate:"min=0"`
+		TradeRunID     int                      `query:"trade_run_id" validate:"required"`
+		OrderState     model.OrderState         `query:"order_state" validate:"required"`
+		TradePair      model.TradePair          `query:"trade_pair" validate:"required"`
+		Timezone       model.Timezone           `query:"timezone" validate:"required"`
+		TradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
+		AlgorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
+		Count          int                      `query:"count" validate:"min=0,max=100"`
+		Offset         int                      `query:"offset" validate:"min=0"`
 	}
 
 	getTradeSummariesAParams struct {
-		tradeRunID int `query:"trade_run_id" validate:"required"`
-		start      int `query:"start" validate:"required"`
+		TradeRunID int `query:"trade_run_id" validate:"required"`
+		Start      int `query:"start" validate:"required"`
 	}
 
 	getTradeSummariesBParams struct {
-		tradeRunID int             `query:"trade_run_id" validate:"required"`
-		tradePair  model.TradePair `query:"trade_pair" validate:"required"`
-		timezone   model.Timezone  `query:"timezone" validate:"required"`
-		start      int             `query:"start" validate:"required"`
+		TradeRunID int             `query:"trade_run_id" validate:"required"`
+		TradePair  model.TradePair `query:"trade_pair" validate:"required"`
+		Timezone   model.Timezone  `query:"timezone" validate:"required"`
+		Start      int             `query:"start" validate:"required"`
 	}
 
 	getTradeCountProfitsParams struct {
-		tradeRunID     int                      `query:"trade_run_id" validate:"required"`
-		tradePair      model.TradePair          `query:"trade_pair" validate:"required"`
-		timezone       model.Timezone           `query:"timezone" validate:"required"`
-		tradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
-		algorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
+		TradeRunID     int                      `query:"trade_run_id" validate:"required"`
+		TradePair      model.TradePair          `query:"trade_pair" validate:"required"`
+		Timezone       model.Timezone           `query:"timezone" validate:"required"`
+		TradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
+		AlgorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
 	}
 
 	getFirstTradeCountProfitsParams struct {
-		tradeRunID int `query:"trade_run_id" validate:"required"`
-		count      int `query:"count" validate:"min=0,max=100"`
-		offset     int `query:"offset" validate:"min=0"`
+		TradeRunID int `query:"trade_run_id" validate:"required"`
+		Count      int `query:"count" validate:"min=0,max=100"`
+		Offset     int `query:"offset" validate:"min=0"`
 	}
 )
 
 func getOrders(c echo.Context) error {
 	p := getOrdersQueryParams{
-		count:  20,
-		offset: 0,
+		Count:  20,
+		Offset: 0,
 	}
 	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	resp, err := service.GetOrders(p.tradeRunID, p.orderState, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, p.count, p.offset)
+	resp, err := service.GetOrders(p.TradeRunID, p.OrderState, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func getTradeSummariesA(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesA(p.tradeRunID, p.start, int(time.Now().Unix()))
+	resp, err := service.GetTradeSummariesA(p.TradeRunID, p.Start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func getTradeSummariesB(c echo.Context) error {
 	}
 
 	resp, err := service.GetTradeSummariesB(
-		p.tradeRunID, p.tradePair, p.timezone, p.start, int(time.Now().Unix()), trader.TradeParamObjectCreator,
+		p.TradeRunID, p.TradePair, p.Timezone, p.Start, int(time.Now().Unix()), trader.TradeParamObjectCreator,
 	)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func getTradeCountProfits(c echo.Context) error {
 	}
 
 	resp, err := service.GetTradeCountProfits(
-		p.tradeRunID, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, 100, trader.TradeParamObjectCreator,
+		p.TradeRunID, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, 100, trader.TradeParamObjectCreator,
 	)
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func getTradeConfigurationGroupSummaries(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeConfigurationGroupSummaries(p.tradeRunID, p.count, p.offset)
+	resp, err := service.GetTradeConfigurationGroupSummaries(p.TradeRunID, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}
