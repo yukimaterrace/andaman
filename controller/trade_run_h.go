@@ -16,20 +16,20 @@ import (
 
 type (
 	getTradeRunsParams struct {
-		_type  tradeRunTypeParam `query:"type" validate:"required"`
-		count  intParam          `query:"count" validate:"gte=0,lte=100"`
-		offset intParam          `query:"offset" validate:"gte=0"`
+		_type  model.TradeRunType `query:"type" validate:"required"`
+		count  int                `query:"count" validate:"gte=0,lte=100"`
+		offset int                `query:"offset" validate:"gte=0"`
 	}
 
 	createTradeParams struct {
-		tradeSetName string            `query:"trade_set_name" validate:"required"`
-		_type        tradeRunTypeParam `query:"type" validate:"required"`
-		start        intParam          `query:"start" validate:"gte=0"`
-		end          intParam          `query:"end" validate:"gte=0"`
+		tradeSetName string             `query:"trade_set_name" validate:"required"`
+		_type        model.TradeRunType `query:"type" validate:"required"`
+		start        int                `query:"start" validate:"gte=0"`
+		end          int                `query:"end" validate:"gte=0"`
 	}
 
 	changeTradeModeParams struct {
-		tradeMode tradeModeParam `query:"trade_mode" validate:"required"`
+		tradeMode flow.TradeMode `query:"trade_mode" validate:"required"`
 	}
 )
 
@@ -39,9 +39,6 @@ func getTradeRuns(c echo.Context) error {
 		offset: 0,
 	}
 	if err := c.Bind(&p); err != nil {
-		return err
-	}
-	if err := c.Validate(&p); err != nil {
 		return err
 	}
 
@@ -58,9 +55,6 @@ func createTrade(c echo.Context) error {
 	if err := c.Bind(&p); err != nil {
 		return err
 	}
-	if err := c.Validate(&p); err != nil {
-		return err
-	}
 
 	if err := _createTrade(p.tradeSetName, model.TradeRunType(p._type), int(p.start), int(p.end)); err != nil {
 		return err
@@ -72,9 +66,6 @@ func createTrade(c echo.Context) error {
 func changeTradeMode(c echo.Context) error {
 	p := changeTradeModeParams{}
 	if err := c.Bind(&p); err != nil {
-		return err
-	}
-	if err := c.Validate(&p); err != nil {
 		return err
 	}
 

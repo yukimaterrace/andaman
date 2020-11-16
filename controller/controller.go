@@ -5,7 +5,6 @@ import (
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/util"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -19,7 +18,7 @@ func CreateController() *echo.Echo {
 	e := echo.New()
 
 	e.HTTPErrorHandler = httpErrorHandler
-	e.Validator = &customValidator{validator.New()}
+	e.Binder = newCustomBinder()
 
 	e.Use(authMiddleware)
 	e.Use(middleware.Logger())
@@ -32,8 +31,7 @@ func CreateController() *echo.Echo {
 	e.POST("/api/create_trade", createTrade)
 	e.POST("/api/change_trade_mode", changeTradeMode)
 
-	e.GET("/api/open_orders", getOpenOrders)
-	e.GET("/api/closed_orders", getClosedOrders)
+	e.GET("/api/orders", getOrders)
 
 	e.GET("/api/trade_summaries_a", getTradeSummariesA)
 	e.GET("/api/trade_summaries_b", getTradeSummariesB)

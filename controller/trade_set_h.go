@@ -9,23 +9,28 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type (
+	getTradeSetsParams struct {
+		_type  model.TradeSetType `query:"type" validate:"required"`
+		count  int                `query:"count" validate:"min=0,max=100"`
+		offset int                `query:"offset" validate:"min=0"`
+	}
+
+	addTradeSetByPresetParams struct {
+		name string `form:"name" validate:"required"`
+	}
+)
+
 func getTradeSets(c echo.Context) error {
-	_type, err := param(c.QueryParam("type")).tradeSetType(true)
-	if err != nil {
+	p := getTradeSetsParams{
+		count:  20,
+		offset: 0,
+	}
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	count, err := param(c.QueryParam("count")).int(false, 20)
-	if err != nil {
-		return err
-	}
-
-	offset, err := param(c.QueryParam("offset")).int(false, 0)
-	if err != nil {
-		return err
-	}
-
-	resp, err := service.GetTradeSets(_type, count, offset)
+	resp, err := service.GetTradeSets(model.TradeSetType(p._type), int(p.count), int(p.offset))
 	if err != nil {
 		return err
 	}
@@ -34,12 +39,12 @@ func getTradeSets(c echo.Context) error {
 }
 
 func addTradeSetByPreset(c echo.Context) error {
-	name, err := param(c.FormValue("name")).string(true)
-	if err != nil {
+	p := addTradeSetByPresetParams{}
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	switch name {
+	switch p.name {
 	case factory.SimulationTradeSetName:
 		factory.AddSimulationTradeSet()
 

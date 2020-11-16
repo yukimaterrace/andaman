@@ -10,97 +10,50 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type ordersQueryParam struct {
-	*tradeGrainQueryParam
-	*countOffsetQueryParam
-}
-
-type tradeGrainQueryParam struct {
-	tradeRunID     int
-	tradePair      model.TradePair
-	timezone       model.Timezone
-	tradeDirection model.TradeDirection
-	algorithmType  model.TradeAlgorithmType
-}
-
-type countOffsetQueryParam struct {
-	count  int
-	offset int
-}
-
-func _getTradeGrainQueryParam(c echo.Context) (*tradeGrainQueryParam, error) {
-	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
-	if err != nil {
-		return nil, err
+type (
+	getOrdersQueryParams struct {
+		tradeRunID     int                      `query:"trade_run_id" validate:"required"`
+		orderState     model.OrderState         `query:"order_state" validate:"required"`
+		tradePair      model.TradePair          `query:"trade_pair" validate:"required"`
+		timezone       model.Timezone           `query:"timezone" validate:"required"`
+		tradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
+		algorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
+		count          int                      `query:"count" validate:"min=0,max=100"`
+		offset         int                      `query:"offset" validate:"min=0"`
 	}
 
-	tradePair, err := param(c.QueryParam("trade_pair")).tradePair(true)
-	if err != nil {
-		return nil, err
+	getTradeSummariesAParams struct {
+		tradeRunID int `query:"trade_run_id" validate:"required"`
+		start      int `query:"start" validate:"required"`
 	}
 
-	timezone, err := param(c.QueryParam("timezone")).timezone(true)
-	if err != nil {
-		return nil, err
+	getTradeSummariesBParams struct {
+		tradeRunID int             `query:"trade_run_id" validate:"required"`
+		tradePair  model.TradePair `query:"trade_pair" validate:"required"`
+		timezone   model.Timezone  `query:"timezone" validate:"required"`
+		start      int             `query:"start" validate:"required"`
 	}
 
-	tradeDirection, err := param(c.QueryParam("trade_direction")).tradeDirection(true)
-	if err != nil {
-		return nil, err
+	getTradeCountProfitsParams struct {
+		tradeRunID     int                      `query:"trade_run_id" validate:"required"`
+		tradePair      model.TradePair          `query:"trade_pair" validate:"required"`
+		timezone       model.Timezone           `query:"timezone" validate:"required"`
+		tradeDirection model.TradeDirection     `query:"trade_direction" validate:"required"`
+		algorithmType  model.TradeAlgorithmType `query:"algorithm_type" validate:"required"`
+		start          int                      `query:"start" validate:"required"`
 	}
+)
 
-	algorithmType, err := param(c.QueryParam("trade_algorithm_type")).tradeAlgorithmType(true)
-	if err != nil {
-		return nil, err
+func getOrders(c echo.Context) error {
+	p := getOrdersQueryParams{
+		count:  20,
+		offset: 0,
 	}
-
-	return &tradeGrainQueryParam{
-		tradeRunID:     tradeRunID,
-		tradePair:      tradePair,
-		timezone:       timezone,
-		tradeDirection: tradeDirection,
-		algorithmType:  algorithmType,
-	}, nil
-}
-
-func _getCountOffsetQueryParam(c echo.Context) (*countOffsetQueryParam, error) {
-	count, err := param(c.QueryParam("count")).int(false, 20)
-	if err != nil {
-		return nil, err
-	}
-
-	offset, err := param(c.QueryParam("offset")).int(false, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	return &countOffsetQueryParam{
-		count:  count,
-		offset: offset,
-	}, nil
-}
-
-func _getOrdersQueryParam(c echo.Context) (*ordersQueryParam, error) {
-	tradeGrainQueryParam, err := _getTradeGrainQueryParam(c)
-	if err != nil {
-		return nil, err
-	}
-
-	countOffsetQueryParam, err := _getCountOffsetQueryParam(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ordersQueryParam{tradeGrainQueryParam, countOffsetQueryParam}, nil
-}
-
-func _getOrders(c echo.Context, orderState model.OrderState) error {
-	p, err := _getOrdersQueryParam(c)
-	if err != nil {
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	resp, err := service.GetOrders(p.tradeRunID, orderState, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, p.count, p.offset)
+	resp, err := service.GetOrders(p.tradeRunID, p.orderState, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, p.count, p.offset)
 	if err != nil {
 		return err
 	}
@@ -108,26 +61,13 @@ func _getOrders(c echo.Context, orderState model.OrderState) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func getOpenOrders(c echo.Context) error {
-	return _getOrders(c, model.Open)
-}
-
-func getClosedOrders(c echo.Context) error {
-	return _getOrders(c, model.Closed)
-}
-
 func getTradeSummariesA(c echo.Context) error {
-	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
-	if err != nil {
+	p := getTradeSummariesAParams{}
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	start, err := param(c.QueryParam("start")).int(true, 0)
-	if err != nil {
-		return err
-	}
-
-	resp, err := service.GetTradeSummariesA(tradeRunID, start, int(time.Now().Unix()))
+	resp, err := service.GetTradeSummariesA(p.tradeRunID, p.start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
@@ -136,27 +76,14 @@ func getTradeSummariesA(c echo.Context) error {
 }
 
 func getTradeSummariesB(c echo.Context) error {
-	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
-	if err != nil {
+	p := getTradeSummariesBParams{}
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	tradePair, err := param(c.QueryParam("trade_pair")).tradePair(true)
-	if err != nil {
-		return err
-	}
-
-	timezone, err := param(c.QueryParam("timezone")).timezone(true)
-	if err != nil {
-		return err
-	}
-
-	start, err := param(c.QueryParam("start")).int(true, 0)
-	if err != nil {
-		return err
-	}
-
-	resp, err := service.GetTradeSummariesB(tradeRunID, tradePair, timezone, start, int(time.Now().Unix()), trader.TradeParamObjectCreator)
+	resp, err := service.GetTradeSummariesB(
+		p.tradeRunID, p.tradePair, p.timezone, p.start, int(time.Now().Unix()), trader.TradeParamObjectCreator,
+	)
 	if err != nil {
 		return err
 	}
@@ -165,38 +92,14 @@ func getTradeSummariesB(c echo.Context) error {
 }
 
 func getTradeCountProfits(c echo.Context) error {
-	tradeRunID, err := param(c.QueryParam("trade_run_id")).int(true, 0)
-	if err != nil {
-		return err
-	}
-
-	tradePair, err := param(c.QueryParam("trade_pair")).tradePair(true)
-	if err != nil {
-		return err
-	}
-
-	timezone, err := param(c.QueryParam("timezone")).timezone(true)
-	if err != nil {
-		return err
-	}
-
-	tradeDirection, err := param(c.QueryParam("trade_direction")).tradeDirection(true)
-	if err != nil {
-		return err
-	}
-
-	algorithmType, err := param(c.QueryParam("trade_algorithm_type")).tradeAlgorithmType(true)
-	if err != nil {
-		return err
-	}
-
-	start, err := param(c.QueryParam("start")).int(true, 0)
-	if err != nil {
+	p := getTradeCountProfitsParams{}
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
 	resp, err := service.GetTradeCountProfits(
-		tradeRunID, tradePair, timezone, tradeDirection, algorithmType, start, int(time.Now().Unix()), 100, trader.TradeParamObjectCreator,
+		p.tradeRunID, p.tradePair, p.timezone, p.tradeDirection, p.algorithmType, p.start,
+		int(time.Now().Unix()), 100, trader.TradeParamObjectCreator,
 	)
 	if err != nil {
 		return err

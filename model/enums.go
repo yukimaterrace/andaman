@@ -9,11 +9,13 @@ import (
 // ErrUnknownType is an error for unknown type
 var ErrUnknownType = errors.New("unknown type")
 
-const unknownString = "unknown"
+// UnknownString is a string for unknown
+const UnknownString = "unknown"
 
-func marshalJSON(t fmt.Stringer) ([]byte, error) {
+// MarshalJSON is a method to marshal JSON
+func MarshalJSON(t fmt.Stringer) ([]byte, error) {
 	s := t.String()
-	if s == unknownString {
+	if s == UnknownString {
 		return nil, ErrUnknownType
 	}
 	return []byte(s), nil
@@ -46,7 +48,7 @@ func (t *TradeSetType) String() string {
 	case GridSearch:
 		return gridSearchString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -67,7 +69,7 @@ func (t *TradeSetType) UnmarshalParam(param string) error {
 
 // MarshalJSON is a method to marshal JSON for trade set type
 func (t *TradeSetType) MarshalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for trade set type
@@ -97,7 +99,7 @@ func (t *TradeRunType) String() string {
 	case OandaTrade:
 		return oandaTradeString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -116,7 +118,7 @@ func (t *TradeRunType) UnmarshalParam(param string) error {
 
 // MarhsalJSON is a method to marshal JSON for trade run type
 func (t *TradeRunType) MarhsalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for trade run type
@@ -151,7 +153,7 @@ func (t *TradeRunState) String() string {
 	case Finished:
 		return finishedString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -172,7 +174,7 @@ func (t *TradeRunState) UnmarshalParam(param string) error {
 
 // MarhsalJSON is a method to marshal JSON for trade run state
 func (t *TradeRunState) MarhsalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for trade run state
@@ -242,7 +244,7 @@ func (t *TradePair) String() string {
 	case EurGbp:
 		return eurGbpString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -277,7 +279,7 @@ func (t *TradePair) UnmarshalParam(param string) error {
 
 // MarshalJSON is a method to marshal JSON for trade pair
 func (t *TradePair) MarshalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for trade pair
@@ -309,7 +311,7 @@ func (t TradePair) OandaInstrument() OandaInstrument {
 	case EurGbp:
 		return OandaEurGbp
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -441,7 +443,7 @@ func (t *Timezone) String() string {
 	case NewYorkPM:
 		return newyorkPMString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -468,7 +470,7 @@ func (t *Timezone) UnmarshalParam(param string) error {
 
 // MarshalJSON is a method to marhsal JSON for timezone
 func (t *Timezone) MarshalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for timezone
@@ -553,7 +555,7 @@ func (t *TradeAlgorithmType) String() string {
 	case Frame:
 		return frameString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -570,7 +572,7 @@ func (t *TradeAlgorithmType) UnmarshalParam(param string) error {
 
 // MarshalJSON is a method to marhsal JSON for trade algorithm type
 func (t *TradeAlgorithmType) MarshalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for trade algorithm type
@@ -600,7 +602,7 @@ func (t *TradeDirection) String() string {
 	case Short:
 		return shortString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -619,7 +621,7 @@ func (t *TradeDirection) UnmarshalParam(param string) error {
 
 // MarshalJSON is a method to marshal JSON for trade direction
 func (t *TradeDirection) MarshalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for trade direction
@@ -649,7 +651,7 @@ func (t *OrderState) String() string {
 	case Closed:
 		return closedString
 	default:
-		return unknownString
+		return UnknownString
 	}
 }
 
@@ -668,7 +670,7 @@ func (t *OrderState) UnmarshalParam(param string) error {
 
 // MarshalJSON is a method to marshal JSON for order state
 func (t *OrderState) MarshalJSON() ([]byte, error) {
-	return marshalJSON(t)
+	return MarshalJSON(t)
 }
 
 // UnmarshalJSON is a method to unmarshal JSON for order state

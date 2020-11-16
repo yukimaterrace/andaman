@@ -1,8 +1,8 @@
 package flow
 
 import (
-	"errors"
 	"yukimaterrace/andaman/broker"
+	"yukimaterrace/andaman/model"
 )
 
 type (
@@ -82,12 +82,46 @@ const (
 	Terminate
 )
 
-// IsValid is a method to validate trade mode
-func (mode TradeMode) IsValid() error {
-	switch mode {
-	case Watch, Trade, Terminate:
-		return nil
+const (
+	watchString    = "watch"
+	tradeString    = "trade"
+	terminateStrig = "terminate"
+)
+
+func (t *TradeMode) String() string {
+	switch *t {
+	case Watch:
+		return watchString
+	case Trade:
+		return tradeString
+	case Terminate:
+		return terminateStrig
 	default:
-		return errors.New("invalid trade mode")
+		return model.UnknownString
 	}
+}
+
+// UnmarshalParam is a method to unmarshal param for trade mode
+func (t *TradeMode) UnmarshalParam(param string) error {
+	switch param {
+	case watchString:
+		*t = Watch
+	case tradeString:
+		*t = Trade
+	case terminateStrig:
+		*t = Terminate
+	default:
+		return model.ErrUnknownType
+	}
+	return nil
+}
+
+// MarshalJSON is a method to marshal JSON for trade mode
+func (t *TradeMode) MarshalJSON() ([]byte, error) {
+	return model.MarshalJSON(t)
+}
+
+// UnmarshalJSON is a method to unmarshal JSON for trade mode
+func (t *TradeMode) UnmarshalJSON(b []byte) error {
+	return t.UnmarshalParam(string(b))
 }
