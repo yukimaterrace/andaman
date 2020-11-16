@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
@@ -22,4 +24,11 @@ func (b *customBinder) Bind(i interface{}, c echo.Context) error {
 		return err
 	}
 	return b.validate.Struct(i)
+}
+
+func paramError(err error) *APIError {
+	return &APIError{
+		Code:    http.StatusBadRequest,
+		Message: err.Error(),
+	}
 }
