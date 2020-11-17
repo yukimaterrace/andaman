@@ -109,28 +109,28 @@ func (recorder *Recorder) flatOrders() []*completableOrder {
 
 func (recorder *Recorder) flush(completableOrders []*completableOrder) {
 	for _, order := range completableOrders {
-		if order.closedOrder == nil {
-			var tradeDirection model.TradeDirection
-			if order.createdOrder.IsLong() {
-				tradeDirection = model.Long
-			} else {
-				tradeDirection = model.Short
-			}
-
-			err := service.AddCreatedOrder(
-				recorder.tradeRun.TradeRunID,
-				int(order.createdOrder.OrderID()),
-				order.tradeConfiguration.TradeConfigurationID,
-				order.createdOrder.Units(),
-				tradeDirection,
-				int(order.createdOrder.TimeAtOpen()),
-				order.createdOrder.PriceAtOpen(),
-			)
-
-			if err != nil {
-				log.Println(err)
-			}
+		var tradeDirection model.TradeDirection
+		if order.createdOrder.IsLong() {
+			tradeDirection = model.Long
 		} else {
+			tradeDirection = model.Short
+		}
+
+		err := service.AddCreatedOrderIfNeeded(
+			recorder.tradeRun.TradeRunID,
+			int(order.createdOrder.OrderID()),
+			order.tradeConfiguration.TradeConfigurationID,
+			order.createdOrder.Units(),
+			tradeDirection,
+			int(order.createdOrder.TimeAtOpen()),
+			order.createdOrder.PriceAtOpen(),
+		)
+
+		if err != nil {
+			log.Println(err)
+		}
+
+		if order.closedOrder != nil {
 			err := service.UpdateOrderForClose(
 				recorder.tradeRun.TradeRunID,
 				int(order.closedOrder.OrderID()),

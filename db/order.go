@@ -328,7 +328,14 @@ func AddOrder(
 
 // UpdateOrderForProfit is a method to update order for profit
 func UpdateOrderForProfit(orderID int, profit float64) error {
-	q := "update order_ set profit = ? order_id = ?"
+	q := `
+		update
+			order_
+		set
+			profit = ?
+		where
+			order_id = ?
+	`
 
 	if _, err := db.Exec(q, profit, orderID); err != nil {
 		return err
@@ -384,7 +391,7 @@ func GetTradeCountProfitByFilter1(tradeRunID int, state model.OrderState, start 
 		return nil, err
 	}
 
-	var m map[model.TradePair]*model.TradeCountProfit
+	m := map[model.TradePair]*model.TradeCountProfit{}
 	for rows.Next() {
 		var tradePair model.TradePair
 		var cp model.TradeCountProfit
@@ -444,7 +451,7 @@ func GetTradeCountProfitByFilter2(
 		return nil, err
 	}
 
-	var m map[model.TradeConfigurationDetail]*model.TradeCountProfit
+	m := map[model.TradeConfigurationDetail]*model.TradeCountProfit{}
 	for rows.Next() {
 		var key model.TradeConfigurationDetail
 		var cp model.TradeCountProfit
@@ -516,7 +523,7 @@ func GetTradeCountProfitByFilter3(
 		return nil, err
 	}
 
-	var m map[model.TradeConfigurationDetail]*model.TradeCountProfit
+	m := map[model.TradeConfigurationDetail]*model.TradeCountProfit{}
 	for rows.Next() {
 		var key model.TradeConfigurationDetail
 		var cp model.TradeCountProfit

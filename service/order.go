@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"sort"
 	"yukimaterrace/andaman/db"
 	"yukimaterrace/andaman/model"
@@ -30,12 +31,25 @@ func GetOrdersResponse(
 	return &model.OrdersResponse{Orders: orders, TotalProfit: totalProfit, Paging: paging}, nil
 }
 
-// AddCreatedOrder is a method to add created order
-func AddCreatedOrder(
+// GetOrder is a method to get order
+func GetOrder(tradeRunID int, brokerOrderID int) (*model.Order, error) {
+	return db.GetOrderByTradeRunAndBrokerOrder(tradeRunID, brokerOrderID)
+}
+
+// AddCreatedOrderIfNeeded is a method to add created order
+func AddCreatedOrderIfNeeded(
 	tradeRunID int, brokerOrderID int, tradeConfigurationID int,
 	units float64, tradeDirection model.TradeDirection, timeAtOpen int, priceAtOpen float64) error {
 
-	err := db.AddOrder(
+	_, err := db.GetOrderByTradeRunAndBrokerOrder(tradeRunID, brokerOrderID)
+
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	} else if err == nil {
+		return nil
+	}
+
+	err = db.AddOrder(
 		tradeRunID, brokerOrderID, tradeConfigurationID,
 		units, tradeDirection, model.Open, 0, timeAtOpen, priceAtOpen, 0, 0,
 	)
@@ -152,7 +166,7 @@ func GetTradeSummariesAResponse(tradeRunID int, start int, end int) (*model.Trad
 		return nil, err
 	}
 
-	var oc map[model.TradePair][2]*model.TradeCountProfit
+	oc := map[model.TradePair][2]*model.TradeCountProfit{}
 
 	for key, cp := range open {
 		oc[key] = [2]*model.TradeCountProfit{cp, nil}
@@ -219,7 +233,7 @@ func GetTradeSummariesBResposne(
 		return nil, err
 	}
 
-	var oc map[model.TradeConfigurationDetail][2]*model.TradeCountProfit
+	oc := map[model.TradeConfigurationDetail][2]*model.TradeCountProfit{}
 
 	for key, cp := range open {
 		oc[key] = [2]*model.TradeCountProfit{cp, nil}
