@@ -11,7 +11,7 @@ import (
 
 type frameCalculator interface {
 	broker.PriceExtractor
-	calculate(tradePair model.TradePair, length int) *Frame
+	Calculate(tradePair model.TradePair, length int) *Frame
 }
 
 // Frame is a struct for frame
@@ -105,8 +105,8 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, 
 	price := calculator.Price(tradePair)
 	spread := spread(price)
 
-	smallFrame := calculator.calculate(tradePair, algorithm.SmallFrameLength)
-	largeFrame := calculator.calculate(tradePair, algorithm.LargeFrameLength)
+	smallFrame := calculator.Calculate(tradePair, algorithm.SmallFrameLength)
+	largeFrame := calculator.Calculate(tradePair, algorithm.LargeFrameLength)
 
 	gapCond := smallFrame.H-smallFrame.L > algorithm.PipsGapForCreateOrder*tradePair.PricePerPip()+spread
 

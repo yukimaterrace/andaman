@@ -53,7 +53,7 @@ func (oandaPrice *oandaPrice) Time() int64 {
 	return oandaPrice.priceTime
 }
 
-func (oandaPrice *oandaPrice) calculate(tradePair model.TradePair, length int) *trader.Frame {
+func (oandaPrice *oandaPrice) Calculate(tradePair model.TradePair, length int) *trader.Frame {
 	candles, ok := oandaPrice.candlesMap[tradePair]
 	if !ok {
 		log.Panicf("no candle exists for %v\n", tradePair)
