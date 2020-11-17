@@ -22,11 +22,11 @@ type (
 	}
 
 	createTradeParams struct {
-		TradeSetName string             `query:"trade_set_name" validate:"required"`
-		Version      int                `query:"version" validate:"required"`
-		Type         model.TradeRunType `query:"type" validate:"required"`
-		Start        int                `query:"start" validate:"min=0"`
-		End          int                `query:"end" validate:"min=0"`
+		TradeSetName string             `form:"trade_set_name" validate:"required"`
+		Version      int                `form:"version" validate:"required"`
+		Type         model.TradeRunType `form:"type" validate:"required"`
+		Start        int                `form:"start" validate:"min=0"`
+		End          int                `form:"end" validate:"min=0"`
 	}
 
 	changeTradeModeParams struct {
@@ -116,7 +116,7 @@ func _createTrade(tradeSetName string, tradeSetVersion int, tradeRunType model.T
 	}
 
 	go func(_flow *flow.Flow) {
-		log.Printf("Trade to start by TradeSet %s\n", tradeSetName)
+		log.Printf("Trade to start by trade set %s [version %d]\n", tradeSetName, tradeSetVersion)
 
 		_flow.Start()
 		_flow.WaitForCompletion()

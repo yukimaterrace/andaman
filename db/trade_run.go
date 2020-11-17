@@ -13,6 +13,7 @@ func getTradeRun(row *sql.Row) (*model.TradeRun, error) {
 		&tradeRun.TradeSetID,
 		&tradeRun.Type,
 		&tradeRun.State,
+		&tradeRun.CreatedAt,
 		&tradeRun.StartAt,
 		&tradeRun.FinishAt,
 	)

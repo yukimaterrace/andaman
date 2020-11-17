@@ -160,7 +160,7 @@ func fetchOandaSimulationPriceSeed(tradePairs []model.TradePair, granularity str
 	candlesMap := map[model.TradePair]*broker.OandaCandles{}
 
 	remainedTradePairs := map[model.TradePair]bool{}
-	fromMap := make(map[model.TradePair]int)
+	fromMap := map[model.TradePair]int{}
 	includeFirstMap := map[model.TradePair]bool{}
 	resultMap := map[model.TradePair]chan *broker.OandaCandles{}
 
@@ -173,11 +173,11 @@ func fetchOandaSimulationPriceSeed(tradePairs []model.TradePair, granularity str
 
 	for len(remainedTradePairs) > 0 {
 		pairs := map[model.TradePair]bool{}
-
 		for pair := range remainedTradePairs {
 			pairs[pair] = true
 		}
 
+		requestedPairs := map[model.TradePair]bool{}
 		for pair := range pairs {
 			count := 5000
 			from := fromMap[pair]
@@ -201,11 +201,13 @@ func fetchOandaSimulationPriceSeed(tradePairs []model.TradePair, granularity str
 				}
 				result <- candles
 			}(resultMap[pair], pair)
+
+			requestedPairs[pair] = true
 		}
 
-		requestCount += len(pairs)
+		requestCount += len(requestedPairs)
 
-		for pair := range pairs {
+		for pair := range requestedPairs {
 			resp := <-resultMap[pair]
 			if resp == nil {
 				delete(remainedTradePairs, pair)
@@ -226,10 +228,15 @@ func fetchOandaSimulationPriceSeed(tradePairs []model.TradePair, granularity str
 			fromMap[pair] = int(resp.Candles[len(resp.Candles)-1].Time)
 			includeFirstMap[pair] = false
 		}
+
+		for pair, t := range fromMap {
+			tm := time.Unix(int64(t), 0)
+			log.Printf("%s %s %d:%d:%d\n", pair.String(), tm.Month().String(), tm.Day(), tm.Hour(), tm.Minute())
+		}
 	}
 
 	for pair, candles := range candlesMap {
-		log.Printf("fetch %s: %d sticks\n", string(pair), len(candles.Candles))
+		log.Printf("fetch %s: %d sticks\n", pair.String(), len(candles.Candles))
 	}
 
 	endTime := time.Now().Unix()
