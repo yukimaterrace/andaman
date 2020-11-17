@@ -52,6 +52,7 @@ func GetOrdersByTradeRunAndState(tradeRunID int, state model.OrderState) ([]*mod
 			&order.TradeConfigurationID,
 			&order.Units,
 			&order.TradeDirection,
+			&order.State,
 			&order.Profit,
 			&order.TimeAtOpen,
 			&order.PriceAtOpen,
@@ -306,6 +307,7 @@ func AddOrder(
 
 	_, err := db.Exec(
 		q,
+		tradeRunID,
 		brokerOrderID,
 		tradeConfigurationID,
 		units,

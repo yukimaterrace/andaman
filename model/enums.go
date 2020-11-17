@@ -117,8 +117,8 @@ func (t *TradeRunType) UnmarshalParam(param string) error {
 	return nil
 }
 
-// MarhsalJSON is a method to marshal JSON for trade run type
-func (t *TradeRunType) MarhsalJSON() ([]byte, error) {
+// MarshalJSON is a method to marshal JSON for trade run type
+func (t *TradeRunType) MarshalJSON() ([]byte, error) {
 	return MarshalJSON(t)
 }
 
@@ -173,8 +173,8 @@ func (t *TradeRunState) UnmarshalParam(param string) error {
 	return nil
 }
 
-// MarhsalJSON is a method to marshal JSON for trade run state
-func (t *TradeRunState) MarhsalJSON() ([]byte, error) {
+// MarshalJSON is a method to marshal JSON for trade run state
+func (t *TradeRunState) MarshalJSON() ([]byte, error) {
 	return MarshalJSON(t)
 }
 

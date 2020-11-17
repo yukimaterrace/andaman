@@ -181,7 +181,7 @@ type (
 // Key is a method to calculate key of trade configuration detail
 func (detail *TradeConfigurationDetail) Key() TradeConfigurationKey {
 	tradePair := strconv.FormatInt(int64(detail.TradePair), 10)
-	timezone := strconv.FormatInt(int64(detail.TradePair), 10)
+	timezone := strconv.FormatInt(int64(detail.Timezone), 10)
 	algorithmID := strconv.FormatInt(int64(detail.Algorithm.TradeAlgorithmID), 10)
 
 	return TradeConfigurationKey(fmt.Sprintf("%s-%s-%s", tradePair, timezone, algorithmID))

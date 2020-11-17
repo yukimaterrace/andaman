@@ -41,7 +41,7 @@ type SimpleSimulationOrderer struct {
 func (orderer *SimpleSimulationOrderer) price(tradePair model.TradePair) Price {
 	price, ok := orderer.currentPriceMap[tradePair]
 	if !ok {
-		log.Panicf("%s cannot handle in this orderer\n", string(tradePair))
+		log.Panicf("%s cannot handle in this orderer\n", tradePair.String())
 	}
 	return price
 }
