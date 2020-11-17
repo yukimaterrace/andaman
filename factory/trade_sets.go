@@ -75,17 +75,18 @@ func AddSimulationTradeSet() {
 		TradeDirection: model.Short,
 	}
 
-	timezoneIterator := model.TimezoneIterator{}
-	tradePairIterator := model.TradePairIterator{}
 	algorithmParams := []*model.TradeAlgorithmParam{
 		&frameTradeAlgorithmForLong,
 		&frameTradeAlgorithmForShort,
 	}
 
 	var configurationParams []*model.TradeConfigurationParam
+
+	timezoneIterator := model.TimezoneIterator{}
 	for timezoneIterator.Next() {
 		timezone := timezoneIterator.Value()
 
+		tradePairIterator := model.TradePairIterator{}
 		for tradePairIterator.Next() {
 			tradePair := tradePairIterator.Value()
 

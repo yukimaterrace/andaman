@@ -52,14 +52,17 @@ func GetTradeConfigurationDetailsByTradeSetID(tradeSetID int) ([]*model.TradeCon
 			trade_algorithm.type,
 			trade_algorithm.param,
 			trade_algorithm.trade_direction
-		from 
-			trade_configuration,
-			trade_set_configuration_rel,
+		from
+			trade_configuration
+		inner join
 			trade_algorithm
-		where
-			trade_set_configuration_rel.trade_set_id = ? and
+		on
+			trade_algorithm.trade_algorithm_id = trade_configuratgion.trade_algorithm_id
+		inner join
+			trade_set_configuration_rel
+		on
 			trade_set_configuration_rel.trade_configuration_id = trade_configuration.trade_configuration_id and
-			trade_configuratgion.trade_algorithm_id = trade_algorithm.trade_algorithm_id
+			trade_set_configuration_rel.trade_set_id = ? 
 	`
 
 	rows, err := db.Query(q, tradeSetID)

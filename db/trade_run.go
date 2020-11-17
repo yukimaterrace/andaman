@@ -60,17 +60,18 @@ func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) ([]*mod
 			trade_set.name,
 			trade_set.type
 		from 
-			trade_run,
+			trade_run
+		inner join
 			trade_set
+		on
+			trade_set.trade_set_id = trade_run.trade_set_id
 		where
 			trade_run.type = ? 
 		order by
 			trade_run.created_at desc 
-		limit 
-			?
-		offset
-			?
-		`
+		limit ?
+		offset ?
+	`
 
 	rows, err := db.Query(q, _type, count, offset)
 	if err != nil {

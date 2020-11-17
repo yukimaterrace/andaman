@@ -288,8 +288,8 @@ func (t *TradePair) UnmarshalJSON(b []byte) error {
 }
 
 // OandaInstrument is a method to get OandaInstrument
-func (t TradePair) OandaInstrument() OandaInstrument {
-	switch t {
+func (t *TradePair) OandaInstrument() OandaInstrument {
+	switch *t {
 	case GbpUsd:
 		return OandaGbpUsd
 	case EurUsd:
@@ -316,8 +316,8 @@ func (t TradePair) OandaInstrument() OandaInstrument {
 }
 
 // PricePerPip returns price per pips
-func (t TradePair) PricePerPip() float64 {
-	switch t {
+func (t *TradePair) PricePerPip() float64 {
+	switch *t {
 	case GbpUsd, EurUsd, AudUsd, GbpAud, EurAud, EurGbp:
 		return 0.0001
 	case AudJpy, UsdJpy, GbpJpy, EurJpy:
@@ -333,7 +333,8 @@ type TradePairIterator struct {
 }
 
 // Next is a method to know if the next item exists
-func (iterator TradePairIterator) Next() bool {
+func (iterator *TradePairIterator) Next() bool {
+	iterator.current++
 	if iterator.current <= EurGbp {
 		return true
 	}
@@ -341,10 +342,8 @@ func (iterator TradePairIterator) Next() bool {
 }
 
 // Value is a method to get the value
-func (iterator TradePairIterator) Value() TradePair {
-	value := iterator.current
-	iterator.current++
-	return value
+func (iterator *TradePairIterator) Value() TradePair {
+	return iterator.current
 }
 
 // OandaInstrument is a definition for oanda instrument
@@ -524,7 +523,8 @@ type TimezoneIterator struct {
 }
 
 // Next is a method to know if the next item exists
-func (iterator TimezoneIterator) Next() bool {
+func (iterator *TimezoneIterator) Next() bool {
+	iterator.current++
 	if iterator.current <= NewYorkPM {
 		return true
 	}
@@ -532,10 +532,8 @@ func (iterator TimezoneIterator) Next() bool {
 }
 
 // Value is a method to get the value
-func (iterator TimezoneIterator) Value() Timezone {
-	value := iterator.current
-	iterator.current++
-	return value
+func (iterator *TimezoneIterator) Value() Timezone {
+	return iterator.current
 }
 
 // TradeAlgorithmType is trade algorithm type enums
