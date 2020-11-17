@@ -14,7 +14,7 @@ const (
 
 func TestTradeSet(t *testing.T) {
 	name := tradeSetName
-	ts, err := GetTradeSetByName(name)
+	ts, err := GetTradeSet(name, 1)
 	if err != nil {
 		log.Println(err)
 	} else {
@@ -23,12 +23,12 @@ func TestTradeSet(t *testing.T) {
 		}
 	}
 
-	err = AddTradeSet(name, model.Simulation)
+	err = AddTradeSet(name, 1, model.Simulation)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ts, err = GetTradeSetByName(name)
+	ts, err = GetTradeSet(name, 1)
 	log.Printf("%v", ts)
 
 	tradeSets, err := GetTradeSetsByType(model.Simulation, 20, 0)
@@ -100,7 +100,7 @@ func TestTradeSetConfiguration(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	ts, err := GetTradeSetByName(tradeSetName)
+	ts, err := GetTradeSet(tradeSetName, 1)
 	if err != nil {
 		log.Fatal(err)
 	}

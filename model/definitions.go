@@ -167,6 +167,7 @@ type (
 	// TradeSetParam is a param for trade set
 	TradeSetParam struct {
 		Name                string                     `json:"name"`
+		Version             int                        `json:"version"`
 		Type                TradeSetType               `json:"type"`
 		ConfigurationParams []*TradeConfigurationParam `json:"configuration_params"`
 	}

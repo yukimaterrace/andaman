@@ -23,6 +23,7 @@ type (
 
 	createTradeParams struct {
 		TradeSetName string             `query:"trade_set_name" validate:"required"`
+		Version      int                `query:"version" validate:"required"`
 		Type         model.TradeRunType `query:"type" validate:"required"`
 		Start        int                `query:"start" validate:"min=0"`
 		End          int                `query:"end" validate:"min=0"`
@@ -56,7 +57,7 @@ func createTrade(c echo.Context) error {
 		return err
 	}
 
-	if err := _createTrade(p.TradeSetName, p.Type, p.Start, p.End); err != nil {
+	if err := _createTrade(p.TradeSetName, p.Version, p.Type, p.Start, p.End); err != nil {
 		return err
 	}
 
@@ -97,15 +98,15 @@ func _unsetFlow() {
 	currentFlow.flow = nil
 }
 
-func _createTrade(tradeSetName string, tradeRunType model.TradeRunType, start int, end int) error {
-	if _, err := service.GetTradeSetByName(tradeSetName); err != nil {
+func _createTrade(tradeSetName string, tradeSetVersion int, tradeRunType model.TradeRunType, start int, end int) error {
+	if _, err := service.GetTradeSetByName(tradeSetName, tradeSetVersion); err != nil {
 		return err
 	}
 
 	var _flow *flow.Flow
 	switch tradeRunType {
 	case model.OandaSimulation:
-		_flow = factory.CreateSimulationFlow(tradeSetName, time.Minute, start, end)
+		_flow = factory.CreateSimulationFlow(tradeSetName, tradeSetVersion, time.Minute, start, end)
 	default:
 		panic("unknown type")
 	}

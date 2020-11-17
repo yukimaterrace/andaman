@@ -23,8 +23,8 @@ func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) (*model
 }
 
 // AddTradeRun is a method to add trade run
-func AddTradeRun(tradeSetName string, tradeRunType model.TradeRunType) (*model.TradeRun, error) {
-	tradeSet, err := db.GetTradeSetByName(tradeSetName)
+func AddTradeRun(tradeSetName string, tradeSetVersion int, tradeRunType model.TradeRunType) (*model.TradeRun, error) {
+	tradeSet, err := db.GetTradeSet(tradeSetName, tradeSetVersion)
 	if err != nil {
 		return nil, err
 	}

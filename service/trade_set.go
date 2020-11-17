@@ -8,8 +8,8 @@ import (
 )
 
 // GetTradeSetByName is a method to get trade set by name
-func GetTradeSetByName(name string) (*model.TradeSet, error) {
-	return db.GetTradeSetByName(name)
+func GetTradeSetByName(name string, version int) (*model.TradeSet, error) {
+	return db.GetTradeSet(name, version)
 }
 
 // GetTradeSets is a method to get trade sets
@@ -29,8 +29,8 @@ func GetTradeSets(_type model.TradeSetType, count int, offset int) (*model.Trade
 }
 
 // GetTradeSetDetail is a method to get trade set detail
-func GetTradeSetDetail(name string, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSetDetail, error) {
-	tradeSet, err := db.GetTradeSetByName(name)
+func GetTradeSetDetail(name string, version int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSetDetail, error) {
+	tradeSet, err := db.GetTradeSet(name, version)
 	if err != nil {
 		return nil, err
 	}
@@ -58,20 +58,19 @@ func GetTradeSetDetail(name string, paramObjectCreator model.TradeParamObjectCre
 
 // AddTradeSet is a method to add trade set
 func AddTradeSet(tradeSetParam *model.TradeSetParam) error {
-	tradeSet, err := db.GetTradeSetByName(tradeSetParam.Name)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			if err := db.AddTradeSet(tradeSetParam.Name, tradeSetParam.Type); err != nil {
-				return err
-			}
+	version, err := db.GetTradeSetLastVersionByName(tradeSetParam.Name)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
 
-			tradeSet, err = db.GetTradeSetByName(tradeSetParam.Name)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
+	version++
+	if err := db.AddTradeSet(tradeSetParam.Name, version, tradeSetParam.Type); err != nil {
+		return err
+	}
+
+	tradeSet, err := db.GetTradeSet(tradeSetParam.Name, version)
+	if err != nil {
+		return err
 	}
 
 	for _, configurationParam := range tradeSetParam.ConfigurationParams {

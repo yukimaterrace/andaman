@@ -10,11 +10,12 @@ import (
 
 // Builder is a builder for trader
 type Builder struct {
-	tradeSetName   string
-	tradeRunType   model.TradeRunType
-	broker         broker.Broker
-	ordererFactory broker.OrdererFactory
-	parallel       int
+	tradeSetName    string
+	tradeSetVersion int
+	tradeRunType    model.TradeRunType
+	broker          broker.Broker
+	ordererFactory  broker.OrdererFactory
+	parallel        int
 }
 
 // NewBuilder is a constructor for trader builder
@@ -23,8 +24,9 @@ func NewBuilder() *Builder {
 }
 
 // TradeSet sets trade set in builder
-func (builder *Builder) TradeSet(name string) *Builder {
+func (builder *Builder) TradeSet(name string, version int) *Builder {
 	builder.tradeSetName = name
+	builder.tradeSetVersion = version
 	return builder
 }
 
@@ -54,7 +56,7 @@ func (builder *Builder) Parallel(paralle int) *Builder {
 
 // Build builds simple trader
 func (builder *Builder) Build() *Trader {
-	tradeSet, err := service.GetTradeSetDetail(builder.tradeSetName, TradeParamObjectCreator)
+	tradeSet, err := service.GetTradeSetDetail(builder.tradeSetName, builder.tradeSetVersion, TradeParamObjectCreator)
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +98,7 @@ func (builder *Builder) Build() *Trader {
 
 // BuildTradeRun is a method to build trade run
 func (builder *Builder) BuildTradeRun() *model.TradeRun {
-	tradeSet, err := service.AddTradeRun(builder.tradeSetName, builder.tradeRunType)
+	tradeSet, err := service.AddTradeRun(builder.tradeSetName, builder.tradeSetVersion, builder.tradeRunType)
 	if err != nil {
 		panic(err)
 	}

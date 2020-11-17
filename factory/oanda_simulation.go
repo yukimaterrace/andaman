@@ -11,7 +11,7 @@ import (
 )
 
 // CreateSimulationFlow is a factory method to create simulation app
-func CreateSimulationFlow(tradeSetName string, writeInterval time.Duration, start int, end int) *flow.Flow {
+func CreateSimulationFlow(tradeSetName string, tradeSetVersion int, writeInterval time.Duration, start int, end int) *flow.Flow {
 	pricerTradePairs := []model.TradePair{
 		model.GbpUsd,
 		model.EurUsd,
@@ -26,7 +26,7 @@ func CreateSimulationFlow(tradeSetName string, writeInterval time.Duration, star
 	}
 
 	tradeBuilder := trader.NewBuilder().
-		TradeSet(tradeSetName).
+		TradeSet(tradeSetName, tradeSetVersion).
 		TradeRunType(model.OandaSimulation).
 		Parallel(1)
 

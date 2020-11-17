@@ -4,6 +4,7 @@ package model
 type TradeSet struct {
 	TradeSetID int          `json:"-"`
 	Name       string       `json:"name"`
+	Version    int          `json:"version"`
 	Type       TradeSetType `json:"type"`
 	CreatedAt  int          `json:"-"`
 }

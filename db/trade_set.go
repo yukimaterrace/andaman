@@ -22,6 +22,7 @@ func GetTradeSetsByType(_type model.TradeSetType, count int, offset int) ([]*mod
 		err := rows.Scan(
 			&ts.TradeSetID,
 			&ts.Name,
+			&ts.Version,
 			&ts.Type,
 			&ts.CreatedAt,
 		)
@@ -35,16 +36,17 @@ func GetTradeSetsByType(_type model.TradeSetType, count int, offset int) ([]*mod
 	return tradeSets, nil
 }
 
-// GetTradeSetByName is a method to get trade sets by name
-func GetTradeSetByName(name string) (*model.TradeSet, error) {
-	q := "select * from trade_set where name = ?"
+// GetTradeSet is a method to get trade sets by name
+func GetTradeSet(name string, version int) (*model.TradeSet, error) {
+	q := "select * from trade_set where name = ? and version = ?"
 
-	row := db.QueryRow(q, name)
+	row := db.QueryRow(q, name, version)
 
 	ts := model.TradeSet{}
 	err := row.Scan(
 		&ts.TradeSetID,
 		&ts.Name,
+		&ts.Version,
 		&ts.Type,
 		&ts.CreatedAt,
 	)
@@ -53,6 +55,31 @@ func GetTradeSetByName(name string) (*model.TradeSet, error) {
 	}
 
 	return &ts, nil
+}
+
+// GetTradeSetLastVersionByName is a method to get trade set last version by name
+func GetTradeSetLastVersionByName(name string) (int, error) {
+	q := `
+		select
+			trade_set.version
+		from
+			trade_set
+		where
+			name = ?
+		order by
+			trade_set.version
+			desc
+		limit
+			1
+	`
+
+	row := db.QueryRow(q, name)
+
+	var version int
+	if err := row.Scan(&version); err != nil {
+		return 0, err
+	}
+	return version, nil
 }
 
 // CountTradeSet is a method to get trade count
@@ -68,11 +95,11 @@ func CountTradeSet(_type model.TradeSetType) (int, error) {
 }
 
 // AddTradeSet is a method to add trade set
-func AddTradeSet(name string, _type model.TradeSetType) error {
-	q := "insert into trade_set (name, type, created_at) values (?, ?, ?)"
+func AddTradeSet(name string, version int, _type model.TradeSetType) error {
+	q := "insert into trade_set (name, version, type, created_at) values (?, ?, ?, ?)"
 
 	now := time.Now().Unix()
-	if _, err := db.Exec(q, name, _type, now); err != nil {
+	if _, err := db.Exec(q, name, version, _type, now); err != nil {
 		return err
 	}
 	return nil

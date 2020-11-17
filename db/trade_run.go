@@ -58,6 +58,7 @@ func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) ([]*mod
 			trade_run.start_at,
 			trade_run.finish_at,
 			trade_set.name,
+			trade_set.version,
 			trade_set.type
 		from 
 			trade_run
@@ -88,6 +89,7 @@ func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) ([]*mod
 			&d.StartAt,
 			&d.FinishAt,
 			&d.TradeSet.Name,
+			&d.TradeSet.Version,
 			&d.TradeSet.Type,
 		)
 		if err != nil {
