@@ -6,8 +6,8 @@ import (
 	"yukimaterrace/andaman/model"
 )
 
-// GetTradeRunDetails is a method to get trade run details
-func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) (*model.TradeRunDetailsResponse, error) {
+// GetTradeRunDetailsResponse is a method to get trade run details
+func GetTradeRunDetailsResponse(_type model.TradeRunType, count int, offset int) (*model.TradeRunDetailsResponse, error) {
 	tradeRuns, err := db.GetTradeRunDetails(_type, count, offset)
 	if err != nil {
 		return nil, err

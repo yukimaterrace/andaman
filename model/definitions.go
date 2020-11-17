@@ -19,6 +19,11 @@ type (
 		Paging    *OffsetPaging `json:"paging"`
 	}
 
+	// TradeSetDetailResponse is a response for trade set detail
+	TradeSetDetailResponse struct {
+		TradeSet *TradeSetDetail `json:"trade_set"`
+	}
+
 	// TradeRunDetailsResponse is a response for trade run details
 	TradeRunDetailsResponse struct {
 		TradeRuns []*TradeRunDetail `json:"trade_runs"`

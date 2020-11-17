@@ -58,7 +58,7 @@ func getOrders(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetOrders(p.TradeRunID, p.OrderState, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, p.Count, p.Offset)
+	resp, err := service.GetOrdersResponse(p.TradeRunID, p.OrderState, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func getTradeSummariesA(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesA(p.TradeRunID, p.Start, int(time.Now().Unix()))
+	resp, err := service.GetTradeSummariesAResponse(p.TradeRunID, p.Start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func getTradeSummariesB(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesB(
+	resp, err := service.GetTradeSummariesBResposne(
 		p.TradeRunID, p.TradePair, p.Timezone, p.Start, int(time.Now().Unix()), trader.TradeParamObjectCreator,
 	)
 	if err != nil {
@@ -102,7 +102,7 @@ func getTradeCountProfits(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeCountProfits(
+	resp, err := service.GetTradeCountProfitsResponse(
 		p.TradeRunID, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, 100, trader.TradeParamObjectCreator,
 	)
 	if err != nil {
@@ -118,7 +118,7 @@ func getTradeConfigurationGroupSummaries(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeConfigurationGroupSummaries(p.TradeRunID, p.Count, p.Offset)
+	resp, err := service.GetTradeConfigurationGroupSummariesResponse(p.TradeRunID, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}

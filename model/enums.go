@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -18,7 +19,7 @@ func MarshalJSON(t fmt.Stringer) ([]byte, error) {
 	if s == UnknownString {
 		return nil, ErrUnknownType
 	}
-	return []byte(s), nil
+	return json.Marshal(s)
 }
 
 // TradeSetType is trade set type enums

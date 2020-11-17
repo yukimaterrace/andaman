@@ -110,7 +110,7 @@ func TradeParamObjectCreator(_type model.TradeAlgorithmType, param string) (inte
 	switch _type {
 	case model.Frame:
 		p := FrameTradeParam{}
-		if err := json.Unmarshal([]byte(param), &param); err != nil {
+		if err := json.Unmarshal([]byte(param), &p); err != nil {
 			return nil, err
 		}
 		return &p, nil

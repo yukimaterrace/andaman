@@ -43,7 +43,7 @@ func getTradeRuns(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeRunDetails(p.Type, p.Count, p.Offset)
+	resp, err := service.GetTradeRunDetailsResponse(p.Type, p.Count, p.Offset)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func _unsetFlow() {
 }
 
 func _createTrade(tradeSetName string, tradeSetVersion int, tradeRunType model.TradeRunType, start int, end int) error {
-	if _, err := service.GetTradeSetByName(tradeSetName, tradeSetVersion); err != nil {
+	if _, err := service.GetTradeSet(tradeSetName, tradeSetVersion); err != nil {
 		return err
 	}
 

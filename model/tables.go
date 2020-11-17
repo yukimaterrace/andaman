@@ -6,7 +6,7 @@ type TradeSet struct {
 	Name       string       `json:"name"`
 	Version    int          `json:"version"`
 	Type       TradeSetType `json:"type"`
-	CreatedAt  int          `json:"-"`
+	CreatedAt  int          `json:"created_at"`
 }
 
 // TradeAlgorithm is a struct for trade algorithm table

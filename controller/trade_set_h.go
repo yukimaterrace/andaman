@@ -5,6 +5,7 @@ import (
 	"yukimaterrace/andaman/factory"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
+	"yukimaterrace/andaman/trader"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,6 +15,11 @@ type (
 		Type   model.TradeSetType `query:"type" validate:"required"`
 		Count  int                `query:"count" validate:"min=0,max=100"`
 		Offset int                `query:"offset" validate:"min=0"`
+	}
+
+	getTradeSetParams struct {
+		Name    string `query:"name" validate:"required"`
+		Version int    `query:"version" validate:"required"`
 	}
 
 	addTradeSetByPresetParams struct {
@@ -30,7 +36,21 @@ func getTradeSets(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSets(p.Type, p.Count, p.Offset)
+	resp, err := service.GetTradeSetsResponse(p.Type, p.Count, p.Offset)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func getTradeSet(c echo.Context) error {
+	p := getTradeSetParams{}
+	if err := c.Bind(&p); err != nil {
+		return err
+	}
+
+	resp, err := service.GetTradeSetDetailResponse(p.Name, p.Version, trader.TradeParamObjectCreator)
 	if err != nil {
 		return err
 	}

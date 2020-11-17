@@ -57,7 +57,7 @@ func GetTradeConfigurationDetailsByTradeSetID(tradeSetID int) ([]*model.TradeCon
 		inner join
 			trade_algorithm
 		on
-			trade_algorithm.trade_algorithm_id = trade_configuratgion.trade_algorithm_id
+			trade_algorithm.trade_algorithm_id = trade_configuration.trade_algorithm_id
 		inner join
 			trade_set_configuration_rel
 		on

@@ -7,13 +7,13 @@ import (
 	"yukimaterrace/andaman/model"
 )
 
-// GetTradeSetByName is a method to get trade set by name
-func GetTradeSetByName(name string, version int) (*model.TradeSet, error) {
+// GetTradeSet is a method to get trade set
+func GetTradeSet(name string, version int) (*model.TradeSet, error) {
 	return db.GetTradeSet(name, version)
 }
 
-// GetTradeSets is a method to get trade sets
-func GetTradeSets(_type model.TradeSetType, count int, offset int) (*model.TradeSetsResponse, error) {
+// GetTradeSetsResponse is a method to get trade sets
+func GetTradeSetsResponse(_type model.TradeSetType, count int, offset int) (*model.TradeSetsResponse, error) {
 	tradeSets, err := db.GetTradeSetsByType(_type, count, offset)
 	if err != nil {
 		return nil, err
@@ -26,6 +26,19 @@ func GetTradeSets(_type model.TradeSetType, count int, offset int) (*model.Trade
 
 	paging := model.OffsetPaging{All: all, Count: len(tradeSets), Offset: offset}
 	return &model.TradeSetsResponse{TradeSets: tradeSets, Paging: &paging}, nil
+}
+
+// GetTradeSetDetailResponse is a method to get trade set detail
+func GetTradeSetDetailResponse(name string, version int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSetDetailResponse, error) {
+	detail, err := GetTradeSetDetail(name, version, paramObjectCreator)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &model.TradeSetDetailResponse{
+		TradeSet: detail,
+	}
+	return resp, nil
 }
 
 // GetTradeSetDetail is a method to get trade set detail

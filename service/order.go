@@ -6,8 +6,8 @@ import (
 	"yukimaterrace/andaman/model"
 )
 
-// GetOrders is a method to get orders
-func GetOrders(
+// GetOrdersResponse is a method to get orders
+func GetOrdersResponse(
 	tradeRunID int, state model.OrderState, tradePair model.TradePair, timezone model.Timezone,
 	tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType, count int, offset int) (*model.OrdersResponse, error) {
 
@@ -130,8 +130,8 @@ func (s tradeConfigurationTradeSummariesOrderedByProfit) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-// GetTradeSummariesA is a method to get trade summaries A
-func GetTradeSummariesA(tradeRunID int, start int, end int) (*model.TradeSummariesResponseA, error) {
+// GetTradeSummariesAResponse is a method to get trade summaries A
+func GetTradeSummariesAResponse(tradeRunID int, start int, end int) (*model.TradeSummariesResponseA, error) {
 	unrealizedProfit, err := db.GetTotalProfitByFilter1(tradeRunID, model.Open, start, end)
 	if err != nil {
 		return nil, err
@@ -194,8 +194,8 @@ func GetTradeSummariesA(tradeRunID int, start int, end int) (*model.TradeSummari
 	return resp, nil
 }
 
-// GetTradeSummariesB is a method to get trade summaries B
-func GetTradeSummariesB(
+// GetTradeSummariesBResposne is a method to get trade summaries B
+func GetTradeSummariesBResposne(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int,
 	paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSummariesResponseB, error) {
 
@@ -274,8 +274,8 @@ func getTradeCount(totalCount int, positiveCount int) *model.TradeCount {
 	}
 }
 
-// GetTradeCountProfits is a method to get trade count profits
-func GetTradeCountProfits(
+// GetTradeCountProfitsResponse is a method to get trade count profits
+func GetTradeCountProfitsResponse(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
 	count int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeCountProfitsResponse, error) {
 
@@ -302,8 +302,8 @@ func GetTradeCountProfits(
 	return resp, nil
 }
 
-// GetTradeConfigurationGroupSummaries is a method to get trade configuration group summaries
-func GetTradeConfigurationGroupSummaries(tradeRunID int, count int, offset int) (*model.TradeConfigurationGroupSummariesResponse, error) {
+// GetTradeConfigurationGroupSummariesResponse is a method to get trade configuration group summaries
+func GetTradeConfigurationGroupSummariesResponse(tradeRunID int, count int, offset int) (*model.TradeConfigurationGroupSummariesResponse, error) {
 	all, err := db.GetTradeConfigurationGroupCountForOrder(tradeRunID)
 	if err != nil {
 		return nil, err
