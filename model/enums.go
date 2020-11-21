@@ -484,38 +484,78 @@ func (t Timezone) OK(unix int64) bool {
 
 	switch t {
 	case TokyoAM:
-		cond1 := 7 <= tm.Hour() && tm.Hour() < 12
-		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
-		return cond1 && cond2
-
+		return isTokyoAM(tm)
 	case TokyoPM:
-		cond1 := 12 <= tm.Hour() && tm.Hour() < 15
-		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
-		return cond1 && cond2
-
+		return isTokyoPM(tm)
 	case LondonAM:
-		cond1 := 15 <= tm.Hour() && tm.Hour() < 20
-		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
-		return cond1 && cond2
-
+		return isLondonAM(tm)
 	case LondonPM:
-		cond1 := 20 <= tm.Hour() && tm.Hour() < 22
-		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
-		return cond1 && cond2
-
+		return isLondonPM(tm)
 	case NewYorkAM:
-		cond1 := (tm.Weekday() != time.Saturday && 22 <= tm.Hour()) || (tm.Weekday() != time.Monday && tm.Hour() < 3)
-		cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Saturday
-		return cond1 && cond2
-
+		return isNewYorkAM(tm)
 	case NewYorkPM:
-		cond1 := 3 <= tm.Hour() && tm.Hour() < 7
-		cond2 := time.Tuesday <= tm.Weekday() && tm.Weekday() <= time.Saturday
-		return cond1 && cond2
-
+		return isNewYorkPM(tm)
 	default:
 		return false
 	}
+}
+
+// GetTimezone is a method to get timezone by unixtime
+func GetTimezone(unix int64) Timezone {
+	tm := time.Unix(unix, 0)
+
+	switch {
+	case isTokyoAM(tm):
+		return TokyoAM
+	case isTokyoPM(tm):
+		return TokyoPM
+	case isLondonAM(tm):
+		return LondonAM
+	case isLondonPM(tm):
+		return LondonPM
+	case isNewYorkAM(tm):
+		return NewYorkAM
+	case isNewYorkPM(tm):
+		return NewYorkPM
+	default:
+		panic("no timezone")
+	}
+}
+
+func isTokyoAM(tm time.Time) bool {
+	cond1 := 7 <= tm.Hour() && tm.Hour() < 12
+	cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
+	return cond1 && cond2
+}
+
+func isTokyoPM(tm time.Time) bool {
+	cond1 := 12 <= tm.Hour() && tm.Hour() < 15
+	cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
+	return cond1 && cond2
+}
+
+func isLondonAM(tm time.Time) bool {
+	cond1 := 15 <= tm.Hour() && tm.Hour() < 20
+	cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
+	return cond1 && cond2
+}
+
+func isLondonPM(tm time.Time) bool {
+	cond1 := 20 <= tm.Hour() && tm.Hour() < 22
+	cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Friday
+	return cond1 && cond2
+}
+
+func isNewYorkAM(tm time.Time) bool {
+	cond1 := (tm.Weekday() != time.Saturday && 22 <= tm.Hour()) || (tm.Weekday() != time.Monday && tm.Hour() < 3)
+	cond2 := time.Monday <= tm.Weekday() && tm.Weekday() <= time.Saturday
+	return cond1 && cond2
+}
+
+func isNewYorkPM(tm time.Time) bool {
+	cond1 := 3 <= tm.Hour() && tm.Hour() < 7
+	cond2 := time.Tuesday <= tm.Weekday() && tm.Weekday() <= time.Saturday
+	return cond1 && cond2
 }
 
 // TimezoneIterator is a struct for timezone iterator
