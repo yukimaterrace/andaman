@@ -61,53 +61,75 @@ func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (f
 }
 
 type tradeRunnersExecutor struct {
-	runners       []*tradeRunner
-	runnersGroups [][]*tradeRunner
-	parallel      int
+	timezoneRunnersMap          map[model.Timezone][]*tradeRunner
+	tradeConfigurationRunnerMap map[model.TradeConfigurationKey]*tradeRunner
+	parallel                    int
 }
 
 func newTradeRunnersExecutor(runners []*tradeRunner, parallel int) *tradeRunnersExecutor {
-	if parallel == 0 {
-		return &tradeRunnersExecutor{
-			runners:       runners,
-			runnersGroups: nil,
-			parallel:      0,
-		}
-	}
+	timezoneRunnersMap := map[model.Timezone][]*tradeRunner{}
+	tradeConfigurationRunnerMap := map[model.TradeConfigurationKey]*tradeRunner{}
 
-	if parallel > len(runners) {
-		parallel = len(runners)
-	}
-
-	runnerGroups := make([][]*tradeRunner, parallel)
-	count := len(runners) / parallel
-	for i := 0; i < parallel; i++ {
-		if i == parallel-1 {
-			runnerGroups[i] = runners[i*count:]
-		} else {
-			runnerGroups[i] = runners[i*count : (i+1)*count]
-		}
+	for _, runner := range runners {
+		tz := runner.tradeConfiguration.Timezone
+		timezoneRunnersMap[tz] = append(timezoneRunnersMap[tz], runner)
+		tradeConfigurationRunnerMap[runner.tradeConfigurationKey] = runner
 	}
 
 	return &tradeRunnersExecutor{
-		runners:       runners,
-		runnersGroups: runnerGroups,
-		parallel:      parallel,
+		timezoneRunnersMap:          timezoneRunnersMap,
+		tradeConfigurationRunnerMap: tradeConfigurationRunnerMap,
+		parallel:                    parallel,
 	}
 }
 
 func (executor *tradeRunnersExecutor) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
-	if executor.parallel == 0 {
-		for _, runner := range executor.runners {
+	timeExtractor, ok := material.(broker.TimeExtractor)
+	if !ok {
+		panic(util.ErrWrongType)
+	}
+
+	timezone := model.GetTimezone(timeExtractor.Time())
+	runners := executor.timezoneRunnersMap[timezone]
+
+	for key := range partitionedOpenOrders {
+		runner, ok := executor.tradeConfigurationRunnerMap[key]
+		if !ok {
+			panic(util.ErrInconsistentLogic)
+		}
+
+		if timezone != runner.tradeConfiguration.Timezone {
+			runners = append(runners, runner)
+		}
+	}
+
+	parallel := executor.parallel
+	if parallel > len(runners) {
+		parallel = len(runners)
+	}
+
+	switch parallel {
+	case 0:
+		for _, runner := range runners {
 			runner.run(material, partitionedOpenOrders, mode)
 		}
-	} else {
-		for i := 0; i < executor.parallel; i++ {
+
+	default:
+		var runnerGroup []*tradeRunner
+		count := len(runners) / parallel
+
+		for i := 0; i < parallel; i++ {
+			if i == parallel-1 {
+				runnerGroup = runners[i*count:]
+			} else {
+				runnerGroup = runners[i*count : (i+1)*count]
+			}
+
 			go func(runners []*tradeRunner) {
 				for _, runner := range runners {
 					runner.run(material, partitionedOpenOrders, mode)
 				}
-			}(executor.runnersGroups[i])
+			}(runnerGroup)
 		}
 	}
 }

@@ -518,7 +518,7 @@ func GetTimezone(unix int64) Timezone {
 	case isNewYorkPM(tm):
 		return NewYorkPM
 	default:
-		panic("no timezone")
+		panic("timezone not exhausted")
 	}
 }
 
