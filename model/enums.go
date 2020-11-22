@@ -501,25 +501,26 @@ func (t Timezone) OK(unix int64) bool {
 }
 
 // GetTimezone is a method to get timezone by unixtime
-func GetTimezone(unix int64) Timezone {
+func GetTimezone(unix int64) (timezone Timezone, err error) {
 	tm := time.Unix(unix, 0)
 
 	switch {
 	case isTokyoAM(tm):
-		return TokyoAM
+		timezone = TokyoAM
 	case isTokyoPM(tm):
-		return TokyoPM
+		timezone = TokyoPM
 	case isLondonAM(tm):
-		return LondonAM
+		timezone = LondonAM
 	case isLondonPM(tm):
-		return LondonPM
+		timezone = LondonPM
 	case isNewYorkAM(tm):
-		return NewYorkAM
+		timezone = NewYorkAM
 	case isNewYorkPM(tm):
-		return NewYorkPM
+		timezone = NewYorkPM
 	default:
-		panic("timezone not exhausted")
+		err = ErrTimezoneNotDefined
 	}
+	return
 }
 
 func isTokyoAM(tm time.Time) bool {

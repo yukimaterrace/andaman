@@ -3,8 +3,8 @@ package gridsearch
 import (
 	"log"
 	"reflect"
+	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/trader"
-	"yukimaterrace/andaman/util"
 )
 
 type frameTradeParam trader.FrameTradeParam
@@ -205,7 +205,7 @@ func FrameTradeParamsForGridSearch() []*trader.FrameTradeParam {
 	for i, param := range params {
 		p, ok := param.(frameTradeParam)
 		if !ok {
-			panic(util.ErrWrongType)
+			panic(model.ErrWrongType)
 		}
 		frameTradeParam := trader.FrameTradeParam(p)
 		frameTradeParams[i] = &frameTradeParam

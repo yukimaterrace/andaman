@@ -7,7 +7,6 @@ import (
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
 	"yukimaterrace/andaman/trader"
-	"yukimaterrace/andaman/util"
 )
 
 type (
@@ -36,7 +35,7 @@ func newRecorder(tradeRun *model.TradeRun) *Recorder {
 func (recorder *Recorder) Record(material flow.RecordMaterial) {
 	recordMaterial, ok := material.(*trader.RecordMaterial)
 	if !ok {
-		panic(util.ErrWrongType)
+		panic(model.ErrWrongType)
 	}
 
 	if recorder.tradeRun.State == model.Pending {

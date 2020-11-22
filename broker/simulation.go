@@ -4,7 +4,6 @@ import (
 	"log"
 	"yukimaterrace/andaman/config"
 	"yukimaterrace/andaman/model"
-	"yukimaterrace/andaman/util"
 )
 
 // SimpleSimulationBroker is a broker for simple simulation
@@ -228,7 +227,7 @@ func NewSimpleSimulationOrdererFactory() *SimpleSimulationOrdererFactory {
 func (factory *SimpleSimulationOrdererFactory) Create(broker Broker) Orderer {
 	simpleSimulationBroker, ok := broker.(*SimpleSimulationBroker)
 	if !ok {
-		panic(util.ErrWrongType)
+		panic(model.ErrWrongType)
 	}
 
 	orderer := &SimpleSimulationOrderer{

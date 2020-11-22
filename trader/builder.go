@@ -5,7 +5,6 @@ import (
 	"yukimaterrace/andaman/broker"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
-	"yukimaterrace/andaman/util"
 )
 
 // Builder is a builder for trader
@@ -88,7 +87,6 @@ func (builder *Builder) Build() *Trader {
 	trader := &Trader{
 		orderer:                  orderer,
 		orderPartitionAggregator: orderPartitionAggregator,
-		tradeRunners:             tradeRunners,
 		executor:                 executor,
 	}
 
@@ -116,7 +114,7 @@ func TradeParamObjectCreator(_type model.TradeAlgorithmType, param string) (inte
 		return &p, nil
 
 	default:
-		return nil, util.ErrWrongType
+		return nil, model.ErrWrongType
 	}
 }
 
@@ -125,11 +123,11 @@ func createTradeAlgorithm(algorithm model.TradeAlgorithmDetail) (TradeAlgorithm,
 	case model.Frame:
 		param, ok := algorithm.ParamObject.(*FrameTradeParam)
 		if !ok {
-			return nil, util.ErrWrongType
+			return nil, model.ErrWrongType
 		}
 		return NewFrameTradeAlgorithm(param), nil
 
 	default:
-		return nil, util.ErrWrongType
+		return nil, model.ErrWrongType
 	}
 }

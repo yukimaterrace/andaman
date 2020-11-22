@@ -6,14 +6,12 @@ import (
 	"yukimaterrace/andaman/config"
 	"yukimaterrace/andaman/flow"
 	"yukimaterrace/andaman/model"
-	"yukimaterrace/andaman/util"
 )
 
 // Trader is a struct for trader
 type Trader struct {
 	orderer                  broker.Orderer
 	orderPartitionAggregator *orderPartitionAggregator
-	tradeRunners             []*tradeRunner
 	executor                 *tradeRunnersExecutor
 }
 
@@ -23,7 +21,7 @@ func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (f
 		if price, ok := material.(broker.PriceExtractor); ok {
 			simulationBroker.Update(price)
 		} else {
-			panic(util.ErrWrongType)
+			panic(model.ErrWrongType)
 		}
 	}
 
@@ -37,10 +35,10 @@ func (trader *Trader) Trade(material flow.TradeMaterial, mode flow.TradeMode) (f
 	}
 
 	partitionedOpenOrders := <-trader.orderPartitionAggregator.partitionedOpenOrders(openOrdersResult.OpenOrders)
-	trader.executor.run(material, partitionedOpenOrders, mode)
+	runners := trader.executor.run(material, partitionedOpenOrders, mode)
 
 	var partitionCombineOrders []*PartitionCombinedOrder
-	for _, runner := range trader.tradeRunners {
+	for _, runner := range runners {
 		combinedOrders := <-runner.done
 		if combinedOrders != nil && (len(combinedOrders.CreatedOrders) > 0 || len(combinedOrders.ClosedOrders) > 0) {
 			partitionCombinedOrder := &PartitionCombinedOrder{
@@ -83,19 +81,23 @@ func newTradeRunnersExecutor(runners []*tradeRunner, parallel int) *tradeRunners
 	}
 }
 
-func (executor *tradeRunnersExecutor) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
+func (executor *tradeRunnersExecutor) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) []*tradeRunner {
 	timeExtractor, ok := material.(broker.TimeExtractor)
 	if !ok {
-		panic(util.ErrWrongType)
+		panic(model.ErrWrongType)
 	}
 
-	timezone := model.GetTimezone(timeExtractor.Time())
+	timezone, err := model.GetTimezone(timeExtractor.Time())
+	if err != nil {
+		return nil
+	}
+
 	runners := executor.timezoneRunnersMap[timezone]
 
 	for key := range partitionedOpenOrders {
 		runner, ok := executor.tradeConfigurationRunnerMap[key]
 		if !ok {
-			panic(util.ErrInconsistentLogic)
+			panic(model.ErrInconsistentLogic)
 		}
 
 		if timezone != runner.tradeConfiguration.Timezone {
@@ -132,6 +134,8 @@ func (executor *tradeRunnersExecutor) run(material flow.TradeMaterial, partition
 			}(runnerGroup)
 		}
 	}
+
+	return runners
 }
 
 // TradeAlgorithm is an interface for trade algorithm
@@ -146,33 +150,14 @@ type tradeRunner struct {
 	algorithm             TradeAlgorithm
 	orderAggregator       *orderAggregator
 	done                  chan *combinedOrders
-	openOrdersExisted     bool
 }
 
 func (runner *tradeRunner) run(material flow.TradeMaterial, partitionedOpenOrders partitionedOpenOrders, mode flow.TradeMode) {
-	timeExtractor, ok := material.(broker.TimeExtractor)
-	if !ok {
-		panic(util.ErrWrongType)
-	}
-
-	tradable := runner.tradeConfiguration.Timezone.OK(timeExtractor.Time())
-
-	if !runner.openOrdersExisted && !tradable {
-		runner.done <- nil
-		return
-	}
-
 	openOrders := partitionedOpenOrders[runner.tradeConfigurationKey]
-
-	if len(openOrders) > 0 {
-		runner.openOrdersExisted = true
-	} else {
-		runner.openOrdersExisted = false
-	}
-
 	tradePair := runner.tradeConfiguration.TradePair
-	if !runner.openOrdersExisted {
-		if mode != flow.Terminate && tradable {
+
+	if len(openOrders) == 0 {
+		if mode != flow.Terminate {
 			runner.algorithm.initialTrade(material, runner.orderAggregator, tradePair)
 		}
 	} else {

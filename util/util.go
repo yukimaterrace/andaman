@@ -1,16 +1,8 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"os"
-)
-
-var (
-	// ErrWrongType is an error for wrong type
-	ErrWrongType = errors.New("wrong type has been passed")
-	// ErrInconsistentLogic is an error for inconsistent logic
-	ErrInconsistentLogic = errors.New("inconsistent logic detected")
 )
 
 // GetEnv gets environment variable

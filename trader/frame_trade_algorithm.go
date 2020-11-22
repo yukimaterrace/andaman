@@ -99,7 +99,7 @@ func NewFrameTradeAlgorithm(param *FrameTradeParam) *FrameTradeAlgorithm {
 func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, agggregator *orderAggregator, tradePair model.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
-		panic(util.ErrWrongType)
+		panic(model.ErrWrongType)
 	}
 
 	price := calculator.Price(tradePair)
@@ -128,7 +128,7 @@ func (algorithm *FrameTradeAlgorithm) initialTrade(material flow.TradeMaterial, 
 func (algorithm *FrameTradeAlgorithm) proceedTrade(material flow.TradeMaterial, agggregator *orderAggregator, openOrders []broker.OpenOrder, tradePair model.TradePair) {
 	calculator, ok := material.(frameCalculator)
 	if !ok {
-		panic(util.ErrWrongType)
+		panic(model.ErrWrongType)
 	}
 
 	if len(openOrders) == 0 {
