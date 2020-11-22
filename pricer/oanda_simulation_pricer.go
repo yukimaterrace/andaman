@@ -9,34 +9,35 @@ import (
 )
 
 type oandaSimulationPricer struct {
+	start           int
+	end             int
 	seed            oandaSimulationPriceSeed
 	currentIndexMap map[model.TradePair]int
 	currentTime     int64
 	granularitySec  int64
 	unitSize        int
+	initialized     bool
 }
 
-func newOandaSimulationPricer(seed oandaSimulationPriceSeed) *oandaSimulationPricer {
+func newOandaSimulationPricer(tradePairs []model.TradePair, start int, end int) *oandaSimulationPricer {
 	unitSize := 250
 
 	currentTime := int64(0)
 	currentIndexMap := make(map[model.TradePair]int)
 
-	for pair, candles := range seed {
-		currentIndexMap[pair] = unitSize
-
-		time := int64(candles.Candles[unitSize-1].Time)
-		if currentTime == 0 || currentTime > time {
-			currentTime = time
-		}
+	for _, tradePair := range tradePairs {
+		currentIndexMap[tradePair] = unitSize
 	}
 
 	return &oandaSimulationPricer{
-		seed:            seed,
+		start:           start,
+		end:             end,
+		seed:            nil,
 		currentIndexMap: currentIndexMap,
 		currentTime:     currentTime,
 		granularitySec:  60,
 		unitSize:        unitSize,
+		initialized:     false,
 	}
 }
 
@@ -73,7 +74,28 @@ func (pricer *oandaSimulationPricer) next() *oandaSimulationPrice {
 	return createPrice
 }
 
+func (pricer *oandaSimulationPricer) Initialize() {
+	var tradePairs []model.TradePair
+	for tradePair := range pricer.currentIndexMap {
+		tradePairs = append(tradePairs, tradePair)
+	}
+
+	pricer.seed = fetchOandaSimulationPriceSeed(tradePairs, "M1", pricer.start, pricer.end)
+
+	for _, candles := range pricer.seed {
+		time := int64(candles.Candles[pricer.unitSize-1].Time)
+		if pricer.currentTime == 0 || pricer.currentTime > time {
+			pricer.currentTime = time
+		}
+	}
+	pricer.initialized = true
+}
+
 func (pricer *oandaSimulationPricer) CreatePrice(done chan<- *flow.CreatePriceResult) {
+	if !pricer.initialized {
+		panic(model.ErrInconsistentLogic)
+	}
+
 	if !pricer.hasNext() {
 		done <- &flow.CreatePriceResult{
 			TradeMaterial: nil,
@@ -104,8 +126,7 @@ func NewOandaSimulationPricerFactory(startTime time.Time, endTime time.Time) *Oa
 
 // Create is a factory method to create oanda simulation pricer factory
 func (factory *OandaSimulationPricerFactory) Create(broker broker.Broker, tradePairs []model.TradePair) flow.Pricer {
-	seed := fetchOandaSimulationPriceSeed(tradePairs, "M1", factory.start, factory.end)
-	return newOandaSimulationPricer(seed)
+	return newOandaSimulationPricer(tradePairs, factory.start, factory.end)
 }
 
 type oandaSimulationPrice struct {

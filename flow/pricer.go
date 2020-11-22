@@ -10,6 +10,7 @@ import (
 type (
 	// Pricer is an interface for pricer
 	Pricer interface {
+		Initialize()
 		CreatePrice(done chan<- *CreatePriceResult)
 	}
 
@@ -44,6 +45,8 @@ func (priceWorker *priceWorker) shutdown() {
 
 func (priceWorker *priceWorker) work(exit chan<- bool) {
 	if !priceWorker.init {
+		priceWorker.Initialize()
+
 		go func() {
 			for {
 				priceWorker.CreatePrice(priceWorker.createPriceResult)
