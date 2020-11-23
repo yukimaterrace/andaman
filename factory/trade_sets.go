@@ -80,37 +80,7 @@ func AddSimulationTradeSet() {
 		&frameTradeAlgorithmForShort,
 	}
 
-	var configurationParams []*model.TradeConfigurationParam
-
-	timezoneIterator := model.TimezoneIterator{}
-	for timezoneIterator.Next() {
-		timezone := timezoneIterator.Value()
-
-		tradePairIterator := model.TradePairIterator{}
-		for tradePairIterator.Next() {
-			tradePair := tradePairIterator.Value()
-
-			for _, algorithmParam := range algorithmParams {
-				configurationParam := model.TradeConfigurationParam{
-					TradePair:      tradePair,
-					Timezone:       timezone,
-					AlgorithmParam: algorithmParam,
-				}
-
-				configurationParams = append(configurationParams, &configurationParam)
-			}
-		}
-	}
-
-	tradeSetParam := model.TradeSetParam{
-		Name:                SimulationTradeSetName,
-		Type:                model.Simulation,
-		ConfigurationParams: configurationParams,
-	}
-
-	if err := service.AddTradeSet(&tradeSetParam); err != nil {
-		panic(err)
-	}
+	addTradeSet(SimulationTradeSetName, model.Simulation, algorithmParams)
 }
 
 // AddGridSearchTradeSet is a method to add grid search trade set
@@ -134,13 +104,17 @@ func AddGridSearchTradeSet() {
 		algorithmParams = append(algorithmParams, &algorithmParam)
 	}
 
-	timezoneIterator := model.TimezoneIterator{}
-	tradePairIterator := model.TradePairIterator{}
+	addTradeSet(GridSearchTradeSetName, model.GridSearch, algorithmParams)
+}
 
+func addTradeSet(tradeSetName string, tradeSetType model.TradeSetType, algorithmParams []*model.TradeAlgorithmParam) {
 	var configurationParams []*model.TradeConfigurationParam
+
+	timezoneIterator := model.TimezoneIterator{}
 	for timezoneIterator.Next() {
 		timezone := timezoneIterator.Value()
 
+		tradePairIterator := model.TradePairIterator{}
 		for tradePairIterator.Next() {
 			tradePair := tradePairIterator.Value()
 
@@ -157,8 +131,8 @@ func AddGridSearchTradeSet() {
 	}
 
 	tradeSetParam := model.TradeSetParam{
-		Name:                GridSearchTradeSetName,
-		Type:                model.GridSearch,
+		Name:                tradeSetName,
+		Type:                tradeSetType,
 		ConfigurationParams: configurationParams,
 	}
 
