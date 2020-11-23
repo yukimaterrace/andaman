@@ -110,7 +110,7 @@ func _createTrade(
 	var _flow *flow.Flow
 	switch tradeRunType {
 	case model.OandaSimulation:
-		_flow = factory.CreateSimulationFlow(tradeSetName, tradeSetVersion, time.Minute, start, end, parallel)
+		_flow = factory.CreateSimulationFlow(tradeSetName, tradeSetVersion, time.Second, start, end, parallel)
 	default:
 		panic("unknown type")
 	}
