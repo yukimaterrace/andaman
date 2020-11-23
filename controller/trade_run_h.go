@@ -27,6 +27,7 @@ type (
 		Type         model.TradeRunType `form:"type" validate:"required"`
 		Start        int                `form:"start" validate:"min=0"`
 		End          int                `form:"end" validate:"min=0"`
+		Parallel     int                `form:"parallel" validate:"min=0,max=8"`
 	}
 
 	changeTradeModeParams struct {
@@ -52,12 +53,14 @@ func getTradeRuns(c echo.Context) error {
 }
 
 func createTrade(c echo.Context) error {
-	p := createTradeParams{}
+	p := createTradeParams{
+		Parallel: 2,
+	}
 	if err := c.Bind(&p); err != nil {
 		return err
 	}
 
-	if err := _createTrade(p.TradeSetName, p.Version, p.Type, p.Start, p.End); err != nil {
+	if err := _createTrade(p.TradeSetName, p.Version, p.Type, p.Start, p.End, p.Parallel); err != nil {
 		return err
 	}
 
@@ -98,7 +101,8 @@ func _unsetFlow() {
 	currentFlow.flow = nil
 }
 
-func _createTrade(tradeSetName string, tradeSetVersion int, tradeRunType model.TradeRunType, start int, end int) error {
+func _createTrade(
+	tradeSetName string, tradeSetVersion int, tradeRunType model.TradeRunType, start int, end int, parallel int) error {
 	if _, err := service.GetTradeSet(tradeSetName, tradeSetVersion); err != nil {
 		return err
 	}
@@ -106,7 +110,7 @@ func _createTrade(tradeSetName string, tradeSetVersion int, tradeRunType model.T
 	var _flow *flow.Flow
 	switch tradeRunType {
 	case model.OandaSimulation:
-		_flow = factory.CreateSimulationFlow(tradeSetName, tradeSetVersion, time.Minute, start, end)
+		_flow = factory.CreateSimulationFlow(tradeSetName, tradeSetVersion, time.Minute, start, end, parallel)
 	default:
 		panic("unknown type")
 	}

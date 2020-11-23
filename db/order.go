@@ -131,7 +131,7 @@ func GetOrders(
 			return nil, err
 		}
 
-		orders = append(orders)
+		orders = append(orders, &order)
 	}
 
 	return orders, nil

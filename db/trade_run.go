@@ -53,6 +53,7 @@ func CountTradeRun(_type model.TradeRunType) (int, error) {
 func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) ([]*model.TradeRunDetail, error) {
 	q := `
 		select
+			trade_run.trade_run_id,
 			trade_run.type,
 			trade_run.state,
 			trade_run.created_at,
@@ -84,6 +85,7 @@ func GetTradeRunDetails(_type model.TradeRunType, count int, offset int) ([]*mod
 	for rows.Next() {
 		var d model.TradeRunDetail
 		err := rows.Scan(
+			&d.TradeRunID,
 			&d.Type,
 			&d.State,
 			&d.CreatedAt,

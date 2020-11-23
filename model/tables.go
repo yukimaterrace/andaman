@@ -50,7 +50,7 @@ type Order struct {
 
 // TradeRun is a struct for trade run table
 type TradeRun struct {
-	TradeRunID int           `json:"-"`
+	TradeRunID int           `json:"trade_run_id"`
 	TradeSetID int           `json:"-"`
 	Type       TradeRunType  `json:"type"`
 	State      TradeRunState `json:"state"`
