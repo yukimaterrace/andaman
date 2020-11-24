@@ -80,7 +80,6 @@ var TradeParamObjectCreator func(_type TradeAlgorithmType, param string) (interf
 // TradeAlgorithmDetail is a struct for trade algorithm detail
 type TradeAlgorithmDetail struct {
 	TradeAlgorithm
-	ParamObject interface{} `json:"param"`
 }
 
 // MarshalJSON is an implementation of Marshaler for TradeAlgorithmDetail
