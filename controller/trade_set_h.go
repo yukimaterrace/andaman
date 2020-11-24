@@ -5,7 +5,6 @@ import (
 	"yukimaterrace/andaman/factory"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
-	"yukimaterrace/andaman/trader"
 
 	"github.com/labstack/echo/v4"
 )
@@ -50,7 +49,7 @@ func getTradeSet(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSetDetailResponse(p.Name, p.Version, trader.TradeParamObjectCreator)
+	resp, err := service.GetTradeSetDetailResponse(p.Name, p.Version)
 	if err != nil {
 		return err
 	}

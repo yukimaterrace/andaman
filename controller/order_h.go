@@ -5,7 +5,6 @@ import (
 	"time"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/service"
-	"yukimaterrace/andaman/trader"
 
 	"github.com/labstack/echo/v4"
 )
@@ -86,9 +85,7 @@ func getTradeSummariesB(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeSummariesBResposne(
-		p.TradeRunID, p.TradePair, p.Timezone, p.Start, int(time.Now().Unix()), trader.TradeParamObjectCreator,
-	)
+	resp, err := service.GetTradeSummariesBResposne(p.TradeRunID, p.TradePair, p.Timezone, p.Start, int(time.Now().Unix()))
 	if err != nil {
 		return err
 	}
@@ -102,9 +99,7 @@ func getTradeCountProfits(c echo.Context) error {
 		return err
 	}
 
-	resp, err := service.GetTradeCountProfitsResponse(
-		p.TradeRunID, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, 100, trader.TradeParamObjectCreator,
-	)
+	resp, err := service.GetTradeCountProfitsResponse(p.TradeRunID, p.TradePair, p.Timezone, p.TradeDirection, p.AlgorithmType, 100)
 	if err != nil {
 		return err
 	}

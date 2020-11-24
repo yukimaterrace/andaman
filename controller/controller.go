@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"yukimaterrace/andaman/model"
+	"yukimaterrace/andaman/trader"
 	"yukimaterrace/andaman/util"
 
 	"github.com/go-playground/validator/v10"
@@ -43,6 +44,8 @@ func CreateController() *echo.Echo {
 
 	e.GET("/api/trade_count_profits", getTradeCountProfits)
 	e.GET("/api/trade_configuration_group_summaries", getTradeConfigurationGroupSummaries)
+
+	model.TradeParamObjectCreator = trader.TradeParamObjectCreator
 
 	return e
 }

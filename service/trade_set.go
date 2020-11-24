@@ -29,8 +29,8 @@ func GetTradeSetsResponse(_type model.TradeSetType, count int, offset int) (*mod
 }
 
 // GetTradeSetDetailResponse is a method to get trade set detail
-func GetTradeSetDetailResponse(name string, version int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSetDetailResponse, error) {
-	detail, err := GetTradeSetDetail(name, version, paramObjectCreator)
+func GetTradeSetDetailResponse(name string, version int) (*model.TradeSetDetailResponse, error) {
+	detail, err := GetTradeSetDetail(name, version)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func GetTradeSetDetailResponse(name string, version int, paramObjectCreator mode
 }
 
 // GetTradeSetDetail is a method to get trade set detail
-func GetTradeSetDetail(name string, version int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSetDetail, error) {
+func GetTradeSetDetail(name string, version int) (*model.TradeSetDetail, error) {
 	tradeSet, err := db.GetTradeSet(name, version)
 	if err != nil {
 		return nil, err
@@ -51,14 +51,6 @@ func GetTradeSetDetail(name string, version int, paramObjectCreator model.TradeP
 	tradeConfigurationDetails, err := db.GetTradeConfigurationDetailsByTradeSetID(tradeSet.TradeSetID)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, detail := range tradeConfigurationDetails {
-		paramObject, err := paramObjectCreator(detail.Algorithm.Type, detail.Algorithm.Param)
-		if err != nil {
-			return nil, err
-		}
-		detail.Algorithm.ParamObject = paramObject
 	}
 
 	tradeSetDetail := &model.TradeSetDetail{

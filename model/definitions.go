@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 )
@@ -71,16 +72,39 @@ type (
 		Count  int `json:"count"`
 		Offset int `json:"offset"`
 	}
+)
 
-	// TradeParamObjectCreator is a definition for param object creator
-	TradeParamObjectCreator func(_type TradeAlgorithmType, param string) (interface{}, error)
+// TradeParamObjectCreator is a definition for param object creator
+var TradeParamObjectCreator func(_type TradeAlgorithmType, param string) (interface{}, error)
 
-	// TradeAlgorithmDetail is a struct for trade algorithm detail
-	TradeAlgorithmDetail struct {
-		TradeAlgorithm
-		ParamObject interface{} `json:"param"`
+// TradeAlgorithmDetail is a struct for trade algorithm detail
+type TradeAlgorithmDetail struct {
+	TradeAlgorithm
+	ParamObject interface{} `json:"param"`
+}
+
+// MarshalJSON is an implementation of Marshaler for TradeAlgorithmDetail
+func (detail *TradeAlgorithmDetail) MarshalJSON() ([]byte, error) {
+	if TradeParamObjectCreator == nil {
+		return nil, ErrInconsistentLogic
 	}
 
+	paramObject, err := TradeParamObjectCreator(detail.Type, detail.Param)
+	if err != nil {
+		return nil, err
+	}
+
+	var target = struct {
+		TradeAlgorithm
+		ParamObject interface{} `json:"param"`
+	}{
+		detail.TradeAlgorithm,
+		paramObject,
+	}
+	return json.Marshal(&target)
+}
+
+type (
 	// TradeConfigurationDetail is a struct for trade configurtation detail
 	TradeConfigurationDetail struct {
 		TradeConfiguration

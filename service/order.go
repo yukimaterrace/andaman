@@ -210,8 +210,7 @@ func GetTradeSummariesAResponse(tradeRunID int, start int, end int) (*model.Trad
 
 // GetTradeSummariesBResposne is a method to get trade summaries B
 func GetTradeSummariesBResposne(
-	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int,
-	paramObjectCreator model.TradeParamObjectCreator) (*model.TradeSummariesResponseB, error) {
+	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, start int, end int) (*model.TradeSummariesResponseB, error) {
 
 	unrealizedProfit, err := db.GetTotalProfitByFilter2(tradeRunID, model.Open, tradePair, timezone, start, end)
 	if err != nil {
@@ -257,12 +256,6 @@ func GetTradeSummariesBResposne(
 			ts.Closed = *cps[1]
 		}
 
-		var err error
-		key.Algorithm.ParamObject, err = paramObjectCreator(key.Algorithm.Type, key.Algorithm.Param)
-		if err != nil {
-			return nil, err
-		}
-
 		tcts := model.TradeConfigurationTradeSummary{
 			TradeConfiguration: key,
 			TradeSummary:       ts,
@@ -291,7 +284,7 @@ func getTradeCount(totalCount int, positiveCount int) *model.TradeCount {
 // GetTradeCountProfitsResponse is a method to get trade count profits
 func GetTradeCountProfitsResponse(
 	tradeRunID int, tradePair model.TradePair, timezone model.Timezone, tradeDirection model.TradeDirection, algorithmType model.TradeAlgorithmType,
-	count int, paramObjectCreator model.TradeParamObjectCreator) (*model.TradeCountProfitsResponse, error) {
+	count int) (*model.TradeCountProfitsResponse, error) {
 
 	_count, err := db.GetCountByPeriod(tradeRunID, tradePair, timezone, tradeDirection, algorithmType)
 	if err != nil {

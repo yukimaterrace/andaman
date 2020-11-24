@@ -55,7 +55,7 @@ func (builder *Builder) Parallel(paralle int) *Builder {
 
 // Build builds simple trader
 func (builder *Builder) Build() *Trader {
-	tradeSet, err := service.GetTradeSetDetail(builder.tradeSetName, builder.tradeSetVersion, TradeParamObjectCreator)
+	tradeSet, err := service.GetTradeSetDetail(builder.tradeSetName, builder.tradeSetVersion)
 	if err != nil {
 		panic(err)
 	}
@@ -119,6 +119,14 @@ func TradeParamObjectCreator(_type model.TradeAlgorithmType, param string) (inte
 }
 
 func createTradeAlgorithm(algorithm model.TradeAlgorithmDetail) (TradeAlgorithm, error) {
+	if algorithm.ParamObject == nil {
+		paramObject, err := TradeParamObjectCreator(algorithm.Type, algorithm.Param)
+		if err != nil {
+			return nil, err
+		}
+		algorithm.ParamObject = paramObject
+	}
+
 	switch algorithm.Type {
 	case model.Frame:
 		param, ok := algorithm.ParamObject.(*FrameTradeParam)
