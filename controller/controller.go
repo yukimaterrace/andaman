@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 	"yukimaterrace/andaman/model"
 	"yukimaterrace/andaman/trader"
 	"yukimaterrace/andaman/util"
@@ -12,18 +13,18 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-var apiKey string
-
 // CreateController is a factory method to create controller
 func CreateController() *echo.Echo {
-	apiKey = util.GetEnv("API_KEY")
+	apiKey := util.GetEnv("API_KEY")
+	origins := util.GetEnv("ORIGINS")
 
 	e := echo.New()
 
 	e.HTTPErrorHandler = httpErrorHandler
 	e.Binder = newCustomBinder()
 
-	e.Use(authMiddleware)
+	e.Use(authMiddleware(apiKey))
+	e.Use(corsMiddleware(origins))
 	e.Use(middleware.Logger())
 
 	e.GET("/api/trade_sets", getTradeSets)
@@ -50,12 +51,20 @@ func CreateController() *echo.Echo {
 	return e
 }
 
-var authMiddleware = middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-	KeyLookup: "header:api-key",
-	Validator: func(key string, c echo.Context) (bool, error) {
-		return key == apiKey, nil
-	},
-})
+func authMiddleware(apiKey string) echo.MiddlewareFunc {
+	return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "header:api-key",
+		Validator: func(key string, c echo.Context) (bool, error) {
+			return key == apiKey, nil
+		},
+	})
+}
+
+func corsMiddleware(origins string) echo.MiddlewareFunc {
+	return middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: strings.Split(origins, ","),
+	})
+}
 
 // APIError is an error for api
 type APIError struct {
