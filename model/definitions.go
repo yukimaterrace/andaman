@@ -54,8 +54,8 @@ type (
 
 	// TradeCountProfitsResponse is a response for trade count profits
 	TradeCountProfitsResponse struct {
-		TradeCount       *TradeCount                           `json:"trade_count"`
-		TradeCountProfit []*TradeConfigurationTradeCountProfit `json:"trade_count_profits"`
+		TradeCount        *TradeCount                           `json:"trade_count"`
+		TradeCountProfits []*TradeConfigurationTradeCountProfit `json:"trade_count_profits"`
 	}
 
 	// TradeConfigurationGroupSummariesResponse is a struct for trade configuration grouup summaries response
@@ -107,7 +107,7 @@ type (
 	// TradeConfigurationDetail is a struct for trade configurtation detail
 	TradeConfigurationDetail struct {
 		TradeConfiguration
-		Algorithm TradeAlgorithmDetail
+		Algorithm TradeAlgorithmDetail `json:"algorithm"`
 	}
 
 	// TradeConfigurationKey is a key for trade configuration
@@ -115,16 +115,16 @@ type (
 
 	// TradeConfigurationGroup is a struct for trade configuration group
 	TradeConfigurationGroup struct {
-		TradePair          TradePair
-		Timezone           Timezone
-		TradeDirection     TradeDirection
-		TradeAlgorithmType TradeAlgorithmType
+		TradePair          TradePair          `json:"trade_pair"`
+		Timezone           Timezone           `json:"timezone"`
+		TradeDirection     TradeDirection     `json:"trade_direction"`
+		TradeAlgorithmType TradeAlgorithmType `json:"trade_algorithm_type"`
 	}
 
 	// TradeSetDetail is a struct for trade set detail
 	TradeSetDetail struct {
 		*TradeSet
-		Configurations []*TradeConfigurationDetail
+		Configurations []*TradeConfigurationDetail `json:"configurations"`
 	}
 
 	// TradeRunDetail is a struct for trade run detail
@@ -153,7 +153,7 @@ type (
 
 	// TradePairTradeSummary is a struct for trade pair trade summary
 	TradePairTradeSummary struct {
-		TradePair TradePair
+		TradePair TradePair `json:"trade_pair"`
 		TradeSummary
 	}
 

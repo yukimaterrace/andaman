@@ -302,8 +302,8 @@ func GetTradeCountProfitsResponse(
 	}
 
 	resp := &model.TradeCountProfitsResponse{
-		TradeCount:       getTradeCount(_count, positiveCount),
-		TradeCountProfit: cps,
+		TradeCount:        getTradeCount(_count, positiveCount),
+		TradeCountProfits: cps,
 	}
 
 	return resp, nil
