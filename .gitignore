@@ -15,6 +15,7 @@
 # vendor/
 
 .vscode
+.DS_Store
 
 env_local.sh
 env_local.ps1
