@@ -23,8 +23,8 @@ func CreateController() *echo.Echo {
 	e.HTTPErrorHandler = httpErrorHandler
 	e.Binder = newCustomBinder()
 
-	e.Use(authMiddleware(apiKey))
 	e.Use(corsMiddleware(origins))
+	e.Use(authMiddleware(apiKey))
 	e.Use(middleware.Logger())
 
 	e.GET("/api/trade_sets", getTradeSets)
