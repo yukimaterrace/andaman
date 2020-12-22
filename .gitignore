@@ -18,4 +18,5 @@
 .DS_Store
 
 env_local.sh
+env_local.txt
 env_local.ps1
