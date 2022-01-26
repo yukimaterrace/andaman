@@ -22,4 +22,4 @@ enum class CurrencySymbol {
     EurGbp
 }
 
-fun CurrencySymbol.show(): String = this.name.uppercase()
+fun CurrencySymbol.fileName(): String = this.name.uppercase()

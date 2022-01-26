@@ -47,7 +47,7 @@ internal fun CurrencySymbol.priceFilePaths(
     val startMonth = start.withDayOfMonth(1)
     val numMonths = (end.year - start.year) * 12 + (end.monthValue - start.monthValue) + 1
     return (1..numMonths).map { startMonth.plusMonths(it.toLong() - 1) }.map {
-        Pair(this, Path(filePath, "${this.show()}_${it.year}_${"%02d".format(it.monthValue)}.csv"))
+        Pair(this, Path(filePath, "${this.fileName()}_${it.year}_${"%02d".format(it.monthValue)}.csv"))
     }
 }
 
