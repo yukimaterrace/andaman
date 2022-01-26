@@ -1,6 +1,6 @@
 package andaman.broker
 
-import andaman.common.Context
+import andaman.common.testContext
 import andaman.price.CurrencySymbol
 import andaman.price.Price
 import java.math.BigDecimal
@@ -25,7 +25,7 @@ class SimulationBrokerTest {
 
     private val currentPrices = usdJpyPrices.zip(eurUsdPrices).map { mapOf(it.first.symbol to it.first, it.second.symbol to it.second) }
 
-    private val broker = SimulationBroker(Context().also { it.currentPrices = currentPrices[0] })
+    private val broker = SimulationBroker(testContext().also { it.currentPrices = currentPrices[0] })
 
     @Test
     fun testNull() {
