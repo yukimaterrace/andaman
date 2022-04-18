@@ -1,0 +1,19 @@
+products:
+  - currencyPair: UsdJpy
+    pipsUnit: 0.01
+    simulationSpreadPips: 0.2
+  - currencyPair: EurJpy
+    pipsUnit: 0.01
+    simulationSpreadPips: 0.5
+  - currencyPair: GbpJpy
+    pipsUnit: 0.01
+    simulationSpreadPips: 1.0
+  - currencyPair: EurUsd
+    pipsUnit: 0.0001
+    simulationSpreadPips: 0.4
+  - currencyPair: GbpUsd
+    pipsUnit: 0.0001
+    simulationSpreadPips: 1.0
+  - currencyPair: EurGbp
+    pipsUnit: 0.0001
+    simulationSpreadPips: 1.0
