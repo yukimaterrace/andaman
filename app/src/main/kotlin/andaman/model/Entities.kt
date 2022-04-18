@@ -3,7 +3,12 @@ package andaman.model
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
+/**
+ * User Entity
+ */
 class User(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<User>(Users)
     var accountId by Users.accountId
@@ -11,6 +16,9 @@ class User(id: EntityID<Int>): IntEntity(id) {
     val trades by Trade referrersOn Trades.user
 }
 
+/**
+ * Trade Entity
+ */
 class Trade(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Trade>(Trades)
     var tradeId by Trades.tradeId
@@ -19,10 +27,13 @@ class Trade(id: EntityID<Int>): IntEntity(id) {
     val positions by Position referrersOn Positions.trade
 }
 
+/**
+ * Position Entity
+ */
 class Position(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Position>(Positions)
     var positionId by Positions.positionId
-    var symbol by Positions.symbol
+    var currencyPair by Positions.currencyPair
     var amount by Positions.amount
     var openPrice by Positions.openPrice
     var openAt by Positions.openAt
@@ -32,3 +43,6 @@ class Position(id: EntityID<Int>): IntEntity(id) {
     var profit by Positions.profit
     var trade by Trade referencedOn Positions.trade
 }
+
+fun LocalDateTime.dbFormat(): String =
+    this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))

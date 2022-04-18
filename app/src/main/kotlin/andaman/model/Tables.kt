@@ -1,17 +1,26 @@
 package andaman.model
 
-import andaman.broker.PositionStatus
-import andaman.price.CurrencySymbol
+import andaman.enum.CurrencyPair
+import andaman.enum.PositionStatus
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 
+/**
+ * テーブルリスト
+ */
 private val tables = arrayOf(Users, Trades, Positions)
 
+/**
+ * Users Table
+ */
 object Users: IntIdTable() {
     val accountId = integer("account_id").uniqueIndex()
     val name = name("name")
 }
 
+/**
+ * Trades Table
+ */
 object Trades: IntIdTable() {
     val tradeId = uuid("trade_id").uniqueIndex()
     val name = name("name")
@@ -19,20 +28,26 @@ object Trades: IntIdTable() {
     val user = reference("user", Users)
 }
 
+/**
+ * Positions Table
+ */
 object Positions: IntIdTable() {
     val positionId = uuid("position_id").uniqueIndex()
-    val symbol = enumeration("symbol", CurrencySymbol::class)
+    val currencyPair = enumeration("currency_pair", CurrencyPair::class)
     val amount = quantity("amount")
     val openPrice = price("open_price")
     val openAt = time("open_at")
-    var closePrice = price("close_price").nullable()
-    var closeAt = time("close_at").nullable()
-    var status = enumeration("status", PositionStatus::class)
+    val closePrice = price("close_price").nullable()
+    val closeAt = time("close_at").nullable()
+    val status = enumeration("status", PositionStatus::class)
     val profit = quantity("profit").nullable()
 
     val trade = reference("trade", Trades)
 }
 
+/**
+ * データベースを初期化します
+ */
 fun Transaction.initDb(withLog: Boolean = false) {
     if (withLog) {
         addLogger(StdOutSqlLogger)
@@ -40,6 +55,9 @@ fun Transaction.initDb(withLog: Boolean = false) {
     SchemaUtils.create(*tables)
 }
 
+/**
+ * テーブルをドロップします
+ */
 fun dropTables() {
     SchemaUtils.drop(*tables)
 }
