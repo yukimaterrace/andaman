@@ -3,18 +3,71 @@
  */
 package andaman
 
-import andaman.usecase.Context
-import andaman.usecase.ProductsHolder
-import andaman.usecase.Trade
-import andaman.usecase.User
+import andaman.enum.BuySellType
+import andaman.enum.CurrencyPair
+import andaman.enum.PositionStatus
+import andaman.model.dropTables
+import andaman.model.initDb
+import andaman.usecase.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.kodein.di.DI
 import org.kodein.di.bindSingleton
+import java.nio.file.Paths
+import java.time.LocalDateTime
 import java.util.*
 
+/**
+ * テスト用のUserを作成します
+ */
 fun testUser() = User(accountId = 0, name = "")
+
+/**
+ * テスト用のTradeを作成します
+ */
 fun testTrade() = Trade(tradeId = UUID.randomUUID())
+
+/**
+ * テスト用のContextを作成します
+ */
 fun testContext() = Context(testUser(), testTrade())
 
+/**
+ * テスト用のPositionを作成します
+ */
+fun testPosition() = Position(
+    id = UUID.randomUUID(),
+    currencyPair = CurrencyPair.UsdJpy,
+    buySellType = BuySellType.BUY,
+    amount = "1000.0".toBigDecimal(),
+    openPrice = "123.45".toBigDecimal(),
+    openAt = LocalDateTime.of(2022, 4, 1, 12, 10),
+    closePrice = "124.56".toBigDecimal(),
+    closeAt = LocalDateTime.of(2022, 5, 1, 11, 20),
+    status = PositionStatus.OPEN
+)
+
+/**
+ * テスト用のDIを作成します
+ */
 fun testDI() = DI {
     bindSingleton { ProductsHolder("resource/test/test_products.yaml").also { it.load() } }
+}
+
+interface TestDbAware {
+    /**
+     * テスト用のDBをセットアップします
+     */
+    fun setupTestDb() {
+        val path = Paths.get("resource/test/test.db").toAbsolutePath().toString()
+        Database.connect("jdbc:sqlite:${path}", "org.sqlite.JDBC")
+        transaction { initDb() }
+    }
+
+    /**
+     * テスト用のDBをシャットダウンします
+     */
+    fun shutdownTestDb() {
+        transaction { dropTables() }
+    }
 }

@@ -1,33 +1,34 @@
 package andaman.repository
 
+import andaman.TestDbAware
+import andaman.enum.BuySellType
 import andaman.enum.CurrencyPair
 import andaman.enum.PositionStatus
-import andaman.model.*
-import org.jetbrains.exposed.sql.Database
+import andaman.model.Position
+import andaman.model.Trade
+import andaman.model.User
+import andaman.testPosition
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.nio.file.Paths
 import java.util.*
 import kotlin.random.Random
 import kotlin.test.*
 
-class DbRepositoryTest {
+class DbRepositoryTest: TestDbAware {
 
     private val repository = DbRepositoryImpl()
 
     @BeforeTest
     fun setup() {
-        val path = Paths.get("resource/test/test.db").toAbsolutePath().toString()
-        Database.connect("jdbc:sqlite:${path}", "org.sqlite.JDBC")
-        transaction { initDb() }
+        setupTestDb()
     }
 
     @AfterTest
     fun shutdown() {
-        transaction { dropTables() }
+        shutdownTestDb()
     }
 
     @Test
-    fun test() {
+    fun testFind() {
         transaction {
             val userA = createUser("A")
             val tradeA = createTrade("A", userA)
@@ -50,6 +51,7 @@ class DbRepositoryTest {
 
             val position = positions.first()
             assertEquals(CurrencyPair.UsdJpy, position.currencyPair)
+            assertEquals(BuySellType.BUY, position.buySellType)
             assertEquals("10000.000".toBigDecimal(), position.amount)
             assertEquals("112.500".toBigDecimal(), position.openPrice)
 
@@ -66,9 +68,26 @@ class DbRepositoryTest {
         }
     }
 
+    @Test
+    fun testInsertPositions() {
+        transaction {
+            val user = createUser("B")
+            val trade = createTrade("B", user)
+            val positions = listOf(testPosition())
+            val positionId = positions.first().id
+
+            repository.insertPositions(positions, trade.tradeId)
+            val position = repository.findPosition(positionId)
+
+            assertNotNull(position)
+            assertEquals(positionId, position.positionId)
+            assertEquals(trade.tradeId, position.trade.tradeId)
+        }
+    }
+
     private fun createUser(name: String) =
         User.new {
-            accountId = Random.nextInt(99999999)
+            accountId = Random.nextLong(99999999)
             this.name = name
         }
 
@@ -83,6 +102,7 @@ class DbRepositoryTest {
         Position.new {
             positionId = UUID.randomUUID()
             currencyPair = CurrencyPair.UsdJpy
+            buySellType = BuySellType.BUY
             amount = "10000.0".toBigDecimal()
             openPrice = "112.5".toBigDecimal()
             openAt = "2022-01-26-12:24"
