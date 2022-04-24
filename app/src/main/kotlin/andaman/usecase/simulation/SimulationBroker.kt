@@ -3,9 +3,7 @@ package andaman.usecase.simulation
 import andaman.enum.BuySellType
 import andaman.enum.CurrencyPair
 import andaman.enum.PositionStatus
-import andaman.usecase.Broker
-import andaman.usecase.Context
-import andaman.usecase.Position
+import andaman.usecase.*
 import java.math.BigDecimal
 import java.util.*
 
@@ -26,7 +24,7 @@ class SimulationBroker: Broker {
             currencyPair = currencyPair,
             buySellType = buySellType,
             amount = amount,
-            openPrice = openPrice,
+            openPrice = openPrice.resolveValueForOpen(buySellType),
             openAt = openPrice.at
         ).also { orderMap = orderMap.plus(Pair(it.id, it)) }
     }
@@ -37,7 +35,7 @@ class SimulationBroker: Broker {
     override fun closeOrder(context: Context, positionId: UUID): Position? {
         return orderMap[positionId]?.let { position ->
             context.currentPrices[position.currencyPair]?.let {
-                position.closePrice = it
+                position.closePrice = it.resolveValueForClose(position.buySellType)
                 position.closeAt = it.at
                 position.status = PositionStatus.CLOSED
                 position
