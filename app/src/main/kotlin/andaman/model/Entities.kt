@@ -34,6 +34,7 @@ class Position(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Position>(Positions)
     var positionId by Positions.positionId
     var currencyPair by Positions.currencyPair
+    var buySellType by Positions.buySellType
     var amount by Positions.amount
     var openPrice by Positions.openPrice
     var openAt by Positions.openAt
@@ -44,5 +45,7 @@ class Position(id: EntityID<Int>): IntEntity(id) {
     var trade by Trade referencedOn Positions.trade
 }
 
-fun LocalDateTime.dbFormat(): String =
-    this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+val dbDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+fun LocalDateTime.dbFormat(): String = this.format(dbDateTimeFormatter)
+fun String.toLocalDateTime(): LocalDateTime = LocalDateTime.parse(this, dbDateTimeFormatter)
