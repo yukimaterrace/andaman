@@ -1,5 +1,6 @@
 package andaman.usecase
 
+import andaman.enum.BuySellType
 import andaman.enum.CurrencyPair
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -13,6 +14,22 @@ data class Price(
     val ask: BigDecimal,
     val at: LocalDateTime
 )
+
+/**
+ * 売買タイプからOPEN時の価格を求めます
+ */
+fun Price.resolveValueForOpen(buySellType: BuySellType) = when (buySellType) {
+    BuySellType.BUY -> ask
+    BuySellType.SELL -> bid
+}
+
+/**
+ * 売買タイプからCLOSE時の価格を求めます
+ */
+fun Price.resolveValueForClose(buySellType: BuySellType) = when (buySellType) {
+    BuySellType.BUY -> bid
+    BuySellType.SELL -> ask
+}
 
 /**
  * 通貨ペアと価格のマップ

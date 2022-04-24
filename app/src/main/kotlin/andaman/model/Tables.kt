@@ -1,5 +1,6 @@
 package andaman.model
 
+import andaman.enum.BuySellType
 import andaman.enum.CurrencyPair
 import andaman.enum.PositionStatus
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -14,7 +15,7 @@ private val tables = arrayOf(Users, Trades, Positions)
  * Users Table
  */
 object Users: IntIdTable() {
-    val accountId = integer("account_id").uniqueIndex()
+    val accountId = long("account_id").uniqueIndex()
     val name = name("name")
 }
 
@@ -34,6 +35,7 @@ object Trades: IntIdTable() {
 object Positions: IntIdTable() {
     val positionId = uuid("position_id").uniqueIndex()
     val currencyPair = enumeration("currency_pair", CurrencyPair::class)
+    val buySellType = enumeration("buy_sell_type", BuySellType::class)
     val amount = quantity("amount")
     val openPrice = price("open_price")
     val openAt = time("open_at")

@@ -24,21 +24,28 @@ class Position(
     val currencyPair: CurrencyPair,
     val buySellType: BuySellType,
     val amount: BigDecimal,
-    val openPrice: Price,
-    val openAt: LocalDateTime
+    val openPrice: BigDecimal,
+    val openAt: LocalDateTime,
+    var closePrice: BigDecimal? = null,
+    var closeAt: LocalDateTime? = null,
+    var status: PositionStatus = PositionStatus.OPEN
 ) {
-    var closePrice: Price? = null
-    var closeAt: LocalDateTime? = null
-    var status = PositionStatus.OPEN
-
     val profit: BigDecimal?
-        get() = closePrice?.let { calcProfit(it) }
+        get() = closePrice?.profit()
 
-    fun profit(price: Price) = calcProfit(price)
+    fun profit(price: Price) = price.resolveValueForProfit().profit()
 
-    private fun calcProfit(price: Price) =
+    private fun BigDecimal.profit(): BigDecimal {
+        val value = (this - openPrice) * amount
+        return when (buySellType) {
+            BuySellType.BUY -> value
+            BuySellType.SELL -> -value
+        }
+    }
+
+    private fun Price.resolveValueForProfit(): BigDecimal =
         when (buySellType) {
-            BuySellType.BUY -> (price.bid - openPrice.ask) * amount
-            BuySellType.SELL -> (openPrice.bid - price.ask) * amount
+            BuySellType.BUY -> bid
+            BuySellType.SELL -> ask
         }
 }
