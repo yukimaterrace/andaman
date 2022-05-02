@@ -1,16 +1,16 @@
 package andaman.usecase
 
 import andaman.enum.CurrencyPair
-import org.kodein.di.DI
-import org.kodein.di.DIAware
+import andaman.usecase.strategy.TradeStrategy
 import java.util.*
 
 /**
  * コンテクスト
  */
-class Context(
+data class Context(
     val user: User,
     val trade: Trade,
+    val strategies: List<TradeStrategy>
 ) {
     var currentPrices: Map<CurrencyPair, Price> = emptyMap()
     var currentPositions: List<Position> = emptyList()
