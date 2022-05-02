@@ -9,6 +9,9 @@ import andaman.enum.PositionStatus
 import andaman.model.dropTables
 import andaman.model.initDb
 import andaman.usecase.*
+import andaman.usecase.strategy.CloseOrderProposal
+import andaman.usecase.strategy.OpenOrderProposal
+import andaman.usecase.strategy.TradeStrategy
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.kodein.di.DI
@@ -30,7 +33,12 @@ fun testTrade() = Trade(tradeId = UUID.randomUUID())
 /**
  * テスト用のContextを作成します
  */
-fun testContext() = Context(testUser(), testTrade())
+fun testContext() = Context(testUser(), testTrade(), emptyList())
+
+/**
+ * テスト用のストラテジー付きContextを作成します
+ */
+fun testContext(strategies: List<TradeStrategy>) = Context(testUser(), testTrade(), strategies)
 
 /**
  * テスト用のPositionを作成します
@@ -45,6 +53,22 @@ fun testPosition() = Position(
     closePrice = "124.56".toBigDecimal(),
     closeAt = LocalDateTime.of(2022, 5, 1, 11, 20),
     status = PositionStatus.OPEN
+)
+
+/**
+ * テスト用のOpenOrderProposalを作成します
+ */
+fun testOpenOrderProposal() = OpenOrderProposal(
+    currencyPair = CurrencyPair.UsdJpy,
+    buySellType = BuySellType.BUY,
+    amount = "12345".toBigDecimal()
+)
+
+/**
+ * テスト用のCloseOrderProposalを作成します
+ */
+fun testCloseOrderProposal() = CloseOrderProposal(
+    positionId = UUID.randomUUID()
 )
 
 /**
